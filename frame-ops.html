@@ -1,0 +1,1694 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Data structures in C: memory, linked lists, queues and binary search trees, with theory, pseudocode and step-by-step code.">
+<style>
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+<title>Frame Ops</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&display=swap">
+<style>
+/* Layout: a mobile-suit cockpit. Sortie tabs on top; each sortie = mission briefing,
+   pseudocode tactics, a combat-sim bench (heap view on top, code + stack below), field tests.
+   Single dark HUD look by design. */
+:root{
+  color-scheme:dark;
+  --bg:#060a12; --panel:#0c1424; --panel2:#101b31; --line:#1d3456; --ink:#d8e5ff; --muted:#7f95ba;
+  --cyan:#3fe0ff; --cyan-soft:rgba(63,224,255,.12); --amber:#ffb640; --amber-soft:rgba(255,182,64,.14);
+  --red:#ff4d5e; --red-soft:rgba(255,77,94,.14); --green:#4dffa6; --green-soft:rgba(77,255,166,.13); --blue:#2f6bff;
+  --armor:#e9eef8; --edge:#0b1220; --code:#070d18;
+  --f-display:"Orbitron","Eurostile","Segoe UI",sans-serif;
+  --f-body:"Rajdhani","Segoe UI",system-ui,sans-serif;
+  --f-mono:"Share Tech Mono","Consolas",ui-monospace,monospace;
+  --cut:polygon(0 0,calc(100% - 16px) 0,100% 16px,100% 100%,16px 100%,0 calc(100% - 16px));
+}
+*{box-sizing:border-box}
+html,body{overflow-x:clip}
+body{margin:0;color:var(--ink);font:500 18px/1.55 var(--f-body);background-color:var(--bg);
+  background-image:radial-gradient(ellipse at 20% -10%,rgba(47,107,255,.22),transparent 55%),radial-gradient(ellipse at 100% 30%,rgba(63,224,255,.08),transparent 45%),
+  linear-gradient(rgba(63,224,255,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(63,224,255,.045) 1px,transparent 1px);
+  background-size:auto,auto,34px 34px,34px 34px;background-attachment:fixed}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--panel)}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:30;background:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 1px,transparent 1px 3px);opacity:.35}
+.wrap{max-width:1300px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3,h4{font-family:var(--f-display);font-weight:800;letter-spacing:.04em;line-height:1.15;margin:0;text-wrap:balance;text-transform:uppercase}
+p{margin:0}
+code{font-family:var(--f-mono);font-size:.92em;color:var(--cyan);background:var(--cyan-soft);padding:0 .3em}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+.hud{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);clip-path:var(--cut);position:relative}
+.hud::after{content:"";position:absolute;top:0;left:18px;width:64px;height:3px;background:var(--cyan)}
+.lbl{font:600 .72rem var(--f-display);letter-spacing:.16em;text-transform:uppercase;color:var(--cyan);display:flex;gap:8px;align-items:center}
+.lbl::before{content:"";width:8px;height:8px;background:var(--cyan);clip-path:polygon(0 0,100% 50%,0 100%)}
+.lbl em{font-style:normal;color:var(--muted);letter-spacing:.06em}
+
+/* top bar */
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:8;background:rgba(9,15,28,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.bar-in{display:flex;align-items:center;gap:16px;flex-wrap:wrap;min-height:64px;padding-block:8px}
+.brand{display:flex;align-items:center;gap:10px;font:800 1.05rem var(--f-display);letter-spacing:.12em;color:var(--ink);text-decoration:none}
+.brand small{display:block;font:500 .62rem var(--f-mono);letter-spacing:.2em;color:var(--green)}
+.tabs{display:flex;gap:6px;overflow-x:auto;flex:1 1 auto;padding-block:2px}
+.tabs a{flex:0 0 auto;text-decoration:none;color:var(--muted);padding:7px 16px 6px;font:600 .74rem var(--f-display);letter-spacing:.1em;border:1px solid var(--line);clip-path:polygon(10px 0,100% 0,calc(100% - 10px) 100%,0 100%);background:var(--panel);display:grid;line-height:1.25}
+.tabs a b{color:var(--ink);font-weight:600}
+.tabs a span{font:500 .62rem var(--f-mono);letter-spacing:.12em}
+.tabs a[aria-current="page"]{background:var(--cyan);color:var(--edge);border-color:var(--cyan)}
+.tabs a[aria-current="page"] b{color:var(--edge)}
+
+/* briefing */
+.sortie{display:grid;gap:30px;padding-block:26px 150px}
+.brief{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:24px;align-items:stretch}
+.brief>*{min-width:0}
+.btext{padding:22px 24px;display:grid;gap:12px;align-content:start}
+.code-no{font:600 .78rem var(--f-mono);letter-spacing:.24em;color:var(--amber)}
+.btext h1{font-size:clamp(1.8rem,4.2vw,2.9rem);color:var(--armor)}
+.btext .big{font-size:1.15rem;max-width:62ch}
+.keys{list-style:none;margin:4px 0 0;padding:0;display:grid;gap:7px}
+.keys li{display:grid;grid-template-columns:20px minmax(0,1fr);gap:8px}
+.keys li::before{content:"";width:10px;height:10px;margin-top:8px;background:var(--amber);clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)}
+.figure{padding:22px 20px 18px;display:grid;gap:14px;align-content:space-between}
+.figure .cap{font-size:1rem;color:var(--muted)}
+.figure .cap b{color:var(--amber);font-weight:700}
+.traps{padding:18px 22px;background:linear-gradient(180deg,rgba(255,182,64,.09),rgba(255,182,64,.03));border:1px solid var(--amber);clip-path:var(--cut);position:relative}
+.traps::before{content:"";position:absolute;inset:0 0 auto;height:8px;background:repeating-linear-gradient(-45deg,var(--amber) 0 10px,var(--edge) 10px 20px)}
+.traps h3{font-size:1rem;color:var(--amber);margin:6px 0 8px;letter-spacing:.14em}
+.traps ul{margin:0;padding-left:1.2em;display:grid;gap:5px}
+.sec{display:grid;gap:4px}
+.sec h2{font-size:1.35rem;color:var(--armor)}
+.sec p{color:var(--muted)}
+
+/* pseudocode */
+.ops{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,520px),1fr));gap:16px}
+.op{padding:16px 18px 14px;display:grid;gap:10px;min-width:0}
+.op-h{display:flex;justify-content:space-between;gap:10px;align-items:baseline;flex-wrap:wrap}
+.op-h h3{font-size:.95rem;color:var(--cyan);letter-spacing:.1em}
+.cost{font:600 .8rem var(--f-mono);color:var(--edge);background:var(--green);padding:1px 8px}
+.pseudo{list-style:none;margin:0;padding:0;display:grid;gap:0;counter-reset:ps}
+.pseudo li{counter-increment:ps;display:grid;grid-template-columns:2em minmax(0,1.1fr) minmax(0,1fr);gap:10px;padding:6px 0;border-top:1px dashed var(--line);align-items:start}
+.pseudo li::before{content:counter(ps);font:600 .8rem var(--f-mono);color:var(--muted);text-align:right;padding-top:2px}
+.pseudo .pc{font:15px/1.5 var(--f-mono);white-space:pre-wrap;color:var(--armor);overflow-wrap:anywhere}
+.pseudo .pc .kw{color:var(--amber)}
+.pseudo .pe{font-size:.98rem;color:var(--muted)}
+
+/* program tabs + lab sheet */
+.ptabs{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.ptabs button{border:1px solid var(--line);background:var(--panel);padding:8px 16px;cursor:pointer;text-align:left;display:grid;line-height:1.25;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,0 100%)}
+.ptabs button b{font:600 .78rem var(--f-display);letter-spacing:.08em}
+.ptabs button small{color:var(--muted);font-size:.85rem}
+.ptabs button[aria-selected="true"]{border-color:var(--cyan);background:var(--cyan-soft)}
+.lab{padding:20px;display:grid;gap:16px;min-width:0}
+.lab>*{min-width:0}
+.lab-top{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:16px;align-items:start}
+.task h3{font-size:1.05rem;color:var(--armor);margin-bottom:6px}
+.io{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.io-box{border:1px solid var(--line);background:var(--code);min-width:0}
+.io-box span{display:block;font:600 .66rem var(--f-display);letter-spacing:.16em;padding:5px 10px;color:var(--amber);border-bottom:1px solid var(--line)}
+.io-box pre{margin:0;padding:8px 10px;font:15px/1.45 var(--f-mono);white-space:pre-wrap;word-break:break-word;color:var(--green)}
+.io-box pre.hide{color:var(--muted);font-family:var(--f-body)}
+
+/* bench */
+.bench{display:grid;gap:12px}
+.bench>*{min-width:0}
+.inrow{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;padding:12px 14px;border:1px dashed var(--line);background:rgba(12,20,36,.7)}
+.inrow label{display:grid;gap:4px;color:var(--muted);font-size:.95rem;flex:1 1 230px}
+.inrow textarea{font:16px/1.45 var(--f-mono);background:var(--code);color:var(--green);border:1px solid var(--line);padding:7px 10px;resize:vertical;width:100%;min-height:2.6em}
+.inerr{width:100%;color:var(--red)}
+.btn{border:1px solid var(--line);background:var(--panel2);padding:8px 14px;font:600 .74rem var(--f-display);letter-spacing:.1em;text-transform:uppercase;cursor:pointer;clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%);color:var(--ink)}
+.btn:hover{border-color:var(--cyan);color:var(--cyan)}
+.btn.go{background:var(--amber);border-color:var(--amber);color:var(--edge)}
+.btn.go:hover{color:var(--edge);filter:brightness(1.08)}
+.btn.cy{background:var(--cyan);border-color:var(--cyan);color:var(--edge)}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.heapview{padding:16px 16px 14px;display:grid;gap:10px}
+.heap{display:grid;gap:12px;min-width:0}
+.chainwrap{overflow-x:auto;padding-bottom:4px}
+.chain{display:flex;align-items:center;gap:6px;width:max-content;min-height:96px}
+.side{display:grid;gap:6px;padding-top:8px;border-top:1px dashed var(--line)}
+.side .lbl{color:var(--amber)}.side .lbl::before{background:var(--amber)}
+.side .chain{min-height:0;flex-wrap:wrap;width:auto}
+.rootcap,.nullcap,.loopcap{font:600 .8rem var(--f-mono);padding:6px 10px;border:1px dashed var(--muted);color:var(--muted);white-space:nowrap}
+.rootcap{border-style:solid;border-color:var(--cyan);color:var(--cyan);display:grid;text-align:center;line-height:1.3}
+.rootcap span{color:var(--ink);font-size:.75rem}
+.nullcap{color:var(--red);border-color:var(--red)}
+.loopcap{color:var(--green);border-color:var(--green)}
+.loopbar{margin-top:6px;font:600 .78rem var(--f-mono);color:var(--green);border:1px solid var(--green);border-top:none;padding:2px 10px;width:max-content;max-width:100%}
+.link{font:700 1.4rem var(--f-mono);color:var(--cyan)}
+.link.two{color:var(--green)}
+.node{display:grid;gap:3px;justify-items:center}
+.bdgs{display:flex;gap:4px;min-height:20px;flex-wrap:wrap;justify-content:center}
+.bdg{font:600 .7rem var(--f-mono);padding:1px 6px;color:var(--edge);background:var(--cyan)}
+.bdg.amber{background:var(--amber)}
+.nbody{border:2px solid var(--line);background:var(--code);padding:4px 6px 6px;display:grid;gap:3px;clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,8px 100%,0 calc(100% - 8px))}
+.naddr{font:.7rem var(--f-mono);color:var(--muted);text-align:center}
+.flds{display:flex;gap:3px}
+.fld{display:grid;justify-items:center;border:1px solid var(--line);padding:2px 7px;min-width:48px}
+.fld span{font:.64rem var(--f-mono);color:var(--muted);text-transform:uppercase}
+.fld b{font:600 1rem var(--f-mono);color:var(--armor);font-weight:400}
+.fld.chg{border-color:var(--green);background:var(--green-soft);animation:pulse .5s}
+.node.hl .nbody{border-color:var(--amber);box-shadow:0 0 0 2px var(--amber-soft),0 0 18px rgba(255,182,64,.35)}
+.node.new .nbody{animation:deploy .45s}
+.node.freed{opacity:.45}
+.node.freed .nbody{border-color:var(--red);border-style:dashed}
+.node.freed .naddr::after{content:" · FREED";color:var(--red)}
+@keyframes pulse{0%{transform:scale(.85)}100%{transform:scale(1)}}
+@keyframes deploy{0%{transform:translateY(-14px);opacity:0}100%{transform:none;opacity:1}}
+.treewrap{overflow-x:auto}
+svg.tree{display:block}
+svg.tree .edge{stroke:var(--cyan);stroke-width:2;opacity:.7}
+svg.tree .nd{fill:var(--code);stroke:var(--line);stroke-width:2}
+svg.tree .nd.hl{stroke:var(--amber);stroke-width:3}
+svg.tree .nd.vis{fill:rgba(77,255,166,.18);stroke:var(--green)}
+svg.tree .nd.new{stroke:var(--green);stroke-width:3}
+svg.tree .val{fill:var(--armor);font:16px var(--f-mono);text-anchor:middle;dominant-baseline:central}
+svg.tree .ad{fill:var(--muted);font:9px var(--f-mono);text-anchor:middle}
+svg.tree .tag{font:600 10px var(--f-mono);text-anchor:middle}
+svg.tree .tag.cyan{fill:var(--cyan)}svg.tree .tag.amber{fill:var(--amber)}
+.detail{display:flex;gap:10px;flex-wrap:wrap}
+.bgrid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:14px;align-items:start}
+.left,.right{display:grid;gap:12px;min-width:0}
+.code{background:var(--code);border:1px solid var(--line);padding:10px 0;overflow-x:auto;font:15px/1.65 var(--f-mono);max-height:560px;overflow-y:auto}
+.ln{display:grid;grid-template-columns:2.8em max-content;min-width:100%;width:max-content;text-align:left;background:none;border:0;border-left:3px solid transparent;padding:0 14px 0 0;cursor:pointer;white-space:pre;font:inherit;color:#c9d6ef}
+.ln .num{color:#4d6286;text-align:right;padding-right:12px;user-select:none}
+.ln:hover{background:rgba(63,224,255,.06)}
+.ln.cur{background:rgba(255,182,64,.16);border-left-color:var(--amber)}
+.ln.cur .num{color:var(--amber)}
+.ln.peek{outline:1px dashed var(--cyan);outline-offset:-2px}
+.t-kw{color:#ff8fa0}.t-type{color:#7fd3ff}.t-str{color:#ffd27a}.t-num{color:#c6a6ff}.t-com{color:#5c7398;font-style:italic}.t-fn{color:#78ffc4}
+.ctrl{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.ctrl .next{flex:1 1 140px;font-size:.82rem;padding:11px 16px}
+.prog{display:flex;align-items:center;gap:10px;width:100%;font:.85rem var(--f-mono);color:var(--muted)}
+.bar{flex:1;height:6px;background:var(--panel);border:1px solid var(--line)}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--cyan),var(--green));transition:width .2s}
+.tact{padding:14px 16px;display:grid;gap:8px;border:1px solid var(--amber);background:linear-gradient(180deg,rgba(255,182,64,.08),rgba(12,20,36,.6));clip-path:var(--cut)}
+.tact .th{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.tact .th .lbl{color:var(--amber)}.tact .th .lbl::before{background:var(--amber)}
+.tact .th code{background:none;color:var(--armor);white-space:pre-wrap;padding:0}
+.tact .now{font-size:1.1rem;line-height:1.5}
+.tact .about{font-size:.98rem;color:var(--muted);border-top:1px dashed var(--line);padding-top:7px}
+.tact .about b{color:var(--ink)}
+.panel{padding:12px 14px;border:1px solid var(--line);background:rgba(12,20,36,.75)}
+.panel .lbl{margin-bottom:8px}
+.tape{display:grid;gap:5px;font:15px var(--f-mono)}
+.tline{display:flex;flex-wrap:wrap;gap:5px}
+.tok{padding:1px 8px;border:1px solid var(--line);color:var(--ink)}
+.tok.used{opacity:.35;text-decoration:line-through}
+.tok.just{background:var(--amber);color:var(--edge);border-color:var(--amber);opacity:1;text-decoration:none}
+.tok.next{border-color:var(--cyan);border-style:dashed}
+.frames{display:grid;gap:8px}
+.frame{border:1px solid var(--line);padding:8px 10px}
+.frame.active{border-color:var(--cyan);box-shadow:inset 3px 0 0 var(--cyan)}
+.fh{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font:.8rem var(--f-mono);color:var(--muted);margin-bottom:4px}
+.fh b{color:var(--ink);font-weight:400;font-size:.95rem}
+.frame.active .fh span{color:var(--cyan)}
+.sv{display:grid;grid-template-columns:minmax(4.5em,auto) auto minmax(0,1fr);gap:8px;align-items:baseline;font:15px var(--f-mono);padding:2px 0}
+.sv .sn{color:var(--armor)}
+.sv .st{color:var(--muted);font-size:.78rem}
+.sv .sval{color:var(--green);font-weight:400}
+.sv .sval.null{color:var(--red)}
+.sv .sval.junk{color:var(--muted)}
+.sv .sval small{color:var(--muted)}
+.sv.chg .sval{background:var(--green-soft);animation:pulse .5s}
+.empty{color:var(--muted);font-style:italic}
+.screen pre{margin:0;background:var(--code);border:1px solid var(--line);padding:8px 10px;font:15px/1.5 var(--f-mono);color:var(--green);min-height:2.6em;white-space:pre-wrap;word-break:break-word}
+.screen pre.none{color:var(--muted)}
+.done{margin-top:8px;padding:7px 10px;font:600 .8rem var(--f-display);letter-spacing:.08em}
+.done.ok{background:var(--green-soft);border:1px solid var(--green);color:var(--green)}
+.done.info{border:1px solid var(--line);color:var(--muted)}
+details.every summary{cursor:pointer;font:600 .8rem var(--f-display);letter-spacing:.1em;color:var(--cyan);padding:6px 0}
+.ew{overflow-x:auto}
+.ew table{border-collapse:collapse;width:100%;font-size:1rem}
+.ew td{padding:7px 10px;border-top:1px solid var(--line);vertical-align:top}
+.ew td.n{font:.8rem var(--f-mono);color:var(--muted);text-align:right;width:2.6em}
+.ew td.s{font:14px/1.5 var(--f-mono);white-space:pre;background:var(--code);color:#c9d6ef;min-width:16em}
+.ew td.t{min-width:16em;color:var(--muted)}
+.ew td.t code{color:var(--cyan)}
+
+/* field tests */
+.tests{display:grid;gap:16px}
+.ex{padding:18px 20px;display:grid;gap:12px;min-width:0}
+.ex>*{min-width:0}
+.ex.solved{border-color:var(--green)}
+.ex.solved::after{background:var(--green)}
+.ex-h{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center}
+.kind{font:600 .66rem var(--f-display);letter-spacing:.14em;color:var(--edge);background:var(--cyan);padding:3px 8px}
+.ex-h h3{font-size:1rem;color:var(--armor);flex:1 1 14em}
+.tick{color:var(--green);font:600 .74rem var(--f-display);letter-spacing:.1em}
+.q{font-weight:700;color:var(--armor)}
+.excode{background:var(--code);border:1px solid var(--line);padding:10px 14px;font:15px/1.65 var(--f-mono);white-space:pre;overflow-x:auto;margin:0;color:#c9d6ef}
+.excode input{font:15px var(--f-mono);background:#1a2a48;color:var(--amber);border:1px dashed var(--amber);padding:0 5px}
+.ans{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.ans input{font:16px var(--f-mono);padding:7px 10px;background:var(--code);color:var(--green);border:1px solid var(--line);width:16em;max-width:100%}
+.choices{display:grid;gap:8px}
+.choices label{display:flex;gap:10px;align-items:center;padding:9px 12px;border:1px solid var(--line);cursor:pointer;font:15px var(--f-mono);overflow-x:auto;white-space:pre}
+.choices label:has(input:checked){border-color:var(--cyan);background:var(--cyan-soft)}
+.acts{display:flex;flex-wrap:wrap;gap:8px}
+.fb{padding:10px 14px;border:1px solid var(--line)}
+.fb.ok{border-color:var(--green);background:var(--green-soft)}
+.fb.bad{border-color:var(--red);background:var(--red-soft)}
+.fb strong{display:block;font:600 .8rem var(--f-display);letter-spacing:.1em;margin-bottom:2px}
+.pager{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.pager a{text-decoration:none}
+
+/* KESTREL: comm panel + launch */
+.comm{position:fixed;right:calc(14px + env(safe-area-inset-right,0px));bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:20;display:flex;align-items:flex-end;gap:8px;pointer-events:none}
+.comm>*{pointer-events:auto}
+.msg{max-width:min(320px,calc(100vw - 120px));background:rgba(9,15,28,.96);border:1px solid var(--cyan);clip-path:var(--cut);padding:10px 30px 12px 14px;position:relative;box-shadow:0 0 24px rgba(63,224,255,.25)}
+.msg .mh{font:600 .66rem var(--f-display);letter-spacing:.16em;color:var(--cyan);margin-bottom:4px}
+.msg .mh b{color:var(--amber);font-weight:600}
+.msg p{font-size:1rem;line-height:1.4}
+.msg.in{animation:comm .35s ease-out}
+@keyframes comm{0%{transform:translateX(18px);opacity:0}100%{transform:none;opacity:1}}
+.msg-x{position:absolute;top:2px;right:6px;border:0;background:none;color:var(--muted);cursor:pointer;font-size:1.1rem}
+.pilot{background:none;border:0;padding:0;cursor:pointer;filter:drop-shadow(0 0 10px rgba(63,224,255,.45));animation:hover 3s ease-in-out infinite}
+.comm.away .pilot{opacity:0}
+@keyframes hover{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+.mech .visor{animation:visor 2.4s ease-in-out infinite}
+@keyframes visor{0%,100%{opacity:1}50%{opacity:.55}}
+.launch{position:fixed;left:-140px;bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:19;pointer-events:none;display:flex;align-items:center;visibility:hidden}
+.launch .trail{width:120px;height:10px;background:linear-gradient(90deg,transparent,rgba(63,224,255,.8),#fff);clip-path:polygon(0 40%,100% 0,100% 100%,0 60%);margin-right:-12px}
+.launch.go{visibility:visible;animation:launch 1.9s cubic-bezier(.6,.05,.3,1) forwards}
+@keyframes launch{0%{transform:translate(0,0)}55%{transform:translate(55vw,-60px)}100%{transform:translate(calc(100vw + 20px),0)}}
+/* part switch, intel, storyboards, array view, Q&A */
+.part{flex:0 0 auto;text-decoration:none;font:600 .7rem var(--f-display);letter-spacing:.1em;color:var(--edge);background:var(--green);padding:7px 12px;clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%)}
+.intel{display:grid;gap:16px}
+.icard{padding:16px 18px;display:grid;gap:10px;min-width:0}
+.icard h3{font-size:.95rem;color:var(--cyan);letter-spacing:.1em}
+.icard p{max-width:80ch}
+.icard ul{margin:0;padding-left:1.2em;display:grid;gap:5px}
+.igrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:16px}
+.tbl{overflow-x:auto}
+.tbl table{border-collapse:collapse;width:100%;font-size:1rem}
+.tbl th{font:600 .68rem var(--f-display);letter-spacing:.12em;text-transform:uppercase;color:var(--amber);text-align:left;padding:8px 10px;border-bottom:1px solid var(--amber)}
+.tbl td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+.tbl td:first-child{color:var(--armor);font-weight:700}
+.story{display:flex;gap:12px;overflow-x:auto;padding-bottom:6px}
+.frame-s{flex:0 0 auto;min-width:260px;max-width:520px;border:1px solid var(--line);background:rgba(7,13,24,.7);padding:10px 12px;display:grid;gap:8px;align-content:start}
+.frame-s .sn{font:600 .66rem var(--f-display);letter-spacing:.16em;color:var(--amber)}
+.frame-s p{font-size:.98rem}
+.frame-s .chain{min-height:70px}
+.qa{border:1px solid var(--line);background:rgba(12,20,36,.7)}
+.qa summary{cursor:pointer;padding:10px 14px;font-weight:700;color:var(--armor);list-style-position:inside}
+.qa summary::marker{color:var(--cyan)}
+.qa div{padding:0 14px 12px;color:var(--ink);border-top:1px dashed var(--line);padding-top:8px}
+.qas{display:grid;gap:8px}
+.arr{display:flex;gap:6px;flex-wrap:wrap;align-items:flex-end}
+.acell{display:grid;justify-items:center;gap:2px}
+.atags{min-height:20px;display:flex;gap:3px}
+.abox{min-width:54px;height:46px;display:grid;place-items:center;border:2px solid var(--line);background:var(--code);font:600 1.1rem var(--f-mono);color:var(--muted)}
+.acell.in .abox{color:var(--armor);border-color:var(--cyan);background:rgba(63,224,255,.08)}
+.acell.hl .abox{border-color:var(--amber);box-shadow:0 0 14px rgba(255,182,64,.35)}
+.acell.chg .abox{border-color:var(--green);background:var(--green-soft);animation:pulse .5s}
+.aidx{font:.75rem var(--f-mono);color:var(--muted)}
+.anote{font:.85rem var(--f-mono);color:var(--muted)}
+@media (max-width:1000px){.bgrid{grid-template-columns:minmax(0,1fr)}.code{max-height:none}}
+@media (max-width:860px){.brief,.lab-top{grid-template-columns:minmax(0,1fr)}.pseudo li{grid-template-columns:2em minmax(0,1fr)}.pseudo .pe{grid-column:2}}
+@media (max-width:540px){body{font-size:17px}.io{grid-template-columns:minmax(0,1fr)}.lab,.ex,.btext{padding:14px}.code,.excode{font-size:13.5px}.pilot svg{width:52px;height:52px}.msg{max-width:min(250px,calc(100vw - 90px))}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<header class="topbar"><div class="wrap bar-in">
+  <a class="brand" href="#memory"><span id="logo" aria-hidden="true"></span><span>FRAME OPS<small>DATA STRUCTURE COMBAT SIM</small></span></a>
+  <nav class="tabs" id="tabs" aria-label="Sorties"></nav>
+  <a class="part" href="./">◀ C basics with Mochi</a>
+</div></header>
+<main class="wrap" id="app"></main>
+
+<script>
+/* ================= helpers ================= */
+const R=String.raw;
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+function md(s){const c=[];s=esc(s).replace(/«([^»]+)»/g,(m,x)=>{c.push(x);return '\u0001'+(c.length-1)+'\u0001';});
+  s=s.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>').replace(/\*([^*]+)\*/g,'<em>$1</em>');
+  return s.replace(/\u0001(\d+)\u0001/g,(m,k)=>'<code>'+c[k]+'</code>');}
+function hl(src){
+  const re=/(\/\/.*$|\/\*.*?\*\/)|(#include|#define)|(<\w+\.h>)|("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')|\b(int|char|struct)\b|\b(return|for|while|if|else|do)\b|\b(NULL|\d+)\b|\b([A-Za-z_]\w*)(?=\s*\()/g;
+  let o='',l=0,m;while((m=re.exec(src))){o+=esc(src.slice(l,m.index));
+    const c=m[1]?'com':m[2]?'kw':m[3]?'str':m[4]?'str':m[5]?'type':m[6]?'kw':m[7]?'num':'fn';
+    o+=`<span class="t-${c}">${esc(m[0])}</span>`;l=re.lastIndex;}
+  return o+esc(src.slice(l));
+}
+const clone=o=>JSON.parse(JSON.stringify(o));
+const hex=a=>a===null?'NULL':a===undefined?'?':'0x'+a.toString(16).toUpperCase();
+const outNorm=s=>String(s).replace(/[ \t]+$/gm,'').replace(/\n+$/,'');
+const ansNorm=s=>String(s).trim().replace(/;$/,'').replace(/\s+/g,'').replace(/^['"](.*)['"]$/,'$1').toLowerCase();
+function tokenize(s){const o=[];String(s).replace(/\r/g,'').split('\n').forEach((l,li)=>l.split(/\s+/).filter(Boolean).forEach(w=>o.push({w,li})));return o;}
+
+/* ================= the simulator ================= */
+const I=v=>({k:'int',v});
+const C=v=>({k:'char',v});
+const P=v=>({k:'ptr',v});
+class Sim{
+  constructor(input='',{globals=false}={}){this.toks=tokenize(input);this.pos=0;this.just=[];this.steps=[];this.frames=[];this.heap={};this.na=0x1A0;this.out='';this.ch=[];
+    if(globals)this.frame('globals');this.frame('main()');}
+  frame(n){this.frames.push({name:n,vars:[]});}
+  pop(){this.frames.pop();}
+  set(name,v,fi){const k=fi===undefined?this.frames.length-1:fi;const f=this.frames[k];const i=f.vars.findIndex(x=>x.name===name);const e={name,...v};if(i<0)f.vars.push(e);else f.vars[i]=e;this.ch.push(k+':'+name);}
+  get(name,fi){const k=fi===undefined?this.frames.length-1:fi;const v=this.frames[k].vars.find(x=>x.name===name);return v?v.v:undefined;}
+  del(name){const f=this.frames[this.frames.length-1];f.vars=f.vars.filter(v=>v.name!==name);}
+  read(){const t=this.toks[this.pos];this.just.push(this.pos);this.pos++;return t?t.w:'';}
+  print(s){this.out+=s;}
+  malloc(fields){const a=this.na;this.na+=0x20;this.heap[a]={addr:a,...fields};this.ch.push('n'+a);return a;}
+  node(a,patch){Object.assign(this.heap[a],patch);for(const k in patch)this.ch.push('n'+a+'.'+k);}
+  free(a){this.heap[a].freed=true;this.ch.push('n'+a);}
+  step(line,now,hl){this.steps.push({line,now,frames:clone(this.frames),heap:clone(this.heap),out:this.out,ch:this.ch.slice(),hl:hl===undefined||hl===null?[]:[].concat(hl).filter(x=>x!==null&&x!==undefined),pos:this.pos,just:this.just.slice()});this.ch=[];this.just=[];}
+}
+const START=R`Launch. The program starts in «main».`;
+const END=R`«return 0;» Mission complete: the program ends with no errors.`;
+const D=(t,a)=>t.heap[a].data;
+
+/* ================= drawing ================= */
+const BASE=f=>f.name==='main()'||f.name==='globals';
+function findVar(s,name){for(const f of s.frames){const v=f.vars.find(x=>x.name===name);if(v)return v.v;}return undefined;}
+function badgeMap(s,skip){
+  const m={},add=(a,name,tone)=>{if(typeof a!=='number')return;(m[a]=m[a]||[]).push({name,tone});};
+  const base=s.frames.filter(BASE),top=s.frames[s.frames.length-1];
+  base.forEach(f=>f.vars.forEach(v=>{if(v.k==='ptr'&&v.name!==skip)add(v.v,v.name,'cyan');}));
+  if(!BASE(top))top.vars.forEach(v=>{if(v.k!=='ptr')return;if(base.some(f=>f.vars.some(b=>b.name===v.name&&b.v===v.v)))return;add(v.v,v.name,'amber');});
+  return m;
+}
+const pv=v=>v===undefined?'?':v===null?'NULL':hex(v);
+function nodeHtml(n,s,badges,view,freed){
+  const ch=k=>s.ch.includes('n'+n.addr+(k?'.'+k:''));
+  const f=(label,val,k)=>`<div class="fld ${ch(k)?'chg':''}"><span>${label}</span><b>${val}</b></div>`;
+  const dv=v=>v===null||v===undefined?'?':esc(v);
+  const fields=view==='dlist'?f('prev',pv(n.prev),'prev')+f('data',dv(n.data),'data')+f('next',pv(n.next),'next')
+    :view==='tree'?f('left',pv(n.left),'left')+f('data',dv(n.data),'data')+f('right',pv(n.right),'right')
+    :f('data',dv(n.data),'data')+f('next',pv(n.next),'next');
+  const bs=(badges[n.addr]||[]).map(b=>`<span class="bdg ${b.tone}">${esc(b.name)}</span>`).join('');
+  return `<div class="node ${s.hl.includes(n.addr)?'hl':''} ${ch('')&&!freed?'new':''} ${freed?'freed':''}"><div class="bdgs">${bs||'&nbsp;'}</div><div class="nbody"><div class="naddr">${hex(n.addr)}</div><div class="flds">${fields}</div></div></div>`;
+}
+function listHtml(s,view,root){
+  const H=s.heap,rootA=findVar(s,root),badges=badgeMap(s,root);
+  const chain=[],seen=new Set();let cur=rootA,circ=false;
+  while(typeof cur==='number'&&H[cur]&&!H[cur].freed){if(seen.has(cur)){circ=true;break;}seen.add(cur);chain.push(cur);cur=H[cur].next;}
+  const live=Object.values(H).filter(n=>!n.freed&&!seen.has(n.addr)),freed=Object.values(H).filter(n=>n.freed);
+  let h=`<div class="chainwrap"><div class="chain"><div class="rootcap">${esc(root)}<span>${pv(rootA)}</span></div><span class="link">→</span>`;
+  if(view==='dlist'&&chain.length)h+=`<div class="nullcap">NULL</div><span class="link two">←</span>`;
+  if(!chain.length)h+=`<div class="nullcap">${rootA===null?'NULL · empty':rootA===undefined?'? junk':'freed '+hex(rootA)}</div>`;
+  chain.forEach((a,i)=>{h+=nodeHtml(H[a],s,badges,view);if(i<chain.length-1){const b=chain[i+1];const two=view==='dlist'&&H[b].prev===a;h+=`<span class="link ${two?'two':''}">${two?'⇄':'→'}</span>`;}});
+  if(chain.length){h+=`<span class="link">→</span>`+(circ?`<div class="loopcap">${hex(cur)}${cur===rootA?' = '+esc(root):''}</div>`:`<div class="nullcap">${cur===null?'NULL':cur===undefined?'? junk':'freed '+hex(cur)}</div>`);}
+  h+='</div>'+(circ?`<div class="loopbar">↺ the last node points back to the first: there is no NULL</div>`:'')+'</div>';
+  if(live.length)h+=`<div class="side"><div class="lbl">Not linked into the chain</div><div class="chain">${live.map(n=>nodeHtml(n,s,badges,view)).join('')}</div></div>`;
+  if(freed.length)h+=`<div class="side"><div class="lbl">Freed memory</div><div class="chain">${freed.map(n=>nodeHtml(n,s,badges,view,true)).join('')}</div></div>`;
+  return h;
+}
+function treeHtml(s,root){
+  const H=s.heap,rootA=findVar(s,root),badges=badgeMap(s);
+  const pos={},order=[],seen=new Set();let maxD=0;
+  const walk=(a,d)=>{if(typeof a!=='number'||!H[a]||H[a].freed||seen.has(a))return;seen.add(a);walk(H[a].left,d+1);pos[a]={i:order.length,d};order.push(a);maxD=Math.max(maxD,d);walk(H[a].right,d+1);};
+  walk(rootA,0);
+  let h=`<div class="chain" style="min-height:0"><div class="rootcap">${esc(root)}<span>${pv(rootA)}</span></div></div>`;
+  if(order.length){
+    const W=order.length*66+20,HH=(maxD+1)*78+30,X=a=>10+pos[a].i*66+33,Y=a=>34+pos[a].d*78;
+    let svg='';
+    order.forEach(a=>['left','right'].forEach(k=>{const c=H[a][k];if(pos[c]!==undefined)svg+=`<line class="edge" x1="${X(a)}" y1="${Y(a)}" x2="${X(c)}" y2="${Y(c)}"/>`;}));
+    order.forEach(a=>{const n=H[a];const cls=['nd',s.hl.includes(a)?'hl':'',n.vis?'vis':'',s.ch.includes('n'+a)?'new':''].join(' ');
+      const tags=(badges[a]||[]).map(b=>b).filter(b=>b.name!==root||true);
+      svg+=`<circle class="${cls}" cx="${X(a)}" cy="${Y(a)}" r="21"/><text class="val" x="${X(a)}" y="${Y(a)}">${n.data===null||n.data===undefined?'?':esc(n.data)}</text><text class="ad" x="${X(a)}" y="${Y(a)+32}">${hex(a)}</text>`;
+      tags.forEach((b,j)=>{svg+=`<text class="tag ${b.tone}" x="${X(a)}" y="${Y(a)-27-j*11}">${esc(b.name)}</text>`;});});
+    h+=`<div class="treewrap"><svg class="tree" viewBox="0 0 ${W} ${HH+8}" width="${W}" height="${HH+8}" role="img" aria-label="Binary search tree">${svg}</svg></div>`;
+  }else h+=`<div class="nullcap" style="width:max-content">${rootA===null?'NULL · empty tree':'?'}</div>`;
+  const focus=[...new Set(s.hl)].filter(a=>H[a]&&!H[a].freed);
+  if(focus.length)h+=`<div class="side"><div class="lbl">Node detail</div><div class="detail">${focus.map(a=>nodeHtml(H[a],s,badges,'tree')).join('')}</div></div>`;
+  const loose=Object.values(H).filter(n=>!n.freed&&!seen.has(n.addr)&&!focus.includes(n.addr));
+  if(loose.length)h+=`<div class="side"><div class="lbl">Not linked into the tree yet</div><div class="detail">${loose.map(n=>nodeHtml(n,s,badges,'tree')).join('')}</div></div>`;
+  return h;
+}
+function stackHtml(s){
+  const last=s.frames.length-1;
+  return s.frames.map((f,i)=>({f,i})).reverse().map(({f,i})=>{
+    const rows=f.vars.map(v=>{const chg=s.ch.includes(i+':'+v.name);let val,cls='';
+      if(v.k==='ptr'){val=pv(v.v);cls=v.v===null?'null':v.v===undefined?'junk':'';const n=typeof v.v==='number'&&s.heap[v.v];if(n&&!n.freed)val+=` <small>→ node(${n.data===null||n.data===undefined?'?':esc(n.data)})</small>`;if(n&&n.freed)val+=' <small>(freed!)</small>';}
+      else if(v.k==='arr'){val='{'+v.v.join(', ')+'}';}
+      else if(v.k==='char'){val=v.v===null?'?':`'${esc(v.v)}'`;cls=v.v===null?'junk':'';}
+      else{val=v.v===null?'?':esc(v.v);cls=v.v===null?'junk':'';}
+      return `<div class="sv ${chg?'chg':''}"><span class="sn">${esc(v.name)}</span><span class="st">${v.k==='ptr'?'Node*':v.k==='arr'?'int['+v.v.length+']':v.k}</span><b class="sval ${cls}">${val}</b></div>`;}).join('');
+    const cap=f.name==='globals'?'global variables':i===last?(i===0||s.frames[i-1].name==='globals'?'running':'running · called by '+s.frames[i-1].name):'paused';
+    return `<div class="frame ${i===last?'active':''}"><div class="fh"><b>${esc(f.name)}</b><span>${cap}</span></div>${rows||'<p class="empty">no variables yet</p>'}</div>`;
+  }).join('');
+}
+function tapeHtml(toks,s){
+  if(!toks.length)return '<p class="empty">no input</p>';
+  const lines=[];toks.forEach((t,k)=>{(lines[t.li]=lines[t.li]||[]).push(`<span class="tok ${s.just.includes(k)?'just':k<s.pos?'used':k===s.pos?'next':''}">${esc(t.w)}</span>`);});
+  return lines.filter(Boolean).map(l=>`<div class="tline">${l.join('')}</div>`).join('');
+}
+function autoNote(line){const s=line.trim();
+  if(!s)return R`An empty line. C ignores it; it only makes the code easier to read.`;
+  if(s==='#include <stdio.h>')return R`Brings in «scanf» and «printf».`;
+  if(s==='#include <stdlib.h>')return R`Brings in «malloc» (reserve heap memory) and «free» (give it back).`;
+  if(s==='int main() {')return R`The program starts running here.`;
+  if(s==='return 0;')return R`Ends main: “finished, no errors”.`;
+  if(s==='}')return R`Closing brace: the end of the block above.`;
+  if(s==='} else {')return R`Ends the «if» part; «else» runs when the test was false.`;
+  if(s==='};')return R`Ends the struct design. It needs the «;».`;
+  if(s==='struct Node {')return R`Designs a node: a small box that holds data plus pointer field(s) to other nodes.`;
+  if(s==='int data;')return R`The value this node carries.`;
+  if(s==='struct Node *next;')return R`The address of the next node (or «NULL» if there is none). A struct may point to its own type.`;
+  if(s==='struct Node *prev;')return R`The address of the previous node (or «NULL»).`;
+  if(s==='struct Node *left;')return R`The address of the left child: every value in that subtree is smaller.`;
+  if(s==='struct Node *right;')return R`The address of the right child: every value in that subtree is bigger or equal.`;
+  return '';}
+
+function arrayHtml(s){
+  const q=findVar(s,'q')||[],f=findVar(s,'front'),r=findVar(s,'rear'),c=findVar(s,'count')||0,N=q.length,inq=new Set();
+  for(let k=0;k<c;k++)inq.add((f+k)%N);
+  return `<div class="arr">${q.map((v,i)=>`<div class="acell ${inq.has(i)?'in':''} ${s.hl.includes(i)?'hl':''} ${s.ch.includes('a'+i)?'chg':''}"><div class="atags">${i===f?'<span class="bdg">front</span>':''}${i===r?'<span class="bdg amber">rear</span>':''}</div><div class="abox">${esc(v)}</div><div class="aidx">[${i}]</div></div>`).join('')}</div>
+  <p class="anote">Bright cells are in the queue (count = ${c}). Dim cells hold old values that no longer count. Indexes wrap: (4 + 1) % 5 = 0.</p>`;
+}
+function mkList(t,vals,view){const a=vals.map(v=>t.malloc(view==='dlist'?{data:v,prev:null,next:null}:{data:v,next:null}));
+  a.forEach((x,i)=>{if(i<a.length-1)t.heap[x].next=a[i+1];if(view==='dlist'&&i>0)t.heap[x].prev=a[i-1];});if(view==='clist'&&a.length)t.heap[a[a.length-1]].next=a[0];t.ch=[];return a;}
+function mkTree(t,vals){let r=null;const m={};vals.forEach(v=>{r=bstAdd(t,r,v);m[v]=t.na-0x20;});t.ch=[];return [r,m];}
+function storyHtml(st){
+  return `<div class="story">${st.steps.map(([cap],k)=>{const t=new Sim('');const ctx=st.base(t)||{};t.ch=[];for(let j=0;j<k;j++){st.steps[j][1](t,ctx);}t.ch=[];ctx.hl=[];st.steps[k][1](t,ctx);t.step(0,'',ctx.hl);
+    const v=st.view==='tree'?treeHtml(t.steps[0],st.root):listHtml(t.steps[0],st.view,st.root);
+    return `<div class="frame-s"><div class="sn">STEP ${k+1}</div><p>${md(cap)}</p><div class="heap">${v}</div></div>`;}).join('')}</div>`;
+}
+function intelHtml(b){
+  if(b.t==='text')return `<div class="hud icard"><h3>${esc(b.title)}</h3>${b.body.map(x=>`<p>${md(x)}</p>`).join('')}</div>`;
+  if(b.t==='list')return `<div class="hud icard"><h3>${esc(b.title)}</h3><ul>${b.items.map(x=>`<li>${md(x)}</li>`).join('')}</ul></div>`;
+  if(b.t==='table')return `<div class="hud icard"><h3>${esc(b.title)}</h3><div class="tbl"><table><thead><tr>${b.head.map(h=>`<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${b.rows.map(r=>`<tr>${r.map(c=>`<td>${md(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div></div>`;
+  if(b.t==='story')return `<div class="hud icard" style="grid-column:1/-1"><h3>${esc(b.title)}</h3>${storyHtml(b)}</div>`;
+  return '';
+}
+
+/* ================= KESTREL (original mech) ================= */
+function mech(size=64,cls=''){
+  const e='var(--edge)';
+  return `<svg class="mech ${cls}" width="${size}" height="${size}" viewBox="0 0 64 64" aria-hidden="true">
+  <path d="M15 27 L3 11 L10 29 Z" fill="var(--amber)" stroke="${e}" stroke-width="1.5" stroke-linejoin="round"/><path d="M49 27 L61 11 L54 29 Z" fill="var(--amber)" stroke="${e}" stroke-width="1.5" stroke-linejoin="round"/>
+  <path d="M16 30 L19 15 L32 9 L45 15 L48 30 L45 45 L32 53 L19 45 Z" fill="var(--armor)" stroke="${e}" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M26 15 L32 12 L38 15 L36 20 L28 20 Z" fill="var(--blue)" stroke="${e}" stroke-width="1.2"/>
+  <path d="M20 26.5 L44 26.5 L41 33.5 L23 33.5 Z" fill="${e}"/><path d="M22.5 28.3 L41.5 28.3 L39.6 31.7 L24.4 31.7 Z" fill="var(--cyan)" class="visor"/>
+  <path d="M19 36 L25 36 L26 44 L21 42 Z M45 36 L39 36 L38 44 L43 42 Z" fill="var(--blue)" stroke="${e}" stroke-width="1"/>
+  <path d="M28 38 L36 38 M28 41 L36 41" stroke="${e}" stroke-width="1.6"/>
+  <path d="M28 45 L36 45 L34.5 51 L29.5 51 Z" fill="var(--red)" stroke="${e}" stroke-width="1.2"/></svg>`;
+}
+const Comm=(()=>{
+  const reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const root=document.createElement('div');root.className='comm';
+  root.innerHTML=`<div class="msg" role="status" aria-live="polite" hidden><button class="msg-x" type="button" aria-label="Close message">×</button><div class="mh">COMM ▸ <b>KESTREL</b></div><p></p></div><button class="pilot" type="button" aria-label="KESTREL: click for a tactical tip">${mech(68)}</button>`;
+  const ln=document.createElement('div');ln.className='launch';ln.setAttribute('aria-hidden','true');ln.innerHTML=`<div class="trail"></div>${mech(70)}`;
+  document.body.append(ln,root);
+  const box=root.querySelector('.msg'),txt=box.querySelector('p');let hideT=null,typeT=null,busy=false;
+  function say(text,ms=5200){clearInterval(typeT);const full=md(text);box.hidden=false;box.classList.remove('in');void box.offsetWidth;box.classList.add('in');
+    if(reduce){txt.innerHTML=full;}else{const plain=text.replace(/[«»*]/g,'');let i=0;txt.textContent='';typeT=setInterval(()=>{i+=2;txt.textContent=plain.slice(0,i);if(i>=plain.length){clearInterval(typeT);txt.innerHTML=full;}},16);}
+    clearTimeout(hideT);hideT=setTimeout(()=>{box.hidden=true;},ms);}
+  function launch(then){if(reduce||busy){if(then)then();return;}busy=true;box.hidden=true;root.classList.add('away');ln.classList.remove('go');void ln.offsetWidth;ln.classList.add('go');
+    setTimeout(()=>{ln.classList.remove('go');root.classList.remove('away');busy=false;if(then)then();},1950);}
+  const TIPS=[R`Always check for «NULL» before you follow a pointer with «->».`,R`After «free(p)», never touch «p» again. Set it to «NULL» if you keep it.`,R`Draw boxes and arrows on paper before you write the code. That is how pilots plan a sortie.`,
+    R`Insert at the front of a singly linked list is «O(1)». Insert at the end is «O(n)» unless you keep a «tail» pointer.`,R`A queue is FIFO: first in, first out.`,R`Inorder traversal of a BST visits the values in sorted order.`,R`Circular list? Loop with «do { … } while (p != head);».`];
+  root.querySelector('.pilot').addEventListener('click',()=>say(TIPS[Math.floor(Math.random()*TIPS.length)]));
+  root.querySelector('.msg-x').addEventListener('click',()=>{box.hidden=true;});
+  return {say,launch};
+})();
+
+/* ================= the bench ================= */
+let benchN=0;
+function Bench(host,prog,opts={}){
+  const id='b'+(++benchN);let steps=[],idx=0,peek=null,timer=null,toks=[],input=prog.sampleIn,last=0,seen={};let speed=1;
+  const lines=prog.code.split('\n');
+  host.innerHTML=`<div class="bench">
+    <form class="inrow" novalidate><label for="${id}-in">Keyboard input (edit it and run again)<textarea id="${id}-in" rows="${Math.min(7,Math.max(1,prog.sampleIn.split('\n').length))}" spellcheck="false">${esc(prog.sampleIn)}</textarea></label>
+      <button class="btn cy" type="submit">Run this input</button><button class="btn" type="button" data-a="sample">Sample input</button><p class="inerr" hidden></p></form>
+    <div class="hud heapview"><div class="lbl">${prog.view==='array'?'Array <em>// global int q[5]</em>':'Heap <em>// nodes and arrows</em>'}</div><div class="heap"></div></div>
+    <div class="bgrid">
+      <div class="left">
+        <div class="code" aria-label="Code. Click a line to read about it.">${lines.map((l,i)=>`<button class="ln" type="button" data-line="${i+1}"><span class="num">${i+1}</span><span>${hl(l)||' '}</span></button>`).join('')}</div>
+        <div class="ctrl"><button class="btn" data-a="reset" type="button" aria-label="Restart">↺</button><button class="btn" data-a="back" type="button">◀ Back</button>
+          <button class="btn go next" data-a="next" type="button">Next line ▶</button><button class="btn" data-a="play" type="button">Auto</button><button class="btn" data-a="speed" type="button">1×</button>
+          <div class="prog"><span class="count"></span><div class="bar"><i></i></div></div></div>
+        <div class="tact" aria-live="polite"></div>
+      </div>
+      <div class="right">
+        <div class="panel"><div class="lbl">Keyboard <em>// yellow = just read</em></div><div class="tape"></div></div>
+        <div class="panel"><div class="lbl">Stack <em>// variables in each function</em></div><div class="frames"></div></div>
+        <div class="panel screen"><div class="lbl">Screen</div><pre></pre><div class="done" hidden></div></div>
+      </div>
+    </div></div>`;
+  const q=s=>host.querySelector(s),ta=q('textarea'),err=q('.inerr');
+  const view=s=>prog.view==='tree'?treeHtml(s,prog.root):prog.view==='array'?arrayHtml(s):listHtml(s,prog.view,prog.root);
+  function run(text){const e=prog.check(tokenize(text).map(t=>t.w));if(e){err.textContent=e+' Fix the input and run again.';err.hidden=false;return;}
+    err.hidden=true;input=text;toks=tokenize(text);steps=prog.trace(text);idx=0;peek=null;last=0;seen={};render();}
+  function react(a,b,matched){
+    const born=Object.keys(b.heap).filter(k=>!a.heap[k]);const died=Object.keys(b.heap).filter(k=>b.heap[k].freed&&!a.heap[k].freed);
+    if(born.length&&!seen.born){seen.born=1;Comm.say(R`New node deployed at «${hex(+born[0])}». «malloc» reserved it on the heap.`);return;}
+    if(died.length){Comm.say(R`Node «${hex(+died[0])}» decommissioned. «free» returned its memory. Do not touch that address again.`);return;}
+    if(b.frames.length>a.frames.length&&!seen.call){seen.call=1;Comm.say(R`Entering «${b.frames[b.frames.length-1].name}»: a new stack frame with its own variables.`);return;}
+    if(idx===steps.length-1)Comm.say(matched?'Mission complete. The screen matches the Sample Output.':'Run finished. Try your own input next, pilot.');
+  }
+  function render(){
+    const s=steps[idx],ln=peek??s.line;
+    host.querySelectorAll('.ln').forEach(b=>{const n=+b.dataset.line;b.classList.toggle('cur',n===s.line);b.classList.toggle('peek',peek!==null&&n===peek&&n!==s.line);});
+    const about=(prog.notes||{})[ln]||autoNote(lines[ln-1]||'');
+    q('.tact').innerHTML=`<div class="th"><span class="lbl">Line ${ln}</span><code>${hl((lines[ln-1]||'').trim())}</code></div>`+
+      (peek!==null&&peek!==s.line?`<p class="now">${md(about)}</p><p class="about">You are reading line ${peek}. The program is still on line ${s.line}; press <b>Next line</b> to continue.</p>`
+      :`<p class="now">${md(s.now)}</p>${about?`<p class="about"><b>About this line:</b> ${md(about)}</p>`:''}`);
+    q('.heap').innerHTML=view(s);q('.tape').innerHTML=tapeHtml(toks,s);q('.frames').innerHTML=stackHtml(s);
+    const pre=q('.screen pre');pre.textContent=s.out||'(nothing printed yet)';pre.classList.toggle('none',!s.out);
+    const done=q('.done');let matched=false;
+    if(idx===steps.length-1){matched=outNorm(input)===outNorm(prog.sampleIn)&&outNorm(s.out)===outNorm(prog.sampleOut);
+      done.className='done '+(matched?'ok':'info');done.textContent=matched?'MISSION COMPLETE · output matches the Sample Output':'RUN FINISHED · try another input';done.hidden=false;}else done.hidden=true;
+    if(idx===last+1)react(steps[last],s,matched);last=idx;
+    q('.count').textContent=`${idx+1}/${steps.length}`;q('.bar i').style.width=((idx+1)/steps.length*100)+'%';
+    q('[data-a=back]').disabled=idx===0;q('[data-a=next]').disabled=idx===steps.length-1;q('[data-a=play]').textContent=timer?'Pause':'Auto';
+  }
+  const stop=()=>{if(timer){clearInterval(timer);timer=null;}};
+  const go=d=>{stop();peek=null;idx=Math.max(0,Math.min(steps.length-1,idx+d));render();};
+  const play=()=>{stop();timer=setInterval(()=>{if(idx>=steps.length-1){stop();render();return;}idx++;render();},1600/speed);render();};
+  host.addEventListener('click',e=>{const ln=e.target.closest('.ln');if(ln){peek=+ln.dataset.line;render();return;}
+    const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a;
+    if(a==='next')go(1);else if(a==='back')go(-1);else if(a==='reset'){stop();idx=0;peek=null;last=0;render();}
+    else if(a==='sample'){stop();ta.value=prog.sampleIn;run(prog.sampleIn);}
+    else if(a==='speed'){speed=speed===1?2:speed===2?4:1;b.textContent=speed+'×';if(timer)play();}
+    else if(a==='play'){if(timer){stop();render();return;}if(idx===steps.length-1)idx=0;peek=null;play();}});
+  host.addEventListener('keydown',e=>{if(e.target.matches('textarea,input'))return;if(e.key==='ArrowRight'){e.preventDefault();go(1);}else if(e.key==='ArrowLeft'){e.preventDefault();go(-1);}});
+  q('form').addEventListener('submit',e=>{e.preventDefault();stop();run(ta.value);});
+  run(prog.sampleIn);
+}
+
+/* ================= input checks ================= */
+const isInt=w=>/^-?\d{1,4}$/.test(w);
+function ints(t,from,count,what){for(let k=from;k<from+count;k++){if(t[k]===undefined)return `Expected ${what}, but the input ran out.`;if(!isInt(t[k]))return `“${t[k]}” should be a whole number (up to 4 digits).`;}return null;}
+const countList=(t,lo,hi,extra=0)=>{let e=ints(t,0,1,'the count n');if(e)return e;const n=+t[0];if(n<lo||n>hi)return `Please choose n from ${lo} to ${hi} so the nodes fit on screen.`;return ints(t,1,n+extra,`${n} values${extra?' and '+extra+' more number':''}`);};
+
+/* ================= shared code fragments ================= */
+const LIST_HEAD=R`#include <stdio.h>
+#include <stdlib.h>
+
+struct Node {
+    int data;
+    struct Node *next;
+};
+`;
+const DLIST_HEAD=R`#include <stdio.h>
+#include <stdlib.h>
+
+struct Node {
+    int data;
+    struct Node *prev;
+    struct Node *next;
+};
+`;
+const TREE_HEAD=R`#include <stdio.h>
+#include <stdlib.h>
+
+struct Node {
+    int data;
+    struct Node *left;
+    struct Node *right;
+};
+
+struct Node *insert(struct Node *r, int x) {
+    if (r == NULL) {
+        struct Node *nd = malloc(sizeof(struct Node));
+        nd->data = x;
+        nd->left = nd->right = NULL;
+        return nd;
+    }
+    if (x < r->data) {
+        r->left = insert(r->left, x);
+    } else {
+        r->right = insert(r->right, x);
+    }
+    return r;
+}
+`;
+const INSERT_NOTES={10:R`Recursive insert. It returns the root of the (sub)tree after inserting, so the caller can re-link it.`,
+  11:R`Base case: an empty spot. This is where the new value belongs.`,12:R`Reserve a new node on the heap.`,13:R`Store the value.`,14:R`A new node has no children yet: both pointers «NULL».`,15:R`Hand the new node back; the caller links it in.`,
+  17:R`The BST rule: smaller values go into the **left** subtree.`,18:R`Insert into the left subtree and store whatever root comes back in «r->left».`,20:R`Bigger (or equal) values go into the **right** subtree.`,22:R`This node stays where it is: return it unchanged.`};
+
+/* ---- singly: traced helpers ---- */
+function sInsertEnd(t,head,x){
+  t.frame('insertEnd()');t.set('head',P(head));t.set('x',I(x));t.step(9,R`insertEnd gets a copy of the head pointer («${hex(head)}») and «x = ${x}».`,head);
+  const a=t.malloc({data:null,next:undefined});t.set('n',P(a));t.step(10,R`«malloc» reserves a new node on the heap at «${hex(a)}». Its fields hold junk for now.`,a);
+  t.node(a,{data:x});t.step(11,R`«n->data = ${x}». The arrow «->» follows the pointer to the node and opens its «data» field.`,a);
+  t.node(a,{next:null});t.step(12,R`«n->next = NULL»: this node will be the last, so it points nowhere.`,a);
+  if(head===null){t.step(13,R`Is «head == NULL»? **Yes**, the list is empty.`,a);t.step(14,R`The new node becomes the whole list: return «${hex(a)}».`,a);t.pop();return a;}
+  t.step(13,R`Is «head == NULL»? No, the list already has nodes.`,head);
+  let cur=head;t.set('cur',P(cur));t.step(16,R`«cur» starts at the first node.`,cur);
+  while(t.heap[cur].next!==null){t.step(17,R`Is «cur->next» («${hex(t.heap[cur].next)}») «!= NULL»? Yes, there is another node after this one.`,cur);
+    cur=t.heap[cur].next;t.set('cur',P(cur));t.step(18,R`«cur = cur->next»: move one node along, to «${hex(cur)}» (data ${D(t,cur)}).`,cur);}
+  t.step(17,R`«cur->next» is «NULL»: cur is the last node.`,cur);
+  t.node(cur,{next:a});t.step(20,R`«cur->next = n»: the old last node now points at the new node. It joins the chain!`,[cur,a]);
+  t.step(21,R`Return the same head «${hex(head)}»: the first node did not change.`);t.pop();return head;
+}
+function sPrint(t,head){
+  t.frame('printList()');t.set('head',P(head));t.step(42,R`printList gets the head pointer.`,head);
+  let c=0;t.set('count',I(0));t.step(43,R`«count» starts at 0.`);let cur=head;t.set('cur',P(cur));t.step(44,R`«cur» starts at the head.`,cur);
+  while(cur!==null){t.step(45,R`Is «cur» («${hex(cur)}») «!= NULL»? Yes.`,cur);const d=D(t,cur);t.print(`${d} -> `);t.step(46,R`Prints «${d} -> ».`,cur);
+    cur=t.heap[cur].next;t.set('cur',P(cur));t.step(47,R`«cur = cur->next» → «${hex(cur)}».`,cur);c++;t.set('count',I(c));t.step(48,R`«count» → «${c}».`,cur);}
+  t.step(45,R`«cur» is «NULL»: we walked off the end of the list. Loop over.`);t.print('NULL\n');t.step(50,R`Prints «NULL» and a new line.`);
+  t.step(51,R`Returns the count, «${c}». (main ignores it here.)`);t.pop();
+}
+function sDelete(t,head,key){
+  t.frame('deleteKey()');t.set('head',P(head));t.set('key',I(key));t.step(24,R`deleteKey gets the head pointer and «key = ${key}».`,head);
+  let cur=head,prev=null;t.set('cur',P(cur));t.set('prev',P(null));t.step(25,R`«cur» starts at the head. «prev» (the node just before cur) starts as «NULL».`,cur);
+  while(cur!==null&&D(t,cur)!==key){t.step(26,R`«cur» is not NULL and its data «${D(t,cur)}» is not «${key}». Keep walking.`,cur);
+    prev=cur;t.set('prev',P(prev));t.step(27,R`«prev = cur»: remember this node.`,cur);cur=t.heap[cur].next;t.set('cur',P(cur));t.step(28,R`«cur = cur->next» → «${hex(cur)}».`,cur);}
+  if(cur===null){t.step(26,R`«cur» is «NULL»: we reached the end without finding «${key}».`);t.step(30,R`Is «cur == NULL»? Yes.`);t.step(31,R`Nothing to delete: return head unchanged.`);t.pop();return head;}
+  t.step(26,R`Found it: «cur->data» is «${key}». The loop stops.`,cur);t.step(30,R`Is «cur == NULL»? No, there is a node to remove.`,cur);
+  if(prev===null){t.step(33,R`Is «prev == NULL»? **Yes**: we are deleting the very first node.`,cur);head=t.heap[cur].next;t.set('head',P(head));t.step(34,R`«head = cur->next»: the second node becomes the new head.`,[cur,head]);}
+  else{t.step(33,R`Is «prev == NULL»? No: there is a node before cur.`,[prev,cur]);t.node(prev,{next:t.heap[cur].next});t.step(36,R`«prev->next = cur->next»: the node before now skips over cur. cur is cut out of the chain.`,[prev,cur]);}
+  t.free(cur);t.step(38,R`«free(cur)» gives the node’s memory back. It is shown crossed out under Freed memory.`);
+  t.step(39,R`Return «${hex(head)}» as the head.`,head);t.pop();return head;
+}
+/* ---- queue: traced helpers ---- */
+function qEnq(t,x){
+  t.frame('enqueue()');t.set('x',I(x));t.step(11,R`enqueue gets «x = ${x}».`);
+  const a=t.malloc({data:null,next:undefined});t.set('nd',P(a));t.step(12,R`A new node at «${hex(a)}».`,a);t.node(a,{data:x});t.step(13,R`«nd->data = ${x}».`,a);t.node(a,{next:null});t.step(14,R`«nd->next = NULL»: it will be the last in line.`,a);
+  const rear=t.get('rear',0);
+  if(rear===null){t.step(15,R`Is «rear == NULL»? **Yes**: the queue is empty.`,a);t.set('front',P(a),0);t.set('rear',P(a),0);t.step(16,R`«front = rear = nd»: the only node is both the front and the back of the line.`,a);}
+  else{t.step(15,R`Is «rear == NULL»? No: there is already a line.`,rear);t.node(rear,{next:a});t.step(18,R`«rear->next = nd»: the unit at the back now points at the newcomer.`,[rear,a]);t.set('rear',P(a),0);t.step(19,R`«rear = nd»: the newcomer is now at the back.`,a);}
+  t.step(21,R`Returns ${x}.`);t.pop();
+}
+function qDeq(t){
+  t.frame('dequeue()');t.step(24,R`dequeue starts.`);const front=t.get('front',0);
+  if(front===null){t.step(25,R`Is «front == NULL»? **Yes**: the queue is empty (underflow).`);t.step(26,R`Returns «-1» to signal “nothing to dequeue”.`);t.pop();return -1;}
+  t.step(25,R`Is «front == NULL»? No.`,front);t.set('t',P(front));t.step(28,R`«t» remembers the front node so we can free it after unlinking.`,front);
+  const x=D(t,front);t.set('x',I(x));t.step(29,R`Save its value: «x = ${x}».`,front);
+  const nf=t.heap[front].next;t.set('front',P(nf),0);t.step(30,R`«front = front->next»: the next unit in line (${hex(nf)}) moves to the front.`,nf);
+  if(nf===null){t.step(31,R`Is «front == NULL»? **Yes**: the queue is now empty.`);t.set('rear',P(null),0);t.step(32,R`So «rear = NULL» too. Otherwise rear would still point at the node we are about to free.`);}
+  else t.step(31,R`Is «front == NULL»? No, units are still waiting.`,nf);
+  t.free(front);t.step(34,R`«free(t)»: the old front node’s memory is returned.`);t.step(35,R`Returns «${x}».`);t.pop();return x;
+}
+const QUEUE_CODE=R`#include <stdio.h>
+#include <stdlib.h>
+
+struct Node {
+    int data;
+    struct Node *next;
+};
+
+struct Node *front = NULL, *rear = NULL;
+
+int enqueue(int x) {
+    struct Node *nd = malloc(sizeof(struct Node));
+    nd->data = x;
+    nd->next = NULL;
+    if (rear == NULL) {
+        front = rear = nd;
+    } else {
+        rear->next = nd;
+        rear = nd;
+    }
+    return x;
+}
+
+int dequeue() {
+    if (front == NULL) {
+        return -1;
+    }
+    struct Node *t = front;
+    int x = t->data;
+    front = front->next;
+    if (front == NULL) {
+        rear = NULL;
+    }
+    free(t);
+    return x;
+}
+
+int main() {
+    int q, x;
+    char op;
+    scanf("%d", &q);
+    for (int i = 0; i < q; i++) {
+        scanf(" %c", &op);
+        if (op == 'E') {
+            scanf("%d", &x);
+            enqueue(x);
+        } else {
+            printf("Dequeued %d\n", dequeue());
+        }
+    }
+    printf("Queue:");
+    for (struct Node *p = front; p != NULL; p = p->next) {
+        printf(" %d", p->data);
+    }
+    printf("\n");
+    return 0;
+}`;
+function queueTrace(inp){
+  const t=new Sim(inp,{globals:true});t.set('front',P(null),0);t.set('rear',P(null),0);
+  t.step(38,R`The global pointers «front» and «rear» start as «NULL»: an empty queue. The program starts in «main».`);
+  t.set('q',I(null));t.set('x',I(null));t.step(39,R`Boxes for the number of commands and a value.`);t.set('op',C(null));t.step(40,R`A char box for the command letter.`);
+  const q=+t.read();t.set('q',I(q));t.step(41,R`«q = ${q}» commands follow.`);
+  for(let i=0;i<q;i++){t.set('i',I(i));t.step(42,i===0?R`Loop starts: «i = 0».`:R`«i++» → «i = ${i}». Is «${i} < ${q}»? Yes.`);
+    const op=t.read();t.set('op',C(op));t.step(43,R`scanf reads the command «'${op}'». The space in «" %c"» skips the line break before it.`);
+    if(op==='E'){t.step(44,R`«op» is «'E'»: enqueue.`);const x=+t.read();t.set('x',I(x));t.step(45,R`Reads the value «${x}».`);t.step(46,R`Call «enqueue(${x})».`);qEnq(t,x);t.step(46,R`Back in main. «${x}» joined the back of the queue.`,t.get('rear',0));}
+    else{t.step(44,R`«op» is not «'E'».`);t.step(48,R`printf needs «dequeue()» first.`);const v=qDeq(t);t.print(`Dequeued ${v}\n`);t.step(48,R`Screen: «Dequeued ${v}».`,t.get('front',0));}}
+  t.set('i',I(q));t.step(42,R`«i = ${q}»: all commands done.`);t.del('i');
+  t.print('Queue:');t.step(51,R`Prints «Queue:».`);let p=t.get('front',0);t.set('p',P(p));t.step(52,R`«p» starts at «front».`,p);
+  while(p!==null){const d=D(t,p);t.print(' '+d);t.step(53,R`Prints « ${d}».`,p);p=t.heap[p].next;t.set('p',P(p));t.step(52,R`«p = p->next» → «${hex(p)}».${p===null?' p is NULL: done.':''}`,p);}
+  t.del('p');t.print('\n');t.step(55,R`New line.`);t.step(56,END);return t.steps;
+}
+function queueCheck(t){let e=ints(t,0,1,'the command count');if(e)return e;const q=+t[0];if(q<1||q>10)return 'Please use from 1 to 10 commands.';let k=1;
+  for(let i=0;i<q;i++){const op=t[k++];if(op==='E'){if(!isInt(t[k]||''))return `Command ${i+1}: “E” must be followed by a whole number.`;k++;}else if(op!=='D')return `Command ${i+1}: use “E number” to enqueue or “D” to dequeue.`;}return null;}
+
+/* ---- tree helpers ---- */
+function tInsert(t,r,x){
+  t.frame('insert()');t.set('r',P(r));t.set('x',I(x));t.step(10,R`«insert(r = ${hex(r)}, x = ${x})».`,r);
+  if(r===null){t.step(11,R`Is «r == NULL»? **Yes**: an empty spot. ${x} belongs here.`);const a=t.malloc({data:null,left:undefined,right:undefined});t.set('nd',P(a));t.step(12,R`A new node at «${hex(a)}».`,a);
+    t.node(a,{data:x});t.step(13,R`«nd->data = ${x}».`,a);t.node(a,{left:null,right:null});t.step(14,R`Both children «NULL»: a new node is a **leaf**.`,a);t.step(15,R`Hands «${hex(a)}» back to the caller, which links it in.`,a);t.pop();return a;}
+  const d=D(t,r);t.step(11,R`Is «r == NULL»? No, there is a node here holding «${d}».`,r);
+  if(x<d){t.step(17,R`Is «${x} < ${d}»? **Yes**: go LEFT.`,r);t.step(18,R`Call «insert(r->left, ${x})» on the left subtree («${hex(t.heap[r].left)}»).`,r);
+    const was=t.heap[r].left,c=tInsert(t,was,x);t.node(r,{left:c});t.step(18,was===c?R`The left child stays «${hex(c)}».`:R`«r->left = ${hex(c)}»: the new node is linked as the LEFT child of ${d}.`,[r,c]);}
+  else{t.step(17,R`Is «${x} < ${d}»? No: go RIGHT.`,r);t.step(20,R`Call «insert(r->right, ${x})» on the right subtree («${hex(t.heap[r].right)}»).`,r);
+    const was=t.heap[r].right,c=tInsert(t,was,x);t.node(r,{right:c});t.step(20,was===c?R`The right child stays «${hex(c)}».`:R`«r->right = ${hex(c)}»: the new node is linked as the RIGHT child of ${d}.`,[r,c]);}
+  t.step(22,R`Returns «r» («${hex(r)}») unchanged.`,r);t.pop();return r;
+}
+function bstAdd(t,root,x){const a=t.malloc({data:x,left:null,right:null});if(root===null)return a;let r=root;
+  for(;;){const k=x<D(t,r)?'left':'right';if(t.heap[r][k]===null){t.node(r,{[k]:a});return root;}r=t.heap[r][k];}}
+function parentOf(t,root,a){let r=root,p=null;while(r!==null&&r!==a){p=r;r=D(t,a)<D(t,r)?t.heap[r].left:t.heap[r].right;}return p;}
+
+/* ================= SORTIES ================= */
+const LESSONS=[
+/* ---------------------------------------------------------------- MEMORY */
+{id:'memory',no:'SORTIE 00',title:'Memory and pointers',short:'MEMORY',
+ big:'Every data structure in this course lives in memory you ask for while the program runs. Before building lists, queues and trees, learn where that memory comes from, how to give it back, and the two classic mistakes: leaks and dangling pointers.',
+ keys:[R`Local variables live on the **stack** and vanish when their function returns.`,R`«malloc» reserves memory on the **heap**; it stays until you call «free».`,R`A pointer holds an address. «NULL» means “points nowhere”.`,R`«p->data» is short for «(*p).data»: follow the pointer, open the field.`],
+ cap:R`<b>Like a hangar requisition:</b> «malloc» assigns you an empty bay and hands you its bay number (the address). «free» returns the bay. Keep the number, or you can never return it.`,
+ demo:()=>{const t=new Sim('');const a=t.malloc({data:42,next:null});t.set('p',P(a));t.ch=[];t.step(0,'');return listHtml(t.steps[0],'list','p');},
+ ops:[
+  {name:'REQUEST A NODE',cost:'O(1)',lines:[['p ← MALLOC(SIZE OF NODE)','Reserve one node on the heap; p receives its address.'],['IF p = NULL THEN STOP','The system is out of memory: never use a NULL pointer.'],['p.data ← x; p.next ← NULL','Initialise every field: new memory holds junk.']]},
+  {name:'RELEASE A NODE',cost:'O(1)',lines:[['FREE(p)','Give the memory back to the system.'],['p ← NULL','p still holds the old address (dangling). Clear it.']]},
+  {name:'FOLLOW A POINTER',cost:'O(1)',lines:[['IF p ≠ NULL THEN VISIT(p.data)','Always check before following: p->data on NULL crashes.']]}],
+ traps:[R`Forgetting to check «malloc»’s result for «NULL».`,R`Using memory after «free» (dangling pointer).`,R`Losing the only pointer to a node: a memory leak.`,R`Calling «free» twice on the same address.`,R`Writing «sizeof(p)» (the size of a pointer) instead of «sizeof(struct Node)».`],
+ hello:R`Sortie 00: memory. Every node you will build comes from «malloc» and goes back with «free». Let’s deploy one.`,
+ progs:[{title:'Deploy one node',short:'malloc · -> · free · NULL',view:'list',root:'p',
+  task:'Read a number, store it in a node created with malloc, print it, then free the node safely.',sampleIn:'42',sampleOut:'Node holds 42',
+  code:LIST_HEAD+R`
+int main() {
+    int x;
+    scanf("%d", &x);
+    struct Node *p = malloc(sizeof(struct Node));
+    if (p == NULL) {
+        printf("Out of memory\n");
+        return 1;
+    }
+    p->data = x;
+    p->next = NULL;
+    printf("Node holds %d\n", p->data);
+    free(p);
+    p = NULL;
+    return 0;
+}`,
+  notes:{10:R`A box for the value.`,11:R`Read it.`,12:R`«sizeof(struct Node)» is how many bytes one node needs. «malloc» reserves that many bytes on the heap and returns the address, which goes into the pointer «p» (on the stack).`,13:R`If the system has no memory left, malloc returns «NULL».`,14:R`Report it…`,15:R`…and stop. «return 1» means “ended with an error”.`,
+   17:R`«p->data» follows the address to the node and opens its data field.`,18:R`Fresh heap memory holds junk, so set every field.`,19:R`Read the value back through the pointer.`,20:R`Return the node’s memory. The address in p is now invalid.`,21:R`Clear the dangling pointer so it cannot be used by mistake.`},
+  check:t=>ints(t,0,1,'one number'),
+  trace(inp){const t=new Sim(inp);t.step(9,START);t.set('x',I(null));t.step(10,R`A box «x» on the stack, junk for now.`);const x=+t.read();t.set('x',I(x));t.step(11,R`«x = ${x}».`);
+   const a=t.malloc({data:null,next:undefined});t.set('p',P(a));t.step(12,R`«malloc» reserves one node on the **heap** at «${hex(a)}». The pointer «p» on the **stack** holds that address.`,a);
+   t.step(13,R`Is «p == NULL»? No, the memory was granted.`,a);t.node(a,{data:x});t.step(17,R`«p->data = ${x}».`,a);t.node(a,{next:null});t.step(18,R`«p->next = NULL»: no junk left in the node.`,a);
+   t.print(`Node holds ${x}\n`);t.step(19,R`Screen: «Node holds ${x}».`,a);t.free(a);t.step(20,R`«free(p)»: the node is returned. Look: «p» still holds «${hex(a)}». That is a **dangling pointer**.`);
+   t.set('p',P(null));t.step(21,R`«p = NULL»: now p safely points nowhere.`);t.step(22,END);return t.steps;}}],
+ labs:[
+  {kind:'Pick the right line',title:'Spot the leak',story:'Two nodes are requested, but the program keeps only one pointer.',q:'What happens to the first node?',
+   code:R`struct Node *p = malloc(sizeof(struct Node));
+p = malloc(sizeof(struct Node));
+free(p);`,
+   options:[{c:'It is leaked: nothing points to it, so it can never be freed.',ok:true},{c:'free(p) frees both nodes.',why:R`«free» releases exactly one block: the one whose address you pass. p now holds the second node’s address.`},{c:'The second malloc reuses the first node.',why:R`The first node is still reserved. malloc gives a different, unused block.`}],
+   explain:R`The second assignment overwrote the only copy of the first address. That node stays reserved until the program ends: a memory leak.`},
+  {kind:'Pick the right line',title:'After the free',story:'A pilot frees a node and then reads it again.',q:'What is wrong with this code?',
+   code:R`free(p);
+printf("%d\n", p->data);`,
+   options:[{c:'p is dangling: reading p->data after free is undefined behaviour.',ok:true},{c:'Nothing: free only marks the node, the data stays readable.',why:R`It might seem to work sometimes, but the memory no longer belongs to you. The result is undefined and can crash.`},{c:'It prints 0 because free clears the node.',why:R`«free» does not promise to clear anything. You simply must not touch it.`}],
+   explain:R`After «free(p)», the address in p is invalid. Set «p = NULL» right after freeing and never dereference it.`}]},
+
+/* ---------------------------------------------------------------- SINGLY */
+{id:'singly',no:'SORTIE 01',title:'Singly linked list',short:'SINGLY',
+ big:'A linked list stores values in separate nodes scattered around the heap. Each node holds its data and the address of the next node. You reach any node by starting at head and following the arrows.',
+ keys:[R`A node = «data» + «next» pointer. The last node’s «next» is «NULL».`,R`«head» points at the first node. Lose head and you lose the whole list.`,R`Nodes are created with «malloc» and destroyed with «free».`,R`No indexes: to reach node 5 you must walk past nodes 1 to 4. That is «O(n)».`],
+ cap:R`<b>Like a supply convoy:</b> each carrier only knows the call sign of the one ahead. To reach the fourth carrier, start at the lead (head) and follow the chain.`,
+ demo:()=>{const t=new Sim('');const a=t.malloc({data:12,next:null}),b=t.malloc({data:7,next:null}),c=t.malloc({data:30,next:null});t.node(a,{next:b});t.node(b,{next:c});t.set('head',P(a));t.ch=[];t.step(0,'');return listHtml(t.steps[0],'list','head');},
+ ops:[
+  {name:'TRAVERSE(head)',cost:'O(n)',lines:[['cur ← head','Start at the first node.'],['WHILE cur ≠ NULL DO','Keep going until you fall off the end; the last node’s next is NULL.'],['    VISIT(cur.data)','Do the work here: print, count, add up…'],['    cur ← cur.next','Follow the link to the next node.']]},
+  {name:'INSERT-FRONT(head, x)',cost:'O(1)',lines:[['node ← NEW NODE','Reserve memory (malloc).'],['node.data ← x','Store the value.'],['node.next ← head','The newcomer points at the old first node.'],['RETURN node','It is the new head. The caller must store it: head ← INSERT-FRONT(head, x).']]},
+  {name:'INSERT-END(head, x)',cost:'O(n)',lines:[['node ← NEW NODE; node.data ← x; node.next ← NULL','The new last node points nowhere.'],['IF head = NULL THEN RETURN node','Empty list: the new node is the whole list.'],['cur ← head','Otherwise go and find the last node…'],['WHILE cur.next ≠ NULL DO cur ← cur.next','…by walking until next is NULL.'],['cur.next ← node','Hook the new node on.'],['RETURN head','The first node did not change.']]},
+  {name:'DELETE(head, key)',cost:'O(n)',lines:[['prev ← NULL; cur ← head','Two pointers walk together; prev stays one node behind cur.'],['WHILE cur ≠ NULL AND cur.data ≠ key DO','Look for the node holding key.'],['    prev ← cur; cur ← cur.next','Step both forward.'],['IF cur = NULL THEN RETURN head','Not found: nothing changes.'],['IF prev = NULL THEN head ← cur.next','Deleting the first node: head itself moves.'],['ELSE prev.next ← cur.next','Otherwise bypass cur: its neighbours link around it.'],['FREE(cur); RETURN head','Give the memory back. Never use cur again.']]},
+  {name:'SEARCH(head, key)',cost:'O(n)',lines:[['cur ← head','Start at the front.'],['WHILE cur ≠ NULL DO','Check every node…'],['    IF cur.data = key THEN RETURN cur','Found: return its address.'],['    cur ← cur.next','Move on.'],['RETURN NULL','Walked the whole list: not there.']]}],
+ traps:[R`Forgetting to store the returned head: «insertEnd(head, x);» instead of «head = insertEnd(head, x);».`,R`Forgetting «n->next = NULL» on the new last node: the list then ends in junk.`,R`Deleting the first node needs its own case: the head itself moves.`,R`Using a node after «free()»: that is a dangling pointer.`,R`Moving «head» to walk the list (instead of a separate «cur») loses the front of the list.`],
+ hello:R`Sortie 01: singly linked lists. Each node knows only the next one. Watch the arrows on the heap.`,
+ progs:[{title:'Build, print, delete',short:'insertEnd · printList · deleteKey',view:'list',root:'head',
+  task:'Read n values and add each to the end of a linked list. Print the list, then read a key, delete the first node holding it, and print the list again.',
+  sampleIn:'4\n10 20 30 40\n30',sampleOut:'10 -> 20 -> 30 -> 40 -> NULL\n10 -> 20 -> 40 -> NULL',
+  code:LIST_HEAD+R`
+struct Node *insertEnd(struct Node *head, int x) {
+    struct Node *n = malloc(sizeof(struct Node));
+    n->data = x;
+    n->next = NULL;
+    if (head == NULL) {
+        return n;
+    }
+    struct Node *cur = head;
+    while (cur->next != NULL) {
+        cur = cur->next;
+    }
+    cur->next = n;
+    return head;
+}
+
+struct Node *deleteKey(struct Node *head, int key) {
+    struct Node *cur = head, *prev = NULL;
+    while (cur != NULL && cur->data != key) {
+        prev = cur;
+        cur = cur->next;
+    }
+    if (cur == NULL) {
+        return head;
+    }
+    if (prev == NULL) {
+        head = cur->next;
+    } else {
+        prev->next = cur->next;
+    }
+    free(cur);
+    return head;
+}
+
+int printList(struct Node *head) {
+    int count = 0;
+    struct Node *cur = head;
+    while (cur != NULL) {
+        printf("%d -> ", cur->data);
+        cur = cur->next;
+        count++;
+    }
+    printf("NULL\n");
+    return count;
+}
+
+int main() {
+    int n, x, key;
+    scanf("%d", &n);
+    struct Node *head = NULL;
+    for (int i = 0; i < n; i++) {
+        scanf("%d", &x);
+        head = insertEnd(head, x);
+    }
+    printList(head);
+    scanf("%d", &key);
+    head = deleteKey(head, key);
+    printList(head);
+    return 0;
+}`,
+  notes:{9:R`Adds a value at the end. It returns the (possibly new) head pointer, so main writes «head = insertEnd(head, x);».`,10:R`«malloc(sizeof(struct Node))» reserves exactly one node’s worth of heap memory and returns its address.`,11:R`«n->data» means «(*n).data»: follow the pointer, open the field.`,12:R`The new node will be the last one, so its next is «NULL».`,
+   13:R`Empty list?`,14:R`Then the new node *is* the list: return it as the head.`,16:R`A separate walking pointer. Never walk with «head» itself, or you lose the front.`,17:R`Stop at the node whose «next» is NULL: the last node.`,18:R`Move one node along.`,20:R`Link the old last node to the new node.`,21:R`The head did not change.`,
+   24:R`Deletes the first node that holds «key». Returns the head, which changes if the first node is deleted.`,25:R`«prev» trails one node behind «cur», because to unlink cur we must change the node *before* it.`,26:R`Walk until we find the key or run out of nodes. The «cur != NULL» test must come first, before «cur->data».`,27:R`Remember the current node…`,28:R`…then step forward.`,
+   30:R`Fell off the end?`,31:R`Key not found: return the list unchanged.`,33:R`Is cur the very first node?`,34:R`Then the head moves to the second node.`,36:R`Otherwise the node before skips over cur.`,38:R`Return the node’s memory. cur is now a dangling pointer: never use it again.`,39:R`Return the (maybe new) head.`,
+   42:R`Prints every node. Returns how many it printed, so it has an int result (no «void» needed).`,43:R`Counter.`,44:R`Walking pointer.`,45:R`Stop when cur falls off the end.`,46:R`Print this node’s data.`,47:R`Follow the link.`,48:R`Count it.`,50:R`The chain ends with NULL.`,51:R`Hand back the count.`,
+   55:R`Boxes for the count, each value, and the key.`,56:R`How many values.`,57:R`An empty list: head points nowhere.`,58:R`Add n values.`,59:R`Read one value.`,60:R`Append it. Store the returned head!`,62:R`Print the full list.`,63:R`Which value to delete.`,64:R`Delete it; store the returned head.`,65:R`Print again.`},
+  check:t=>countList(t,1,6,1),
+  trace(inp){const t=new Sim(inp);t.step(54,START);t.set('n',I(null));t.set('x',I(null));t.set('key',I(null));t.step(55,R`Three int boxes, holding junk for now.`);
+   const n=+t.read();t.set('n',I(n));t.step(56,R`«n = ${n}»: ${n} values will be added.`);let head=null;t.set('head',P(null));t.step(57,R`«head» points to the first node. «NULL» means the list is empty.`);
+   for(let i=0;i<n;i++){t.set('i',I(i));t.step(58,i===0?R`Loop starts: «i = 0». Is «0 < ${n}»? Yes.`:R`«i++» → «i = ${i}». Is «${i} < ${n}»? Yes.`);
+     const x=+t.read();t.set('x',I(x));t.step(59,R`scanf reads «${x}».`);t.step(60,R`Call «insertEnd(head, ${x})». main waits for the new head.`);
+     head=sInsertEnd(t,head,x);t.set('head',P(head));t.step(60,R`insertEnd returned «${hex(head)}», stored in main’s «head».`,head);}
+   t.set('i',I(n));t.step(58,R`«i = ${n}». Is «${n} < ${n}»? No: all ${n} nodes are linked.`);t.del('i');
+   t.step(62,R`Call «printList(head)».`);sPrint(t,head);
+   const key=+t.read();t.set('key',I(key));t.step(63,R`scanf reads the key to delete: «${key}».`);
+   t.step(64,R`Call «deleteKey(head, ${key})».`);head=sDelete(t,head,key);t.set('head',P(head));t.step(64,R`deleteKey returned «${hex(head)}», stored in main’s «head».`,head);
+   t.step(65,R`Print the list again.`);sPrint(t,head);t.step(66,END);return t.steps;}}],
+ labs:[
+  {kind:'Predict the output',title:'Reverse formation',story:'Each new carrier is placed at the FRONT of the convoy instead of the back.',sampleIn:'3\n1 2 3',sampleOut:'3 2 1',hideOut:true,q:'Type exactly what is printed for the sample input.',view:'list',root:'head',
+   code:LIST_HEAD+R`
+int main() {
+    int n, x;
+    scanf("%d", &n);
+    struct Node *head = NULL;
+    for (int i = 0; i < n; i++) {
+        scanf("%d", &x);
+        struct Node *nd = malloc(sizeof(struct Node));
+        nd->data = x;
+        nd->next = head;
+        head = nd;
+    }
+    for (struct Node *p = head; p != NULL; p = p->next) {
+        printf("%d ", p->data);
+    }
+    return 0;
+}`,answers:['3 2 1'],hint:R`Each new node points at the old head and then becomes the head. Which value ends up first?`,explain:R`Insert at front reverses the order: the last value read sits at the head.`,
+   check:t=>countList(t,1,6),
+   trace(inp){const t=new Sim(inp);t.step(9,START);t.set('n',I(null));t.set('x',I(null));t.step(10,R`Two boxes.`);const n=+t.read();t.set('n',I(n));t.step(11,R`«n = ${n}».`);let head=null;t.set('head',P(null));t.step(12,R`Empty list.`);
+    for(let i=0;i<n;i++){t.set('i',I(i));t.step(13,R`«i = ${i}».`);const x=+t.read();t.set('x',I(x));t.step(14,R`Reads «${x}».`);const a=t.malloc({data:null,next:undefined});t.set('nd',P(a));t.step(15,R`New node at «${hex(a)}».`,a);
+      t.node(a,{data:x});t.step(16,R`«nd->data = ${x}».`,a);t.node(a,{next:head});t.step(17,R`«nd->next = head»: the newcomer points at the old first node («${hex(head)}»).`,a);head=a;t.set('head',P(a));t.step(18,R`«head = nd»: the newcomer is now first.`,a);t.del('nd');}
+    t.del('i');let p=head;t.set('p',P(p));t.step(20,R`Start printing from head.`,p);while(p!==null){t.print(D(t,p)+' ');t.step(21,R`Prints «${D(t,p)}».`,p);p=t.heap[p].next;t.set('p',P(p));t.step(20,R`«p = p->next».`,p);}
+    t.del('p');t.step(23,END);return t.steps;}},
+  {kind:'Fill the gap',title:'Convoy length',story:'Command needs to know how many carriers are in the convoy.',sampleIn:'4\n9 8 7 6',sampleOut:'Length = 4',q:'How does p move to the next node?',view:'list',root:'head',
+   code:LIST_HEAD+R`
+int length(struct Node *head) {
+    int c = 0;
+    for (struct Node *p = head; p != NULL; p = ⟦p->next⟧) {
+        c++;
+    }
+    return c;
+}
+
+int main() {
+    int n, x;
+    scanf("%d", &n);
+    struct Node *head = NULL;
+    for (int i = 0; i < n; i++) {
+        scanf("%d", &x);
+        struct Node *nd = malloc(sizeof(struct Node));
+        nd->data = x;
+        nd->next = head;
+        head = nd;
+    }
+    printf("Length = %d\n", length(head));
+    return 0;
+}`,answers:['p->next','(*p).next'],hint:R`Each node stores the address of the next one in its «next» field.`,explain:R`«p = p->next» follows the link. When p becomes NULL, every node has been counted.`,
+   check:t=>countList(t,1,6),
+   trace(inp){const t=new Sim(inp);t.step(17,START);t.set('n',I(null));t.set('x',I(null));t.step(18,R`Two boxes.`);const n=+t.read();t.set('n',I(n));t.step(19,R`«n = ${n}».`);let head=null;t.set('head',P(null));t.step(20,R`Empty list.`);
+    for(let i=0;i<n;i++){t.set('i',I(i));const x=+t.read();t.set('x',I(x));t.step(22,R`Reads «${x}».`);const a=t.malloc({data:x,next:head});head=a;t.set('head',P(a));t.step(26,R`Lines 23–26 make a node for «${x}» and put it at the front.`,a);}
+    t.del('i');t.step(28,R`printf needs «length(head)».`);t.frame('length()');t.set('head',P(head));t.step(9,R`length gets the head pointer.`,head);let c=0;t.set('c',I(0));t.step(10,R`«c = 0».`);
+    let p=head;t.set('p',P(p));t.step(11,R`«p» starts at head.`,p);while(p!==null){c++;t.set('c',I(c));t.step(12,R`Count this node: «c = ${c}».`,p);p=t.heap[p].next;t.set('p',P(p));t.step(11,R`«p = p->next» → «${hex(p)}». ${p===null?'NULL: the loop ends.':'Is it NULL? No, keep counting.'}`,p);}
+    t.step(14,R`Returns «${c}».`);t.pop();t.print(`Length = ${c}\n`);t.step(28,R`Screen: «Length = ${c}».`);t.step(29,END);return t.steps;}}]},
+
+/* ---------------------------------------------------------------- DOUBLY */
+{id:'doubly',no:'SORTIE 02',title:'Doubly linked list',short:'DOUBLY',
+ big:'Each node has two links: next (forward) and prev (backward). With a head and a tail pointer you can walk the list both ways and add at either end in O(1).',
+ keys:[R`A node = «prev» + «data» + «next».`,R`The first node’s «prev» and the last node’s «next» are «NULL».`,R`Every link change happens in pairs: fix «next» **and** «prev».`,R`Keeping a «tail» pointer makes insert-at-end «O(1)».`],
+ cap:R`<b>Like a squad in formation:</b> every pilot has a radio link to the pilot ahead and the pilot behind, so orders can travel down the line in both directions.`,
+ demo:()=>{const t=new Sim('');const a=t.malloc({data:1,prev:null,next:null}),b=t.malloc({data:2,prev:null,next:null}),c=t.malloc({data:3,prev:null,next:null});t.node(a,{next:b});t.node(b,{prev:a,next:c});t.node(c,{prev:b});t.set('head',P(a));t.set('tail',P(c));t.ch=[];t.step(0,'');return listHtml(t.steps[0],'dlist','head');},
+ ops:[
+  {name:'INSERT-END(x) with tail',cost:'O(1)',lines:[['node ← NEW NODE; node.data ← x; node.next ← NULL','The newcomer will be last.'],['node.prev ← tail','Its back-link points at the current last node (NULL if the list is empty).'],['IF tail = NULL THEN head ← node','First node ever: it is also the head.'],['ELSE tail.next ← node','The old last node links forward to it.'],['tail ← node','The newcomer is the last node now.']]},
+  {name:'INSERT-FRONT(x)',cost:'O(1)',lines:[['node ← NEW NODE; node.data ← x','Make the node.'],['node.prev ← NULL; node.next ← head','Nothing before it; the old first node after it.'],['IF head ≠ NULL THEN head.prev ← node','The old first node links back to the newcomer.'],['ELSE tail ← node','Empty list: it is also the tail.'],['head ← node','The newcomer is first.']]},
+  {name:'DELETE-NODE(d)',cost:'O(1) given d',lines:[['IF d.prev ≠ NULL THEN d.prev.next ← d.next','The node before d skips forward over d…'],['ELSE head ← d.next','…or, if d was first, the head moves.'],['IF d.next ≠ NULL THEN d.next.prev ← d.prev','The node after d skips back over d…'],['ELSE tail ← d.prev','…or, if d was last, the tail moves.'],['FREE(d)','Only free after both neighbours are re-linked.']]},
+  {name:'TRAVERSE-BACKWARD(tail)',cost:'O(n)',lines:[['cur ← tail','Start at the last node.'],['WHILE cur ≠ NULL DO','Until we pass the first node…'],['    VISIT(cur.data); cur ← cur.prev','…follow the back-links.']]}],
+ traps:[R`Updating only one direction: every insert or delete must fix both «next» and «prev».`,R`Forgetting the ends: deleting the first or last node must also move «head» or «tail».`,R`Freeing a node before re-linking its neighbours loses the addresses you need.`,R`Forgetting «tail = nd» after inserting at the end.`],
+ hello:R`Sortie 02: doubly linked lists. Two links per node, ⇄. Every change must fix both directions.`,
+ progs:[{title:'Forward and backward',short:'head · tail · prev · next',view:'dlist',root:'head',
+  task:'Read n values and append each to a doubly linked list using a tail pointer. Print the list forward from head and backward from tail.',
+  sampleIn:'4\n1 2 3 4',sampleOut:'Forward: 1 2 3 4\nBackward: 4 3 2 1',
+  code:DLIST_HEAD+R`
+int main() {
+    int n, x;
+    scanf("%d", &n);
+    struct Node *head = NULL, *tail = NULL;
+    for (int i = 0; i < n; i++) {
+        scanf("%d", &x);
+        struct Node *nd = malloc(sizeof(struct Node));
+        nd->data = x;
+        nd->next = NULL;
+        nd->prev = tail;
+        if (tail == NULL) {
+            head = nd;
+        } else {
+            tail->next = nd;
+        }
+        tail = nd;
+    }
+    printf("Forward:");
+    for (struct Node *p = head; p != NULL; p = p->next) {
+        printf(" %d", p->data);
+    }
+    printf("\nBackward:");
+    for (struct Node *p = tail; p != NULL; p = p->prev) {
+        printf(" %d", p->data);
+    }
+    printf("\n");
+    return 0;
+}`,
+  notes:{11:R`Boxes for the count and each value.`,12:R`How many values.`,13:R`Two pointers: «head» (first node) and «tail» (last node). Both NULL: empty list.`,14:R`Add n values.`,15:R`Read one value.`,16:R`A new node on the heap.`,17:R`Store the value.`,18:R`It will be last: nothing after it.`,19:R`Its back-link points at the current last node. On the first insert, tail is NULL, so prev is NULL.`,
+   20:R`Is the list empty?`,21:R`Then the new node is also the first node.`,23:R`Otherwise the old last node links forward to the new one. Together with line 19 that makes a two-way link ⇄.`,25:R`The new node is the last node now.`,
+   27:R`Start the forward line.`,28:R`Walk forward: start at head, follow «next» until NULL.`,29:R`Print each value.`,31:R`End the first line and start the second.`,32:R`Walk backward: start at tail, follow «prev» until NULL. A singly linked list cannot do this.`,33:R`Print each value.`,35:R`Finish the line.`},
+  check:t=>countList(t,1,6),
+  trace(inp){const t=new Sim(inp);t.step(10,START);t.set('n',I(null));t.set('x',I(null));t.step(11,R`Two int boxes.`);const n=+t.read();t.set('n',I(n));t.step(12,R`«n = ${n}».`);
+   let head=null,tail=null;t.set('head',P(null));t.set('tail',P(null));t.step(13,R`«head» and «tail» both start as «NULL»: the list is empty.`);
+   for(let i=0;i<n;i++){t.set('i',I(i));t.step(14,i===0?R`Loop starts: «i = 0».`:R`«i++» → «i = ${i}». Is «${i} < ${n}»? Yes.`);const x=+t.read();t.set('x',I(x));t.step(15,R`Reads «${x}».`);
+     const a=t.malloc({data:null,prev:undefined,next:undefined});t.set('nd',P(a));t.step(16,R`A new node at «${hex(a)}». All fields hold junk.`,a);
+     t.node(a,{data:x});t.step(17,R`«nd->data = ${x}».`,a);t.node(a,{next:null});t.step(18,R`«nd->next = NULL»: it will be the last node.`,a);
+     t.node(a,{prev:tail});t.step(19,R`«nd->prev = tail» («${hex(tail)}»): the back-link points at the current last node.`,[a,tail]);
+     if(tail===null){t.step(20,R`Is «tail == NULL»? **Yes**: this is the first node.`,a);head=a;t.set('head',P(a));t.step(21,R`«head = nd».`,a);}
+     else{t.step(20,R`Is «tail == NULL»? No.`,tail);t.node(tail,{next:a});t.step(23,R`«tail->next = nd»: the old last node now links forward to the new one. Both links are set: ⇄.`,[tail,a]);}
+     tail=a;t.set('tail',P(a));t.step(25,R`«tail = nd»: the new node is the last one.`,a);t.del('nd');}
+   t.set('i',I(n));t.step(14,R`«i = ${n}»: loop done.`);t.del('i');t.print('Forward:');t.step(27,R`Prints «Forward:».`);
+   let p=head;t.set('p',P(p));t.step(28,R`Forward walk: «p = head».`,p);while(p!==null){t.print(' '+D(t,p));t.step(29,R`Prints « ${D(t,p)}».`,p);p=t.heap[p].next;t.set('p',P(p));t.step(28,R`«p = p->next» → «${hex(p)}».${p===null?' NULL: forward walk done.':''}`,p);}
+   t.del('p');t.print('\nBackward:');t.step(31,R`New line, then «Backward:».`);
+   p=tail;t.set('p',P(p));t.step(32,R`Backward walk: «p = tail».`,p);while(p!==null){t.print(' '+D(t,p));t.step(33,R`Prints « ${D(t,p)}».`,p);p=t.heap[p].prev;t.set('p',P(p));t.step(32,R`«p = p->prev» → «${hex(p)}».${p===null?' NULL: we passed the first node.':''}`,p);}
+   t.del('p');t.print('\n');t.step(35,R`New line.`);t.step(36,END);return t.steps;}}],
+ labs:(()=>{const head3=DLIST_HEAD+R`
+int main() {
+    int a, b, c;
+    scanf("%d %d %d", &a, &b, &c);
+    struct Node *x = malloc(sizeof(struct Node));
+    struct Node *y = malloc(sizeof(struct Node));
+    struct Node *z = malloc(sizeof(struct Node));
+    x->data = a; y->data = b; z->data = c;
+    x->prev = NULL; x->next = y;
+    y->prev = x; y->next = z;
+    z->prev = y; z->next = NULL;
+`;
+  const build=t=>{t.step(10,START);t.set('a',I(null));t.set('b',I(null));t.set('c',I(null));t.step(11,R`Three int boxes.`);const v=[+t.read(),+t.read(),+t.read()];['a','b','c'].forEach((n,k)=>t.set(n,I(v[k])));t.step(12,R`Reads «${v.join(' ')}».`);
+    const X=t.malloc({data:null,prev:undefined,next:undefined});t.set('x',P(X));t.step(13,R`Node x at «${hex(X)}».`,X);const Y=t.malloc({data:null,prev:undefined,next:undefined});t.set('y',P(Y));t.step(14,R`Node y at «${hex(Y)}».`,Y);const Z=t.malloc({data:null,prev:undefined,next:undefined});t.set('z',P(Z));t.step(15,R`Node z at «${hex(Z)}».`,Z);
+    t.node(X,{data:v[0]});t.node(Y,{data:v[1]});t.node(Z,{data:v[2]});t.step(16,R`Data stored in all three.`);t.node(X,{prev:null,next:Y});t.step(17,R`x: nothing before, y after.`,X);t.node(Y,{prev:X,next:Z});t.step(18,R`y: x before, z after.`,Y);t.node(Z,{prev:Y,next:null});t.step(19,R`z: y before, nothing after. A three-node doubly linked list.`,Z);return [X,Y,Z,v];};
+  return [
+  {kind:'Pick the right line',title:'Pull a unit out of formation',story:'Pilot d (the middle node) leaves the formation. Both neighbours must be re-linked around it before its memory is freed.',sampleIn:'10 20 30',sampleOut:'10 30',q:'Which line unlinks d correctly?',view:'dlist',root:'x',
+   code:head3+R`    struct Node *d = y;
+    /* which line goes here? */
+    free(d);
+    for (struct Node *p = x; p != NULL; p = p->next) {
+        printf("%d ", p->data);
+    }
+    return 0;
+}`,
+   options:[{c:'d->prev->next = d->next; d->next->prev = d->prev;',ok:true},{c:'d->prev->next = d->next;',why:R`Only the forward link is fixed. z’s «prev» still points at d, which is about to be freed.`},{c:'d->next = NULL; d->prev = NULL;',why:R`This changes d’s own links, but x and z still point at d. The list stays broken.`}],
+   solution:'d->prev->next = d->next; d->next->prev = d->prev;',explain:R`x must skip forward to z, and z must skip back to x. Both directions, then «free(d)».`,
+   check:t=>ints(t,0,3,'three numbers'),
+   trace(inp){const t=new Sim(inp);const [X,Y,Z,v]=build(t);t.set('d',P(Y));t.step(20,R`«d» points at the middle node (data ${v[1]}).`,Y);
+    t.node(X,{next:Z});t.node(Z,{prev:X});t.step(21,R`«d->prev->next = d->next»: x now points forward to z. «d->next->prev = d->prev»: z now points back to x. d is out of the chain.`,[X,Z]);
+    t.free(Y);t.step(22,R`Now it is safe to «free(d)».`);let p=X;t.set('p',P(p));t.step(23,R`Walk forward from x.`,p);while(p!==null){t.print(D(t,p)+' ');t.step(24,R`Prints «${D(t,p)}».`,p);p=t.heap[p].next;t.set('p',P(p));t.step(23,R`«p = p->next».`,p);}t.del('p');t.step(26,END);return t.steps;}},
+  {kind:'Predict the output',title:'Forward, forward, back',story:'A scout pointer moves two nodes forward, then one node back.',sampleIn:'10 20 30',sampleOut:'20',hideOut:true,q:'What number is printed for the sample input?',view:'dlist',root:'x',
+   code:head3+R`    struct Node *p = x;
+    p = p->next;
+    p = p->next;
+    p = p->prev;
+    printf("%d\n", p->data);
+    return 0;
+}`,answers:['20'],hint:R`x → y → z, then one step back along «prev».`,explain:R`p goes x → y → z, then «p->prev» takes it back to y, which holds 20.`,
+   check:t=>ints(t,0,3,'three numbers'),
+   trace(inp){const t=new Sim(inp);const [X,Y,Z,v]=build(t);t.set('p',P(X));t.step(20,R`«p = x».`,X);t.set('p',P(Y));t.step(21,R`«p = p->next»: now at y.`,Y);t.set('p',P(Z));t.step(22,R`«p = p->next»: now at z.`,Z);t.set('p',P(Y));t.step(23,R`«p = p->prev»: back to y.`,Y);
+    t.print(v[1]+'\n');t.step(24,R`Prints «${v[1]}».`,Y);t.step(25,END);return t.steps;}}];})()},
+
+/* ---------------------------------------------------------------- CIRCULAR */
+{id:'circular',no:'SORTIE 03',title:'Circular linked list',short:'CIRCULAR',
+ big:'In a circular singly linked list the last node does not point to NULL. It points back to the first node, so the nodes form a ring. There is no end, so loops must stop when they get back to where they started.',
+ keys:[R`The last node’s «next» is «head», not «NULL».`,R`Traverse with «do { … } while (p != head);» so the head is visited exactly once.`,R`A single node points to itself: «head->next == head».`,R`Moving «head» one step rotates the whole ring.`],
+ cap:R`<b>Like a patrol route around a base:</b> after the last checkpoint the route leads straight back to the first. You stop when you are back at the start, not when the road ends.`,
+ demo:()=>{const t=new Sim('');const a=t.malloc({data:1,next:null}),b=t.malloc({data:2,next:null}),c=t.malloc({data:3,next:null});t.node(a,{next:b});t.node(b,{next:c});t.node(c,{next:a});t.set('head',P(a));t.set('tail',P(c));t.ch=[];t.step(0,'');return listHtml(t.steps[0],'clist','head');},
+ ops:[
+  {name:'INSERT-END(x) with tail',cost:'O(1)',lines:[['node ← NEW NODE; node.data ← x','Make the node.'],['IF head = NULL THEN head ← node','First node: it is the head.'],['ELSE tail.next ← node','Old last node links to the newcomer.'],['tail ← node','The newcomer is last.'],['tail.next ← head','Close the ring: the last node points back at the first.']]},
+  {name:'TRAVERSE(head)',cost:'O(n)',lines:[['IF head = NULL THEN RETURN','Empty ring: nothing to visit.'],['cur ← head','Start at the head.'],['REPEAT','A do-while: the body runs before the test…'],['    VISIT(cur.data); cur ← cur.next','…so the head is visited first.'],['UNTIL cur = head','Stop when we are back at the start. Testing cur ≠ NULL would loop forever.']]},
+  {name:'ROTATE(k)',cost:'O(k)',lines:[['REPEAT k TIMES','Move the starting point k steps.'],['    tail ← head; head ← head.next','Moving both keeps tail just behind head.']]},
+  {name:'COUNT(head)',cost:'O(n)',lines:[['IF head = NULL THEN RETURN 0',''],['c ← 0; cur ← head',''],['REPEAT c ← c + 1; cur ← cur.next UNTIL cur = head','One full lap counts every node once.'],['RETURN c','']]}],
+ traps:[R`Using «while (p != NULL)» on a circular list: there is no NULL, so it never stops.`,R`Using «while (p != head)» with «p = head» at the start: the loop never runs. Use do-while.`,R`Forgetting «tail->next = head» after adding a node breaks the ring.`,R`An empty list needs its own check before «head->next»: «head» is NULL.`],
+ hello:R`Sortie 03: circular lists. The last node points back to the first. No NULL anywhere: watch your loop condition!`,
+ progs:[{title:'Build a ring, patrol, rotate',short:'tail->next = head · do-while',view:'clist',root:'head',
+  task:'Read n values into a circular list. Print one full lap starting at head. Then read k and move head forward k times; print the new head’s value.',
+  sampleIn:'5\n1 2 3 4 5\n2',sampleOut:'1 2 3 4 5\nAfter 2 rotations, head = 3',
+  code:LIST_HEAD+R`
+int main() {
+    int n, x, k;
+    scanf("%d", &n);
+    struct Node *head = NULL, *tail = NULL;
+    for (int i = 0; i < n; i++) {
+        scanf("%d", &x);
+        struct Node *nd = malloc(sizeof(struct Node));
+        nd->data = x;
+        if (head == NULL) {
+            head = nd;
+        } else {
+            tail->next = nd;
+        }
+        tail = nd;
+        tail->next = head;
+    }
+    struct Node *p = head;
+    do {
+        printf("%d ", p->data);
+        p = p->next;
+    } while (p != head);
+    printf("\n");
+    scanf("%d", &k);
+    for (int i = 0; i < k; i++) {
+        head = head->next;
+    }
+    printf("After %d rotations, head = %d\n", k, head->data);
+    return 0;
+}`,
+  notes:{10:R`Boxes for the count, each value, and the rotation count.`,11:R`How many values.`,12:R`Head and tail start empty.`,13:R`Add n nodes.`,14:R`Read a value.`,15:R`New node.`,16:R`Store the value.`,17:R`First node?`,18:R`Then it is the head.`,20:R`Otherwise the old last node links to it.`,22:R`The new node is the last one.`,23:R`**Close the ring**: the last node points back at the head. Done after every insert, so the ring is always closed.`,
+   25:R`Start a lap at head.`,26:R`«do»: run the body first, test afterwards. This makes sure head itself is printed.`,27:R`Print this node.`,28:R`Move along the ring.`,29:R`Keep going until we arrive back at head. One full lap.`,30:R`End the line.`,31:R`How many rotations.`,32:R`Repeat k times…`,33:R`…move head one node forward. The ring itself does not change; only where we start.`,35:R`Print the new starting value.`},
+  check:t=>{const e=countList(t,1,6,1);if(e)return e;const k=+t[+t[0]+1];return k<0||k>12?'Keep k between 0 and 12.':null;},
+  trace(inp){const t=new Sim(inp);t.step(9,START);t.set('n',I(null));t.set('x',I(null));t.set('k',I(null));t.step(10,R`Three int boxes.`);const n=+t.read();t.set('n',I(n));t.step(11,R`«n = ${n}».`);
+   let head=null,tail=null;t.set('head',P(null));t.set('tail',P(null));t.step(12,R`Empty ring.`);
+   for(let i=0;i<n;i++){t.set('i',I(i));t.step(13,i===0?R`Loop starts: «i = 0».`:R`«i = ${i}».`);const x=+t.read();t.set('x',I(x));t.step(14,R`Reads «${x}».`);const a=t.malloc({data:null,next:undefined});t.set('nd',P(a));t.step(15,R`New node at «${hex(a)}».`,a);t.node(a,{data:x});t.step(16,R`«nd->data = ${x}».`,a);
+     if(head===null){t.step(17,R`Is «head == NULL»? **Yes**.`,a);head=a;t.set('head',P(a));t.step(18,R`«head = nd».`,a);}else{t.step(17,R`Is «head == NULL»? No.`,tail);t.node(tail,{next:a});t.step(20,R`«tail->next = nd»: the old last node links to the newcomer.`,[tail,a]);}
+     tail=a;t.set('tail',P(a));t.step(22,R`«tail = nd».`,a);t.node(a,{next:head});t.step(23,a===head?R`«tail->next = head»: a single node points to **itself**. That is already a ring of one.`:R`«tail->next = head»: the last node points back at the first. The ring is closed again.`,[a,head]);t.del('nd');}
+   t.set('i',I(n));t.step(13,R`«i = ${n}»: all nodes linked.`);t.del('i');let p=head;t.set('p',P(p));t.step(25,R`«p = head».`,p);t.step(26,R`«do»: the body runs before any test.`,p);
+   do{t.print(D(t,p)+' ');t.step(27,R`Prints «${D(t,p)}».`,p);p=t.heap[p].next;t.set('p',P(p));t.step(28,R`«p = p->next» → «${hex(p)}».`,p);t.step(29,p!==head?R`Is «p != head»? Yes, keep going round.`:R`Is «p != head»? **No**: we are back at the start. One full lap.`,p);}while(p!==head);
+   t.print('\n');t.step(30,R`New line.`);const k=+t.read();t.set('k',I(k));t.step(31,R`«k = ${k}».`);
+   for(let i=0;i<k;i++){t.set('i',I(i));t.step(32,R`Rotation ${i+1} of ${k}.`);head=t.heap[head].next;t.set('head',P(head));t.step(33,R`«head = head->next»: head moves to «${hex(head)}» (data ${D(t,head)}). The ring itself is unchanged.`,head);}
+   t.set('i',I(k));t.step(32,R`«i = ${k}»: rotations done.`);t.del('i');t.print(`After ${k} rotations, head = ${D(t,head)}\n`);t.step(35,R`Screen: «After ${k} rotations, head = ${D(t,head)}».`,head);t.step(36,END);return t.steps;}}],
+ labs:(()=>{const ringCode=(closing,printLoop)=>LIST_HEAD+R`
+int main() {
+    int n, x;
+    scanf("%d", &n);
+    struct Node *head = NULL, *tail = NULL;
+    for (int i = 0; i < n; i++) {
+        scanf("%d", &x);
+        struct Node *nd = malloc(sizeof(struct Node));
+        nd->data = x;
+        if (head == NULL) {
+            head = nd;
+        } else {
+            tail->next = nd;
+        }
+        tail = nd;
+        tail->next = ${closing};
+    }
+    struct Node *p = head;
+    for (int i = 0; ${printLoop}; i++) {
+        printf("%d ", p->data);
+        p = p->next;
+    }
+    return 0;
+}`;
+  const buildRing=t=>{t.step(9,START);t.set('n',I(null));t.set('x',I(null));t.step(10,R`Two boxes.`);const n=+t.read();t.set('n',I(n));t.step(11,R`«n = ${n}».`);let head=null,tail=null;t.set('head',P(null));t.set('tail',P(null));t.step(12,R`Empty ring.`);
+    for(let i=0;i<n;i++){const x=+t.read();t.set('x',I(x));t.step(14,R`Reads «${x}».`);const a=t.malloc({data:x,next:undefined});if(head===null){head=a;t.set('head',P(a));}else t.node(tail,{next:a});tail=a;t.set('tail',P(a));t.node(a,{next:head});t.step(23,R`Lines 15–23 add «${x}» at the end and close the ring: «tail->next = head».`,a);}
+    return [n,head];};
+  const lap=(t,head,count)=>{let p=head;t.set('p',P(p));t.step(25,R`«p = head».`,p);for(let i=0;i<count;i++){t.set('i',I(i));t.step(26,R`«i = ${i}».`,p);t.print(D(t,p)+' ');t.step(27,R`Prints «${D(t,p)}».`,p);p=t.heap[p].next;t.set('p',P(p));t.step(28,R`«p = p->next»: ${p===head?'back at the head, the ring wraps around.':'next node.'}`,p);}t.set('i',I(count));t.step(26,R`«i = ${count}»: the loop ends.`);t.del('i');};
+  return [
+  {kind:'Predict the output',title:'Seven checkpoints',story:'A patrol visits 7 checkpoints on a ring of only 3 bases.',sampleIn:'3\n1 2 3',sampleOut:'1 2 3 1 2 3 1',hideOut:true,q:'Type exactly what is printed for the sample input.',view:'clist',root:'head',
+   code:ringCode('head','i < 7'),answers:['1 2 3 1 2 3 1'],hint:'After the last node, next leads back to the head. The loop runs exactly 7 times.',explain:R`The ring has no end, so 7 steps simply wrap around: «1 2 3 1 2 3 1».`,
+   check:t=>countList(t,1,6),
+   trace(inp){const t=new Sim(inp);const [n,head]=buildRing(t);lap(t,head,7);t.step(30,END);return t.steps;}},
+  {kind:'Fill the gap',title:'Close the ring',story:'Each time a base is added, the route must lead from the last base back to the first.',sampleIn:'3\n4 5 6',sampleOut:'4 5 6 4',q:'What should the last node point to?',view:'clist',root:'head',
+   code:ringCode('⟦head⟧','i <= n'),answers:['head'],hint:R`In a circular list the last node never points to «NULL».`,explain:R`«tail->next = head» closes the ring, so after 6 the patrol continues at 4.`,
+   check:t=>countList(t,1,6),
+   trace(inp){const t=new Sim(inp);const [n,head]=buildRing(t);lap(t,head,n+1);t.step(30,END);return t.steps;}}];})()},
+
+/* ---------------------------------------------------------------- QUEUE */
+{id:'queue',no:'SORTIE 04',title:'Queue',short:'QUEUE',
+ big:'A queue is a line: new items join at the rear and leave from the front. First in, first out (FIFO). With a linked list and two pointers, front and rear, both operations are O(1).',
+ keys:[R`«enqueue» adds at the **rear**. «dequeue» removes from the **front**.`,R`FIFO: the first unit in is the first unit out. (A stack is LIFO.)`,R`Empty queue: «front == NULL». Dequeue there is *underflow*.`,R`When the last node leaves, reset «rear = NULL» too.`],
+ cap:R`<b>Like a launch catapult line:</b> units roll in at the back of the line and launch from the front, strictly in arrival order.`,
+ demo:()=>{const t=new Sim('');const a=t.malloc({data:30,next:null}),b=t.malloc({data:40,next:null}),c=t.malloc({data:50,next:null});t.node(a,{next:b});t.node(b,{next:c});t.set('front',P(a));t.set('rear',P(c));t.ch=[];t.step(0,'');return listHtml(t.steps[0],'list','front');},
+ ops:[
+  {name:'ENQUEUE(x)',cost:'O(1)',lines:[['node ← NEW NODE; node.data ← x; node.next ← NULL','The newcomer will be last in line.'],['IF rear = NULL THEN front ← rear ← node','Empty queue: one node is both ends.'],['ELSE rear.next ← node','The current last unit points at the newcomer…'],['     rear ← node','…and the newcomer becomes the rear.']]},
+  {name:'DEQUEUE()',cost:'O(1)',lines:[['IF front = NULL THEN RETURN UNDERFLOW','Nothing to remove.'],['t ← front; x ← t.data','Remember the front node and its value.'],['front ← front.next','The next in line moves up.'],['IF front = NULL THEN rear ← NULL','The queue just became empty: reset rear too.'],['FREE(t); RETURN x','Release the old node, hand back its value.']]},
+  {name:'PEEK() · IS-EMPTY()',cost:'O(1)',lines:[['IS-EMPTY: RETURN front = NULL','No nodes means empty.'],['PEEK: RETURN front.data','Look at the next value without removing it.']]},
+  {name:'ARRAY QUEUE (circular buffer, size N)',cost:'O(1)',lines:[['ENQUEUE: IF count = N THEN OVERFLOW','The array is full.'],['rear ← (rear + 1) MOD N; A[rear] ← x; count ← count + 1','MOD wraps the index from N − 1 back to 0.'],['DEQUEUE: IF count = 0 THEN UNDERFLOW','Nothing to remove.'],['x ← A[front]; front ← (front + 1) MOD N; count ← count − 1','Front also wraps around.'],['START: front ← 0; rear ← −1; count ← 0','So the first enqueue lands in A[0].']]}],
+ traps:[R`Mixing up FIFO (queue) and LIFO (stack). Queues serve the oldest item first.`,R`Dequeue on an empty queue: check «front == NULL» before reading «front->data».`,R`Forgetting «rear = NULL» when the last node leaves: rear then points at freed memory.`,R`Array queues: wrap with «(rear + 1) % N» and use a count to tell full from empty.`],
+ hello:R`Sortie 04: queues. Join at the rear, launch from the front. First in, first out.`,
+ progs:[{title:'Launch queue',short:'enqueue · dequeue · front · rear',view:'list',root:'front',
+  task:'Read q commands. “E x” enqueues x; “D” dequeues and prints the value. At the end print what is left in the queue, front to rear.',
+  sampleIn:'6\nE 10\nE 20\nE 30\nD\nE 40\nD',sampleOut:'Dequeued 10\nDequeued 20\nQueue: 30 40',code:QUEUE_CODE,
+  notes:{9:R`Two **global** pointers, visible to every function: «front» (next to leave) and «rear» (last to arrive). NULL: empty queue.`,11:R`Adds x at the rear. Returns x, so it has an int result.`,12:R`A new node.`,13:R`Store the value.`,14:R`It will be last in line.`,15:R`Empty queue?`,16:R`Then the new node is both the front and the rear.`,18:R`Otherwise the current rear links to the newcomer…`,19:R`…and the newcomer becomes the rear.`,21:R`Hand back the value.`,
+   24:R`Removes and returns the front value. Empty parentheses: it takes no input.`,25:R`Empty queue?`,26:R`Underflow: return -1 as a signal.`,28:R`Remember the front node so we can free it after unlinking.`,29:R`Save its value before freeing.`,30:R`The next node becomes the front.`,31:R`Did the queue just become empty?`,32:R`Then rear must be reset too, or it would point at freed memory.`,34:R`Release the old front node.`,35:R`Hand back the saved value.`,
+   39:R`Boxes for the command count and a value.`,40:R`The command letter.`,41:R`How many commands.`,42:R`Process each command.`,43:R`«" %c"»: the space skips any spaces or newlines before the letter.`,44:R`Enqueue command?`,45:R`Read the value…`,46:R`…and add it at the rear.`,48:R`Dequeue and print the value that left.`,51:R`Print what is left.`,52:R`Walk from front to rear.`,53:R`Print each value.`,55:R`Finish the line.`},
+  check:queueCheck,trace:queueTrace},
+  {title:'Circular array queue',short:'q[N] · (rear + 1) % N',view:'array',root:'q',
+   task:'A queue stored in a fixed array of 5 slots. “E x” enqueues, “D” dequeues. The indexes wrap around with %, and a full queue reports Overflow.',
+   sampleIn:'10\nE 1\nE 2\nE 3\nE 4\nD\nD\nE 5\nE 6\nE 7\nE 8',sampleOut:'Dequeued 1\nDequeued 2\nOverflow\nfront = 2, rear = 1, count = 5',
+   code:R`#include <stdio.h>
+#define N 5
+
+int q[N];
+int front = 0, rear = -1, count = 0;
+
+int enqueue(int x) {
+    if (count == N) {
+        printf("Overflow\n");
+        return 0;
+    }
+    rear = (rear + 1) % N;
+    q[rear] = x;
+    count++;
+    return 1;
+}
+
+int dequeue() {
+    if (count == 0) {
+        printf("Underflow\n");
+        return -1;
+    }
+    int x = q[front];
+    front = (front + 1) % N;
+    count--;
+    return x;
+}
+
+int main() {
+    int ops, x;
+    char c;
+    scanf("%d", &ops);
+    for (int i = 0; i < ops; i++) {
+        scanf(" %c", &c);
+        if (c == 'E') {
+            scanf("%d", &x);
+            enqueue(x);
+        } else {
+            x = dequeue();
+            if (x != -1) {
+                printf("Dequeued %d\n", x);
+            }
+        }
+    }
+    printf("front = %d, rear = %d, count = %d\n", front, rear, count);
+    return 0;
+}`,
+   notes:{2:R`«#define N 5» makes «N» a name for 5 everywhere in the program: the queue’s capacity.`,4:R`The queue’s storage: 5 int slots. Global arrays start filled with 0.`,5:R`«front»: index of the next value to leave. «rear»: index of the last value added (−1 = none yet). «count»: how many values are queued.`,
+    7:R`Returns 1 on success, 0 on overflow.`,8:R`Full?`,9:R`**Overflow**: no free slot.`,10:R`Fail.`,12:R`Move rear one slot forward. «% N» wraps 4 → 0, so freed slots at the start get reused. That is the whole point of a circular queue.`,13:R`Store the value.`,14:R`One more in the queue.`,15:R`Success.`,
+    18:R`Removes and returns the front value, or −1 on underflow.`,19:R`Empty?`,20:R`**Underflow**: nothing to remove.`,21:R`Signal failure.`,23:R`Take the front value. (The slot keeps its old number, but it no longer counts.)`,24:R`Move front forward, wrapping with «% N».`,25:R`One fewer in the queue.`,26:R`Hand back the value.`,
+    30:R`Command count and a value.`,31:R`Command letter.`,32:R`How many commands.`,33:R`Process each one.`,34:R`Read E or D (the space skips line breaks).`,35:R`Enqueue?`,36:R`Read the value…`,37:R`…and enqueue it.`,39:R`Dequeue.`,40:R`Only print real values.`,41:R`Print it.`,45:R`Show the final indexes and count.`},
+   check:t=>{const e=queueCheck(t);if(e)return e;return +t[0]>12?'Please use at most 12 commands.':null;},
+   trace(inp){const t=new Sim(inp,{globals:true});const N=5;let q=[0,0,0,0,0],front=0,rear=-1,count=0;
+    const G=k=>{t.set('q',{k:'arr',v:q.slice()},0);if(k!==undefined)t.ch.push('a'+k);};G();t.set('front',I(0),0);t.set('rear',I(-1),0);t.set('count',I(0),0);
+    t.step(29,R`Globals: «q» has 5 slots (all 0), «front = 0», «rear = -1», «count = 0». An empty queue. The program starts in «main».`);
+    t.set('ops',I(null));t.set('x',I(null));t.step(30,R`Two int boxes.`);t.set('c',C(null));t.step(31,R`A char box.`);const ops=+t.read();t.set('ops',I(ops));t.step(32,R`«ops = ${ops}».`);
+    for(let i=0;i<ops;i++){t.set('i',I(i));t.step(33,i===0?R`Loop starts: «i = 0».`:R`«i = ${i}».`);const c=t.read();t.set('c',C(c));t.step(34,R`Command «'${c}'».`);
+      if(c==='E'){t.step(35,R`It is «'E'».`);const x=+t.read();t.set('x',I(x));t.step(36,R`Value «${x}».`);t.step(37,R`Call «enqueue(${x})».`);t.frame('enqueue()');t.set('x',I(x));t.step(7,R`enqueue gets «x = ${x}».`);
+        if(count===N){t.step(8,R`Is «count == N» («${count} == 5»)? **Yes**: every slot is in use.`);t.print('Overflow\n');t.step(9,R`Screen: «Overflow».`);t.step(10,R`Returns 0: ${x} was not added.`);t.pop();}
+        else{t.step(8,R`Is «count == N» («${count} == 5»)? No.`);const o=rear;rear=(rear+1)%N;t.set('rear',I(rear),0);t.step(12,R`«rear = (${o} + 1) % 5 = ${rear}».${o===4?' **Wrap-around!** Index 4 + 1 becomes 0, reusing the freed slot at the start.':''}`,rear);
+          q[rear]=x;G(rear);t.step(13,R`«q[${rear}] = ${x}».`,rear);count++;t.set('count',I(count),0);t.step(14,R`«count = ${count}».`,rear);t.step(15,R`Returns 1.`);t.pop();}
+        t.step(37,R`Back in main.`);}
+      else{t.step(35,R`It is not «'E'».`);t.step(39,R`Call «dequeue()».`);t.frame('dequeue()');t.step(18,R`dequeue starts.`);let v;
+        if(count===0){t.step(19,R`Is «count == 0»? **Yes**: empty.`);t.print('Underflow\n');t.step(20,R`Screen: «Underflow».`);t.step(21,R`Returns -1.`);t.pop();v=-1;}
+        else{t.step(19,R`Is «count == 0»? No.`,front);v=q[front];t.set('x',I(v));t.step(23,R`«x = q[${front}] = ${v}».`,front);const o=front;front=(front+1)%N;t.set('front',I(front),0);t.step(24,R`«front = (${o} + 1) % 5 = ${front}». Slot ${o} no longer counts.`,front);
+          count--;t.set('count',I(count),0);t.step(25,R`«count = ${count}».`);t.step(26,R`Returns «${v}».`);t.pop();}
+        t.set('x',I(v));t.step(39,R`«x = ${v}».`);if(v!==-1){t.step(40,R`Is «x != -1»? Yes.`);t.print(`Dequeued ${v}\n`);t.step(41,R`Screen: «Dequeued ${v}».`);}else t.step(40,R`«x» is -1: nothing to print.`);}}
+    t.set('i',I(ops));t.step(33,R`All commands done.`);t.del('i');t.print(`front = ${front}, rear = ${rear}, count = ${count}\n`);t.step(45,R`Screen: «front = ${front}, rear = ${rear}, count = ${count}». Notice rear (${rear}) is *before* front (${front}): the queue wraps around the end of the array.`);t.step(46,END);return t.steps;}}],
+ labs:[
+  {kind:'Pick the right line',title:'Launch order',story:'Three units arrive at the catapult; two launches happen in between.',sampleIn:'5\nE 7\nE 8\nD\nE 9\nD',sampleOut:'Dequeued 7\nDequeued 8\nQueue: 9',hideOut:true,q:'Which output does the queue program print for this input?',view:'list',root:'front',
+   code:QUEUE_CODE,options:[{c:'Dequeued 7\nDequeued 8\nQueue: 9',ok:true},{c:'Dequeued 8\nDequeued 9\nQueue: 7',why:R`That is a stack (last in, first out). A queue always serves the oldest unit first.`},{c:'Dequeued 7\nDequeued 9\nQueue: 8',why:R`9 arrived after 8, so 8 must launch before 9.`}],
+   explain:R`FIFO: 7 arrived first and launches first, then 8. Only 9 is left.`,check:queueCheck,trace:queueTrace},
+  {kind:'Fill the gap',title:'Reset the rear',story:'When the last unit launches, both ends of the line must be cleared. Otherwise the next enqueue writes into freed memory.',sampleIn:'4\nE 5\nD\nE 6\nD',sampleOut:'Dequeued 5\nDequeued 6\nQueue:',q:'What should rear become when the queue empties?',view:'list',root:'front',
+   code:QUEUE_CODE.replace('        rear = NULL;','        rear = ⟦NULL⟧;'),answers:['NULL','0'],hint:R`An empty queue has «front == NULL». What should «rear» be then?`,explain:R`«rear = NULL» keeps both ends consistent. The next enqueue then sees an empty queue and sets «front = rear = nd».`,check:queueCheck,trace:queueTrace}]},
+
+/* ---------------------------------------------------------------- TREE */
+{id:'tree',no:'SORTIE 05',title:'Binary search tree',short:'TREE',
+ big:'A binary tree node has up to two children, left and right. In a binary search tree (BST), every value in the left subtree is smaller and every value in the right subtree is bigger or equal. That rule lets you find values by going left or right at each node.',
+ keys:[R`The top node is the **root**. Nodes with no children are **leaves**.`,R`BST rule: left subtree < node ≤ right subtree, at **every** node.`,R`Inorder (left, node, right) visits a BST in **sorted** order.`,R`Search and insert follow one path down: «O(h)», where h is the height.`],
+ cap:R`<b>Like a hangar sorting rail:</b> at every junction, smaller unit numbers turn left and bigger ones turn right. Finding a unit takes a few turns instead of checking every bay.`,
+ demo:()=>{const t=new Sim('');let r=null;[50,30,70,20,40,60,80].forEach(x=>{r=bstAdd(t,r,x);});t.set('root',P(r));t.ch=[];t.step(0,'');return treeHtml(t.steps[0],'root');},
+ ops:[
+  {name:'BST-INSERT(r, x)',cost:'O(h)',lines:[['IF r = NULL THEN RETURN NEW NODE(x)','An empty spot: the new value goes here.'],['IF x < r.data THEN r.left ← BST-INSERT(r.left, x)','Smaller values go into the left subtree.'],['ELSE r.right ← BST-INSERT(r.right, x)','Bigger or equal values go right.'],['RETURN r','This node stays; return it so the parent keeps its link.']]},
+  {name:'BST-SEARCH(r, key)',cost:'O(h)',lines:[['WHILE r ≠ NULL AND r.data ≠ key DO','Until we find it or fall off the tree…'],['    IF key < r.data THEN r ← r.left','…go left for smaller…'],['    ELSE r ← r.right','…or right for bigger. Each step skips a whole subtree.'],['RETURN r','The node, or NULL if not found.']]},
+  {name:'INORDER(r) · sorted',cost:'O(n)',lines:[['IF r = NULL THEN RETURN','Base case: empty subtree.'],['INORDER(r.left)','All smaller values first…'],['VISIT(r)','…then this node…'],['INORDER(r.right)','…then all bigger values.']]},
+  {name:'PREORDER · POSTORDER',cost:'O(n)',lines:[['PREORDER: VISIT(r); PREORDER(r.left); PREORDER(r.right)','Node first. Used to copy or print a tree’s shape.'],['POSTORDER: POSTORDER(r.left); POSTORDER(r.right); VISIT(r)','Node last. Used to free a tree: children before parent.']]},
+  {name:'HEIGHT(r)',cost:'O(n)',lines:[['IF r = NULL THEN RETURN −1','Empty tree (some courses use 0: check yours).'],['RETURN 1 + MAX(HEIGHT(r.left), HEIGHT(r.right))','One more than the taller subtree.']]}],
+ traps:[R`The BST rule holds at **every** node, not just between a node and its children.`,R`Only inorder is sorted. Preorder starts with the root, postorder ends with it.`,R`Every recursive tree function needs the «r == NULL» base case first.`,R`Inserting sorted data (1, 2, 3, 4 …) makes a tall chain: search becomes «O(n)» instead of «O(log n)».`,R`Forgetting to store the result: «r->left = insert(r->left, x);», not just «insert(r->left, x);».`],
+ hello:R`Sortie 05: binary search trees. Smaller goes left, bigger goes right. Watch the call frames stack up as insert dives down.`,
+ progs:[{title:'Insert, inorder, search',short:'recursion on a tree',view:'tree',root:'root',
+  task:'Read n values and insert each into a BST. Print the values with an inorder traversal and the number of nodes. Then read a key and report whether it is in the tree.',
+  sampleIn:'5\n50 30 70 20 60\n60',sampleOut:'Inorder: 20 30 50 60 70\nNodes = 5\nFound 60',
+  code:TREE_HEAD+R`
+int inorder(struct Node *r) {
+    if (r == NULL) {
+        return 0;
+    }
+    int c = inorder(r->left);
+    printf(" %d", r->data);
+    return c + 1 + inorder(r->right);
+}
+
+int search(struct Node *r, int key) {
+    while (r != NULL && r->data != key) {
+        if (key < r->data) {
+            r = r->left;
+        } else {
+            r = r->right;
+        }
+    }
+    return r != NULL;
+}
+
+int main() {
+    int n, x, key;
+    scanf("%d", &n);
+    struct Node *root = NULL;
+    for (int i = 0; i < n; i++) {
+        scanf("%d", &x);
+        root = insert(root, x);
+    }
+    printf("Inorder:");
+    int count = inorder(root);
+    printf("\nNodes = %d\n", count);
+    scanf("%d", &key);
+    if (search(root, key)) {
+        printf("Found %d\n", key);
+    } else {
+        printf("%d not found\n", key);
+    }
+    return 0;
+}`,
+  notes:{...INSERT_NOTES,25:R`Prints the subtree in sorted order and returns how many nodes it printed.`,26:R`Base case: an empty subtree prints nothing…`,27:R`…and counts 0 nodes.`,29:R`First the whole LEFT subtree (all smaller values).`,30:R`Then this node.`,31:R`Then the whole RIGHT subtree, and add up the counts.`,
+   34:R`Iterative search: no recursion needed, just walk down one path.`,35:R`Stop when we find the key or fall off the tree.`,36:R`Smaller key?`,37:R`Go left.`,39:R`Otherwise go right.`,42:R`«r != NULL» is 1 (found) or 0 (not found).`,
+   46:R`Boxes for the count, each value and the search key.`,47:R`How many values.`,48:R`An empty tree.`,49:R`Insert n values.`,50:R`Read one value.`,51:R`Insert it. Store the returned root (it changes on the first insert).`,53:R`Start the output line.`,54:R`Inorder prints the values and returns the count.`,55:R`Print the node count.`,56:R`The value to look for.`,57:R`search returns 1 or 0, which works directly as the «if» test.`,58:R`Found.`,60:R`Not found.`},
+  check:t=>countList(t,1,7,1),
+  trace(inp){const t=new Sim(inp);t.step(45,START);t.set('n',I(null));t.set('x',I(null));t.set('key',I(null));t.step(46,R`Three int boxes.`);const n=+t.read();t.set('n',I(n));t.step(47,R`«n = ${n}».`);
+   let root=null;t.set('root',P(null));t.step(48,R`«root = NULL»: an empty tree.`);
+   for(let i=0;i<n;i++){t.set('i',I(i));t.step(49,i===0?R`Loop starts: «i = 0».`:R`«i = ${i}». Is «${i} < ${n}»? Yes.`);const x=+t.read();t.set('x',I(x));t.step(50,R`Reads «${x}».`);t.step(51,R`Call «insert(root, ${x})».`,root);
+     root=tInsert(t,root,x);t.set('root',P(root));t.step(51,R`insert returned the root «${hex(root)}». ${x} is in the tree.`,root);}
+   t.set('i',I(n));t.step(49,R`«i = ${n}»: all values inserted.`);t.del('i');t.print('Inorder:');t.step(53,R`Prints «Inorder:».`);t.step(54,R`Call «inorder(root)».`,root);
+   const rec=r=>{t.frame('inorder()');t.set('r',P(r));t.step(25,R`«inorder(r = ${hex(r)})».`,r);
+     if(r===null){t.step(26,R`Is «r == NULL»? **Yes**: an empty subtree.`);t.step(27,R`Returns 0.`);t.pop();return 0;}
+     const d=D(t,r);t.step(26,R`Is «r == NULL»? No, node ${d}.`,r);t.step(29,R`Visit the LEFT subtree of ${d} first.`,r);const c=rec(t.heap[r].left);t.set('c',I(c));t.step(29,R`Left subtree of ${d} done: «c = ${c}».`,r);
+     t.node(r,{vis:true});t.print(' '+d);t.step(30,R`Print «${d}». Left side, then the node, then the right side: that is why the output is sorted.`,r);
+     t.step(31,R`Now the RIGHT subtree of ${d}.`,r);const rc=rec(t.heap[r].right);t.step(31,R`Returns «${c} + 1 + ${rc} = ${c+1+rc}».`,r);t.pop();return c+1+rc;};
+   const count=rec(root);t.set('count',I(count));t.step(54,R`inorder returned «${count}».`);t.print(`\nNodes = ${count}\n`);t.step(55,R`Screen: «Nodes = ${count}».`);
+   const key=+t.read();t.set('key',I(key));t.step(56,R`«key = ${key}».`);t.step(57,R`Call «search(root, ${key})».`,root);
+   t.frame('search()');let r=root;t.set('r',P(r));t.set('key',I(key));t.step(34,R`search starts at the root.`,r);
+   while(r!==null&&D(t,r)!==key){const d=D(t,r);t.step(35,R`«r» holds «${d}», not «${key}». Keep searching.`,r);if(key<d){t.step(36,R`Is «${key} < ${d}»? Yes.`,r);r=t.heap[r].left;t.set('r',P(r));t.step(37,R`Go left → «${hex(r)}».`,r);}else{t.step(36,R`Is «${key} < ${d}»? No.`,r);r=t.heap[r].right;t.set('r',P(r));t.step(39,R`Go right → «${hex(r)}».`,r);}}
+   const f=r!==null;t.step(35,f?R`Found «${key}» at «${hex(r)}».`:R`«r» is «NULL»: fell off the tree. «${key}» is not here.`,r);t.step(42,R`Returns «${f?1:0}».`,r);t.pop();
+   if(f){t.step(57,R`search gave 1: true.`);t.print(`Found ${key}\n`);t.step(58,R`Screen: «Found ${key}».`);}else{t.step(59,R`search gave 0: false, so the «else» runs.`);t.print(`${key} not found\n`);t.step(60,R`Screen: «${key} not found».`);}
+   t.step(62,END);return t.steps;}}],
+ labs:[
+  {kind:'Predict the output',title:'Preorder recon',story:'Recon reports the tree node first, then the left wing, then the right wing.',sampleIn:'5\n40 20 60 10 30',sampleOut:'40 20 10 30 60',hideOut:true,q:'Type exactly what is printed for the sample input.',view:'tree',root:'root',
+   code:TREE_HEAD+R`
+int preorder(struct Node *r) {
+    if (r == NULL) {
+        return 0;
+    }
+    printf("%d ", r->data);
+    return 1 + preorder(r->left) + preorder(r->right);
+}
+
+int main() {
+    int n, x;
+    scanf("%d", &n);
+    struct Node *root = NULL;
+    for (int i = 0; i < n; i++) {
+        scanf("%d", &x);
+        root = insert(root, x);
+    }
+    preorder(root);
+    return 0;
+}`,answers:['40 20 10 30 60'],hint:'Preorder prints a node before visiting its left subtree, then its right subtree. Draw the tree first.',explain:R`Tree: 40 at the root, 20 and 60 below it, 10 and 30 under 20. Preorder: 40, then the left wing (20, 10, 30), then 60.`,
+   check:t=>countList(t,1,7),
+   trace(inp){const t=new Sim(inp);t.step(33,START);t.set('n',I(null));t.set('x',I(null));t.step(34,R`Two boxes.`);const n=+t.read();t.set('n',I(n));t.step(35,R`«n = ${n}».`);let root=null;t.set('root',P(null));t.step(36,R`Empty tree.`);
+    for(let i=0;i<n;i++){const x=+t.read();t.set('x',I(x));t.step(38,R`Reads «${x}».`);root=bstAdd(t,root,x);t.set('root',P(root));const a=t.na-0x20,p=parentOf(t,root,a);t.step(39,p===null?R`«insert» makes «${x}» the root.`:R`«insert» walks down and links «${x}» as the ${x<D(t,p)?'LEFT':'RIGHT'} child of ${D(t,p)}.`,a);}
+    t.step(41,R`Call «preorder(root)».`,root);
+    const rec=r=>{t.frame('preorder()');t.set('r',P(r));if(r===null){t.step(26,R`«r» is NULL: return 0.`);t.pop();return 0;}t.step(26,R`«r» holds ${D(t,r)}.`,r);t.node(r,{vis:true});t.print(D(t,r)+' ');t.step(29,R`Print «${D(t,r)}» **first**, before its children.`,r);
+      t.step(30,R`Then the left subtree, then the right subtree.`,r);const c=1+rec(t.heap[r].left)+rec(t.heap[r].right);t.step(30,R`Subtree of ${D(t,r)} done.`,r);t.pop();return c;};
+    rec(root);t.step(42,END);return t.steps;}},
+  {kind:'Fill the gap',title:'Search path',story:'Mission control wants the route a search takes through the hangar rail.',sampleIn:'6\n50 30 70 20 40 60\n40',sampleOut:'Path: 50 30 40 (found)',q:'Which way should the search go for a smaller key?',view:'tree',root:'root',
+   code:TREE_HEAD+R`
+int main() {
+    int n, x, key;
+    scanf("%d", &n);
+    struct Node *root = NULL;
+    for (int i = 0; i < n; i++) {
+        scanf("%d", &x);
+        root = insert(root, x);
+    }
+    scanf("%d", &key);
+    struct Node *r = root;
+    printf("Path:");
+    while (r != NULL && r->data != key) {
+        printf(" %d", r->data);
+        if (key < r->data) {
+            r = r->⟦left⟧;
+        } else {
+            r = r->right;
+        }
+    }
+    if (r != NULL) {
+        printf(" %d (found)\n", r->data);
+    } else {
+        printf(" (not found)\n");
+    }
+    return 0;
+}`,answers:['left'],hint:'In a BST, smaller values live on one particular side.',explain:R`Smaller keys are in the LEFT subtree, so «r = r->left».`,
+   check:t=>countList(t,1,7,1),
+   trace(inp){const t=new Sim(inp);t.step(25,START);t.set('n',I(null));t.set('x',I(null));t.set('key',I(null));t.step(26,R`Three boxes.`);const n=+t.read();t.set('n',I(n));t.step(27,R`«n = ${n}».`);let root=null;t.set('root',P(null));t.step(28,R`Empty tree.`);
+    for(let i=0;i<n;i++){const x=+t.read();t.set('x',I(x));t.step(30,R`Reads «${x}».`);root=bstAdd(t,root,x);t.set('root',P(root));const a=t.na-0x20,p=parentOf(t,root,a);t.step(31,p===null?R`«${x}» becomes the root.`:R`«${x}» is linked as the ${x<D(t,p)?'LEFT':'RIGHT'} child of ${D(t,p)}.`,a);}
+    const key=+t.read();t.set('key',I(key));t.step(33,R`«key = ${key}».`);let r=root;t.set('r',P(r));t.step(34,R`«r» starts at the root.`,r);t.print('Path:');t.step(35,R`Prints «Path:».`,r);
+    while(r!==null&&D(t,r)!==key){const d=D(t,r);t.step(36,R`«${d}» is not «${key}».`,r);t.node(r,{vis:true});t.print(' '+d);t.step(37,R`Prints « ${d}».`,r);if(key<d){t.step(38,R`Is «${key} < ${d}»? Yes.`,r);r=t.heap[r].left;t.set('r',P(r));t.step(39,R`Go LEFT → «${hex(r)}».`,r);}else{t.step(38,R`Is «${key} < ${d}»? No.`,r);r=t.heap[r].right;t.set('r',P(r));t.step(41,R`Go RIGHT → «${hex(r)}».`,r);}}
+    if(r!==null){t.step(36,R`Found «${key}».`,r);t.step(44,R`«r» is not NULL.`,r);t.node(r,{vis:true});t.print(` ${key} (found)\n`);t.step(45,R`Screen ends with « ${key} (found)».`,r);}else{t.step(36,R`«r» is NULL: fell off the tree.`);t.step(44,R`«r» is NULL.`);t.step(46,R`So the «else» runs.`);t.print(' (not found)\n');t.step(47,R`Prints « (not found)».`);}
+    t.step(49,END);return t.steps;}}]}
+];
+
+/* ================= INTEL: theory for every sortie ================= */
+const ptrOn=(t,name,a)=>t.set(name,P(a));
+const INTEL={
+memory:{blocks:[
+  {t:'table',title:'Stack vs heap',head:['','Stack','Heap'],rows:[
+    ['Holds','Local variables and parameters of each function call','Memory you request with «malloc»'],
+    ['Managed by','The compiler, automatically','You: «malloc» to get it, «free» to return it'],
+    ['Lifetime','Until the function returns','Until you call «free» (or the program ends)'],
+    ['Size','Small (often a few MB)','Large (most of the RAM)'],
+    ['Typical error','Stack overflow from very deep recursion','Memory leak, dangling pointer, double free']]},
+  {t:'table',title:'The heap toolbox (stdlib.h)',head:['Call','What it does'],rows:[
+    ['«malloc(n)»','Reserves n bytes. The contents are junk. Returns the address, or «NULL» if there is no memory.'],
+    ['«calloc(k, n)»','Reserves k × n bytes and sets them all to 0.'],
+    ['«realloc(p, n)»','Resizes the block at p to n bytes (it may move: use the address it returns).'],
+    ['«free(p)»','Returns the block at p. p itself still holds the old address.'],
+    ['«sizeof(type)»','How many bytes a type uses. Always use it instead of guessing.']]},
+  {t:'list',title:'Pointer vocabulary',items:[
+    R`**Address**: where a value lives in memory (shown here like «0x1A0»).`,
+    R`**Pointer**: a variable that stores an address. «struct Node *p;»`,
+    R`**Dereference**: follow the address. «*p» is the whole node, «p->data» is one field.`,
+    R`**NULL**: a pointer value meaning “points nowhere”. Following NULL crashes the program.`,
+    R`**Dangling pointer**: still holds an address that has been freed.`,
+    R`**Memory leak**: heap memory nobody points to any more, so it can never be freed.`,
+    R`**Self-referential structure**: a struct that contains a pointer to its own type, like «struct Node *next;». Every structure in this course is one.`]},
+  {t:'table',title:'Big-O: how cost grows with n items',head:['Order','Name','Example from this course'],rows:[
+    ['«O(1)»','Constant','Insert at the head of a list, enqueue, dequeue'],
+    ['«O(log n)»','Logarithmic','Search in a balanced BST'],
+    ['«O(n)»','Linear','Traverse or search a linked list'],
+    ['«O(n log n)»','Linearithmic','Good sorting algorithms (merge sort)'],
+    ['«O(n²)»','Quadratic','Nested loops over the same data (bubble sort)']]},
+  {t:'text',title:'Abstract data type (ADT)',body:[R`An ADT describes **what** a structure does: its operations and their rules. It does not say **how** it is built. A *queue* is an ADT (enqueue, dequeue, FIFO). A queue built from a linked list, or from a circular array, is an **implementation** of it.`,R`Exams often ask you to “define the ADT”: list the data it stores and each operation with what it does.`]},
+  {t:'story',title:'Storyboard: the life of one node',view:'list',root:'p',base:t=>{t.set('p',P(undefined));return {};},steps:[
+    [R`«struct Node *p;» A pointer on the stack. It holds junk: it points nowhere valid yet.`,(t,c)=>{}],
+    [R`«p = malloc(sizeof(struct Node));» A node appears on the heap; p holds its address.`,(t,c)=>{c.a=t.malloc({data:null,next:undefined});ptrOn(t,'p',c.a);c.hl=[c.a];}],
+    [R`«p->data = 42; p->next = NULL;» Every field set: no junk left.`,(t,c)=>{t.node(c.a,{data:42,next:null});c.hl=[c.a];}],
+    [R`«free(p);» The memory is returned. p still holds the old address: **dangling**.`,(t,c)=>{t.free(c.a);}],
+    [R`«p = NULL;» Now p safely points nowhere.`,(t,c)=>{ptrOn(t,'p',null);}]]},
+  {t:'story',title:'Storyboard: how a memory leak happens',view:'list',root:'p',base:t=>({}),steps:[
+    [R`«p = malloc(...)» → node A at the address in p.`,(t,c)=>{c.a=t.malloc({data:1,next:null});ptrOn(t,'p',c.a);}],
+    [R`«p = malloc(...)» again → node B. Node A is still reserved, but no pointer holds its address: it is **leaked**.`,(t,c)=>{c.b=t.malloc({data:2,next:null});ptrOn(t,'p',c.b);}],
+    [R`«free(p)» frees only B. A can never be freed. Fix: «free» A before reusing p, or keep a second pointer.`,(t,c)=>{t.free(c.b);}]]}],
+ qa:[
+  [R`What is the difference between stack and heap memory?`,R`The stack holds local variables; they are created and destroyed automatically with each function call. The heap holds memory requested with «malloc»; it stays until «free» is called. Linked structures use the heap because they must outlive the function that created them and their size changes at run time.`],
+  [R`What does malloc return when it fails, and what should you do?`,R`It returns «NULL». Check the pointer before using it and handle the error (print a message, stop).`],
+  [R`What is a memory leak?`,R`Heap memory that is still reserved but no longer reachable through any pointer, so it can never be freed. Long-running programs that leak eventually run out of memory.`],
+  [R`What is a dangling pointer? How do you avoid it?`,R`A pointer that still holds the address of memory that has been freed. Using it is undefined behaviour. Set pointers to «NULL» right after «free» and never use a pointer after freeing what it points to.`],
+  [R`Why write sizeof(struct Node) instead of a number like 8?`,R`The size depends on the machine and compiler (ints and pointers can be 4 or 8 bytes, plus padding). «sizeof» always gives the correct size.`],
+  [R`What is an abstract data type?`,R`A logical description of data and the operations on it, independent of implementation. Example: the Queue ADT (enqueue, dequeue, isEmpty, FIFO order) can be implemented with an array or a linked list.`]]},
+
+singly:{blocks:[
+  {t:'text',title:'Why linked lists?',body:[R`An array is one solid block: its size is fixed when you declare it, and inserting in the middle means shifting every later element. A linked list asks for one node at a time, anywhere on the heap, and joins them with pointers. It can grow and shrink while the program runs, and inserting means changing two arrows, not moving data.`,R`The price: there are no indexes. To reach the k-th node you must walk k links, and each node spends extra memory on its pointer.`]},
+  {t:'table',title:'Array vs linked list',head:['','Array','Singly linked list'],rows:[
+    ['Memory','One contiguous block','Separate nodes scattered on the heap'],
+    ['Size','Fixed when declared','Grows and shrinks at run time'],
+    ['Access k-th item','«O(1)»: «a[k]»','«O(n)»: walk k links'],
+    ['Insert/delete at front','«O(n)»: shift everything','«O(1)»'],
+    ['Insert/delete in the middle','«O(n)»: shift','«O(1)» once you hold the node before it (finding it is «O(n)»)'],
+    ['Extra memory','None','One pointer per node'],
+    ['Cache speed','Fast (neighbours are adjacent)','Slower (nodes are scattered)']]},
+  {t:'list',title:'Kinds of linked list',items:[R`**Singly**: each node points to the next. One direction only.`,R`**Doubly**: next and prev pointers. Both directions (Sortie 02).`,R`**Circular singly**: the last node points back to the first (Sortie 03).`,R`**Circular doubly**: both: head’s prev is the tail, tail’s next is the head.`,R`**With a header (dummy) node**: an empty first node so insert/delete at the front never need a special case.`]},
+  {t:'story',title:'Storyboard: insert 25 after the node p',view:'list',root:'head',base:t=>{const a=mkList(t,[10,20,30],'list');ptrOn(t,'head',a[0]);return {a};},steps:[
+    [R`Before: «p» points at 20. We want 25 right after it.`,(t,c)=>{ptrOn(t,'p',c.a[1]);c.hl=[c.a[1]];}],
+    [R`«n = malloc(...); n->data = 25;» A new node, not linked yet.`,(t,c)=>{c.n=t.malloc({data:25,next:null});ptrOn(t,'n',c.n);}],
+    [R`«n->next = p->next;» The new node points at 30 **first**, so the rest of the list is not lost.`,(t,c)=>{t.node(c.n,{next:c.a[2]});c.hl=[c.n];}],
+    [R`«p->next = n;» Now 20 points at 25. Doing these two lines in the other order would lose 30!`,(t,c)=>{t.node(c.a[1],{next:c.n});c.hl=[c.a[1]];}]]},
+  {t:'story',title:'Storyboard: delete the middle node',view:'list',root:'head',base:t=>{const a=mkList(t,[10,20,30],'list');ptrOn(t,'head',a[0]);return {a};},steps:[
+    [R`Before: delete 20. «prev» points at 10, «cur» at 20.`,(t,c)=>{ptrOn(t,'prev',c.a[0]);ptrOn(t,'cur',c.a[1]);c.hl=[c.a[1]];}],
+    [R`«prev->next = cur->next;» 10 now skips straight to 30.`,(t,c)=>{t.node(c.a[0],{next:c.a[2]});c.hl=[c.a[0]];}],
+    [R`«free(cur);» 20’s memory is returned.`,(t,c)=>{t.free(c.a[1]);}]]},
+  {t:'story',title:'Storyboard: reverse the list',view:'list',root:'head',base:t=>{const a=mkList(t,[1,2,3],'list');ptrOn(t,'head',a[0]);return {a};},steps:[
+    [R`Start: «prev = NULL», «cur = head». Each round turns one arrow around.`,(t,c)=>{ptrOn(t,'cur',c.a[0]);c.hl=[c.a[0]];}],
+    [R`Round 1: «nxt = cur->next; cur->next = prev;» Node 1 now points to NULL.`,(t,c)=>{t.node(c.a[0],{next:null});ptrOn(t,'prev',c.a[0]);ptrOn(t,'cur',c.a[1]);c.hl=[c.a[0]];}],
+    [R`Round 2: node 2 points back at node 1.`,(t,c)=>{t.node(c.a[1],{next:c.a[0]});ptrOn(t,'prev',c.a[1]);ptrOn(t,'cur',c.a[2]);c.hl=[c.a[1]];}],
+    [R`Round 3: node 3 points at node 2. «cur» is now NULL, so «head = prev».`,(t,c)=>{t.node(c.a[2],{next:c.a[1]});ptrOn(t,'prev',c.a[2]);ptrOn(t,'cur',null);ptrOn(t,'head',c.a[2]);c.hl=[c.a[2]];}]]},
+  {t:'list',title:'Where singly linked lists are used',items:[R`Implementing stacks and queues of unknown size.`,R`Polynomials (each node holds a coefficient and a power) and sparse matrices.`,R`Hash tables with chaining: each bucket is a list.`,R`Adjacency lists for graphs.`,R`Undo history, playlists, free-memory lists inside allocators.`]},
+  {t:'table',title:'Advantages and disadvantages',head:['Advantages','Disadvantages'],rows:[
+    ['Dynamic size: no need to know n in advance','No random access: reaching node k is «O(n)»'],
+    ['«O(1)» insert/delete at the head','Extra memory for every pointer'],
+    ['No shifting of data when inserting or deleting','Only one direction: no going back'],
+    ['Memory is used only for nodes that exist','Easy to leak memory or follow a dangling pointer']]}],
+ qa:[
+  [R`Differentiate between an array and a linked list.`,R`An array is a contiguous, fixed-size block with «O(1)» access by index but «O(n)» insertion/deletion (shifting). A linked list is a chain of dynamically allocated nodes: size changes at run time and insertion/deletion at a known position is «O(1)», but access by position is «O(n)» and each node needs an extra pointer.`],
+  [R`Why is inserting at the beginning O(1) but at the end O(n)?`,R`The head is always known, so inserting there changes a fixed number of pointers. To insert at the end you must first walk to the last node, which takes n steps, unless you also keep a «tail» pointer.`],
+  [R`What is a self-referential structure? Give an example.`,R`A structure that contains a pointer to a structure of the same type: «struct Node { int data; struct Node *next; };».`],
+  [R`How do you know you have reached the end of a singly linked list?`,R`The current node’s «next» is «NULL» (or, when walking with «cur = cur->next», «cur» itself becomes «NULL»).`],
+  [R`Write the steps to reverse a singly linked list.`,R`Use three pointers: «prev = NULL», «cur = head». While «cur != NULL»: «nxt = cur->next; cur->next = prev; prev = cur; cur = nxt;». Finally «head = prev». Time «O(n)», extra space «O(1)».`],
+  [R`Why does deleting the first node need a special case?`,R`There is no node before it whose «next» can be changed. Instead the «head» pointer itself must move to the second node.`]]},
+
+doubly:{blocks:[
+  {t:'table',title:'Singly vs doubly linked list',head:['','Singly','Doubly'],rows:[
+    ['Pointers per node','1 («next»)','2 («prev», «next»)'],['Traverse backward','No','Yes'],['Delete a node you hold','«O(n)»: must find the node before it','«O(1)»: d->prev is right there'],
+    ['Insert before a node','«O(n)»','«O(1)»'],['Pointer updates to insert in the middle','2','4'],['Memory per node','Less','More']]},
+  {t:'story',title:'Storyboard: insert 20 after p (the 4 pointer changes)',view:'dlist',root:'head',base:t=>{const a=mkList(t,[10,30],'dlist');ptrOn(t,'head',a[0]);return {a};},steps:[
+    [R`Before: «p» points at 10. Insert 20 between 10 and 30.`,(t,c)=>{ptrOn(t,'p',c.a[0]);c.hl=[c.a[0]];}],
+    [R`«n = new node(20)», not linked yet.`,(t,c)=>{c.n=t.malloc({data:20,prev:null,next:null});ptrOn(t,'n',c.n);}],
+    [R`① «n->prev = p;» ② «n->next = p->next;» Wire the newcomer first.`,(t,c)=>{t.node(c.n,{prev:c.a[0],next:c.a[1]});c.hl=[c.n];}],
+    [R`③ «p->next->prev = n;» 30 now points back at 20.`,(t,c)=>{t.node(c.a[1],{prev:c.n});c.hl=[c.a[1]];}],
+    [R`④ «p->next = n;» 10 now points forward at 20. Four pointer changes, all done: ⇄ ⇄.`,(t,c)=>{t.node(c.a[0],{next:c.n});c.hl=[c.a[0]];}]]},
+  {t:'story',title:'Storyboard: delete node d (two bypasses, then free)',view:'dlist',root:'head',base:t=>{const a=mkList(t,[10,20,30],'dlist');ptrOn(t,'head',a[0]);return {a};},steps:[
+    [R`Before: «d» points at 20.`,(t,c)=>{ptrOn(t,'d',c.a[1]);c.hl=[c.a[1]];}],
+    [R`«d->prev->next = d->next;» 10 skips forward to 30.`,(t,c)=>{t.node(c.a[0],{next:c.a[2]});c.hl=[c.a[0]];}],
+    [R`«d->next->prev = d->prev;» 30 skips back to 10.`,(t,c)=>{t.node(c.a[2],{prev:c.a[0]});c.hl=[c.a[2]];}],
+    [R`«free(d);» Only now is it safe to free.`,(t,c)=>{t.free(c.a[1]);}]]},
+  {t:'list',title:'Where doubly linked lists are used',items:[R`Browser history: Back and Forward.`,R`Undo and redo in editors.`,R`Music players: previous and next track.`,R`LRU caches: move any item to the front in «O(1)».`,R`The C++ «std::list» and Java «LinkedList» are doubly linked.`]},
+  {t:'table',title:'Advantages and disadvantages',head:['Advantages','Disadvantages'],rows:[['Traverse in both directions','Extra «prev» pointer in every node'],['Delete a known node in «O(1)»','Every insert/delete changes more pointers'],['Insert before a node easily','More places to make a mistake']]}],
+ qa:[
+  [R`What are the advantages of a doubly linked list over a singly linked list?`,R`It can be traversed in both directions, and a node you already hold can be deleted (or a new node inserted before it) in «O(1)», because its predecessor is available through «prev».`],
+  [R`What are its disadvantages?`,R`Each node needs an extra pointer (more memory), and every insertion or deletion must update more pointers, so the code is longer and easier to get wrong.`],
+  [R`How many pointers change when you insert a node in the middle?`,R`Four: the new node’s «prev» and «next», the next node’s «prev», and the previous node’s «next».`],
+  [R`In a non-circular doubly linked list, what are head->prev and tail->next?`,R`Both are «NULL».`],
+  [R`Give two real applications.`,R`Browser back/forward navigation and undo/redo stacks; also LRU caches and music playlists.`]]},
+
+circular:{blocks:[
+  {t:'table',title:'Where the last node points',head:['List type','last->next','first->prev','Stop walking when…'],rows:[
+    ['Singly','«NULL»','none','«p == NULL»'],['Circular singly','«head»','none','«p» is back at «head»'],['Circular doubly','«head»','«tail»','«p» is back at «head»']]},
+  {t:'text',title:'Why keep only a tail pointer',body:[R`In a circular list «tail->next» *is* the head. So one pointer, «tail», gives you both ends: inserting at the front and at the back are both «O(1)». Many textbooks keep only «last» for this reason.`]},
+  {t:'story',title:'Storyboard: insert at the front using only tail',view:'clist',root:'head',base:t=>{const a=mkList(t,[1,2,3],'clist');ptrOn(t,'head',a[0]);ptrOn(t,'tail',a[2]);return {a};},steps:[
+    [R`Before: «tail->next» is the first node (1).`,(t,c)=>{c.hl=[c.a[2]];}],
+    [R`«n = new node(0)», not linked yet.`,(t,c)=>{c.n=t.malloc({data:0,next:null});ptrOn(t,'n',c.n);}],
+    [R`«n->next = tail->next;» The newcomer points at the old first node.`,(t,c)=>{t.node(c.n,{next:c.a[0]});c.hl=[c.n];}],
+    [R`«tail->next = n;» The last node now points at the newcomer, which is the new first node («head = tail->next»).`,(t,c)=>{t.node(c.a[2],{next:c.n});ptrOn(t,'head',c.n);c.hl=[c.a[2]];}]]},
+  {t:'list',title:'Where circular lists are used',items:[R`**Round-robin CPU scheduling**: give each process a turn, forever.`,R`Turn order in multiplayer games.`,R`The **Josephus problem**: people in a circle, every k-th one leaves.`,R`Circular buffers for audio and network data.`,R`Repeat-all in music players.`]},
+  {t:'table',title:'Advantages and disadvantages',head:['Advantages','Disadvantages'],rows:[['Any node can be the starting point','Easy to write an infinite loop'],['Both ends reachable from tail in «O(1)»','No NULL to mark the end; needs a different stop test'],['Natural for things that repeat in cycles','Deleting needs care to keep the ring closed']]}],
+ qa:[
+  [R`What is a circular linked list?`,R`A linked list in which the last node’s «next» points back to the first node instead of «NULL», so the nodes form a ring.`],
+  [R`Why does while (p != NULL) fail on a circular list?`,R`There is no «NULL» in the ring, so the condition never becomes false and the loop runs forever. Stop when «p» returns to the starting node, usually with «do { … } while (p != head);».`],
+  [R`Why is it common to keep a pointer to the last node instead of the first?`,R`Because «last->next» is the first node, a single pointer gives access to both ends, making insertion at the front and the back «O(1)».`],
+  [R`What does a circular list with one node look like?`,R`The node points to itself: «head->next == head».`],
+  [R`Name two applications.`,R`Round-robin scheduling and the Josephus problem; also circular buffers and turn-based games.`]]},
+
+queue:{blocks:[
+  {t:'text',title:'The Queue ADT',body:[R`A queue stores items in arrival order. Items are added at the **rear** and removed from the **front**: **FIFO**, first in, first out.`,R`Operations: «enqueue(x)» add at the rear · «dequeue()» remove from the front · «peek()» look at the front · «isEmpty()» · «isFull()» (array version only). Removing from an empty queue is **underflow**; adding to a full array queue is **overflow**.`]},
+  {t:'table',title:'Stack vs queue',head:['','Stack','Queue'],rows:[['Order','LIFO: last in, first out','FIFO: first in, first out'],['Add','push, at the top','enqueue, at the rear'],['Remove','pop, from the top','dequeue, from the front'],['Pointers / indexes','«top»','«front» and «rear»'],['Examples','Undo, function calls, bracket matching','Printer jobs, CPU scheduling, BFS']]},
+  {t:'table',title:'Three ways to build a queue',head:['Implementation','enqueue / dequeue','Notes'],rows:[
+    ['Linear array','«O(1)»','After dequeues, slots at the front are wasted: “full” even with free space (false overflow).'],
+    ['Circular array','«O(1)»','Indexes wrap with «(i + 1) % N», so freed slots are reused. Fixed capacity N.'],
+    ['Linked list','«O(1)»','No fixed limit. Extra pointer per node. Must reset «rear» when it empties.']]},
+  {t:'list',title:'Circular array formulas',items:[R`Next index: «i = (i + 1) % N».`,R`Start: «front = 0», «rear = -1», «count = 0».`,R`Empty: «count == 0». Full: «count == N».`,R`Without a count, a common rule leaves one slot empty: full when «(rear + 1) % N == front».`]},
+  {t:'list',title:'Kinds of queue',items:[R`**Simple (linear) queue**: the basic FIFO line.`,R`**Circular queue**: an array queue whose indexes wrap around.`,R`**Priority queue**: the item with the highest priority leaves first, not the oldest (often built with a heap).`,R`**Deque** (double-ended queue): add and remove at both ends. *Input-restricted*: add at one end only. *Output-restricted*: remove at one end only.`]},
+  {t:'story',title:'Storyboard: a linked queue from empty to empty',view:'list',root:'front',base:t=>{ptrOn(t,'front',null);ptrOn(t,'rear',null);return {};},steps:[
+    [R`Empty queue: «front = rear = NULL».`,(t,c)=>{}],
+    [R`«enqueue(10)»: the only node is both the front and the rear.`,(t,c)=>{c.a=t.malloc({data:10,next:null});ptrOn(t,'front',c.a);ptrOn(t,'rear',c.a);c.hl=[c.a];}],
+    [R`«enqueue(20)»: «rear->next = n; rear = n;»`,(t,c)=>{c.b=t.malloc({data:20,next:null});t.node(c.a,{next:c.b});ptrOn(t,'rear',c.b);c.hl=[c.b];}],
+    [R`«dequeue()» returns 10: «front = front->next;» then the old node is freed.`,(t,c)=>{ptrOn(t,'front',c.b);t.free(c.a);c.hl=[c.b];}],
+    [R`«dequeue()» returns 20: front becomes NULL, so «rear = NULL» too. Empty again.`,(t,c)=>{ptrOn(t,'front',null);ptrOn(t,'rear',null);t.free(c.b);}]]},
+  {t:'list',title:'Where queues are used',items:[R`CPU and printer scheduling: jobs are served in arrival order.`,R`Breadth-first search (BFS) in graphs, and level-order traversal of trees (Sortie 05).`,R`Keyboard and network buffers.`,R`Call centres and ticket systems.`]}],
+ qa:[
+  [R`Define a queue. Why is it called FIFO?`,R`A linear data structure where insertion happens at the rear and deletion at the front. The first element inserted is the first one removed: First In, First Out.`],
+  [R`Differentiate a stack and a queue.`,R`A stack is LIFO with one end (top) for both push and pop. A queue is FIFO with two ends: enqueue at the rear, dequeue at the front.`],
+  [R`Why is a circular queue better than a linear array queue?`,R`In a linear array queue, slots freed by dequeues at the front can never be reused, so the queue can report “full” while space is free. A circular queue wraps the indexes with modulo, reusing those slots.`],
+  [R`What are overflow and underflow?`,R`Overflow: trying to enqueue into a full (array) queue. Underflow: trying to dequeue from an empty queue.`],
+  [R`What are the full and empty conditions of a circular queue of size N?`,R`With a counter: empty when «count == 0», full when «count == N». Without one (keeping one slot empty): empty when «front == rear» (or a sentinel value), full when «(rear + 1) % N == front».`],
+  [R`What is a priority queue? What is a deque?`,R`A priority queue removes the highest-priority element first rather than the oldest. A deque allows insertion and deletion at both ends.`]]},
+
+tree:{blocks:[
+  {t:'table',title:'Tree terminology (on the example tree)',head:['Term','Meaning','In the example'],rows:[
+    ['Root','The top node; it has no parent','50'],['Parent / child','A node and the nodes directly below it','30 is the parent of 20 and 40'],['Siblings','Children of the same parent','20 and 40'],
+    ['Leaf','A node with no children','20, 40, 60, 80'],['Internal node','A node with at least one child','50, 30, 70'],['Edge','The link between a parent and a child','n nodes always have n − 1 edges'],
+    ['Depth of a node','Edges from the root down to it','depth(20) = 2'],['Height of the tree','Edges on the longest root-to-leaf path','2'],['Level','Same as depth: root is level 0','40 is on level 2'],
+    ['Degree','Number of children of a node','Binary tree: at most 2'],['Subtree','A node together with all its descendants','30, 20, 40']]},
+  {t:'table',title:'Kinds of binary tree',head:['Type','Rule'],rows:[
+    ['Binary tree','Every node has at most 2 children.'],['Full (strict)','Every node has 0 or 2 children.'],['Complete','Every level is full except possibly the last, which is filled from the left.'],
+    ['Perfect','All internal nodes have 2 children and all leaves are on the same level.'],['Skewed (degenerate)','Every node has one child: it behaves like a linked list.'],
+    ['Binary search tree','Left subtree < node ≤ right subtree, at every node.'],['Balanced (AVL, red-black)','Keeps the height «O(log n)» by rotating after inserts and deletes.']]},
+  {t:'list',title:'Useful formulas (height counted in edges, root at level 0)',items:[R`Maximum nodes on level i: «2^i».`,R`Maximum nodes in a tree of height h: «2^(h+1) − 1».`,R`n nodes have exactly «n − 1» edges.`,R`Minimum height for n nodes: «⌈log₂(n + 1)⌉ − 1».`,R`In a full binary tree: leaves = internal nodes + 1.`]},
+  {t:'table',title:'Traversals of the example tree',head:['Traversal','Order','Result'],rows:[
+    ['Inorder','Left, Node, Right','20 30 40 50 60 70 80 (sorted)'],['Preorder','Node, Left, Right','50 30 20 40 70 60 80'],
+    ['Postorder','Left, Right, Node','20 40 30 60 80 70 50'],['Level order (BFS)','Level by level, using a queue','50 30 70 20 40 60 80']]},
+  {t:'story',title:'Storyboard: delete case 1, a leaf (20)',view:'tree',root:'root',base:t=>{const [r,m]=mkTree(t,[50,30,70,20,40,60,80]);ptrOn(t,'root',r);return {m};},steps:[
+    [R`20 has no children.`,(t,c)=>{c.hl=[c.m[20]];}],
+    [R`Set its parent’s link to NULL («30->left = NULL») and «free» it.`,(t,c)=>{t.node(c.m[30],{left:null});t.free(c.m[20]);c.hl=[c.m[30]];}]]},
+  {t:'story',title:'Storyboard: delete case 2, one child (30)',view:'tree',root:'root',base:t=>{const [r,m]=mkTree(t,[50,30,70,20,60]);ptrOn(t,'root',r);return {m};},steps:[
+    [R`30 has only one child, 20.`,(t,c)=>{c.hl=[c.m[30]];}],
+    [R`Link the parent straight to that child («50->left = 20») and «free» 30. The BST rule still holds.`,(t,c)=>{t.node(c.m[50],{left:c.m[20]});t.free(c.m[30]);c.hl=[c.m[50],c.m[20]];}]]},
+  {t:'story',title:'Storyboard: delete case 3, two children (50)',view:'tree',root:'root',base:t=>{const [r,m]=mkTree(t,[50,30,70,20,40,60,80]);ptrOn(t,'root',r);return {m};},steps:[
+    [R`50 has two children, so we cannot just unlink it.`,(t,c)=>{c.hl=[c.m[50]];}],
+    [R`Find the **inorder successor**: the smallest value in the right subtree (go right once, then left as far as possible): 60.`,(t,c)=>{c.hl=[c.m[60]];}],
+    [R`Copy 60 into the node being deleted.`,(t,c)=>{t.node(c.m[50],{data:60});c.hl=[c.m[50]];}],
+    [R`Delete the old 60 node from the right subtree. It has at most one child, so this is case 1 or 2.`,(t,c)=>{t.node(c.m[70],{left:null});t.free(c.m[60]);c.hl=[c.m[50]];}]]},
+  {t:'table',title:'BST cost',head:['Operation','Balanced tree','Skewed tree (worst case)'],rows:[['Search','«O(log n)»','«O(n)»'],['Insert','«O(log n)»','«O(n)»'],['Delete','«O(log n)»','«O(n)»'],['Traversal','«O(n)»','«O(n)»']]},
+  {t:'list',title:'Where trees are used',items:[R`File systems: folders inside folders.`,R`Database indexes (B-trees) and in-memory maps (balanced BSTs).`,R`Expression trees in compilers: «(a + b) * c».`,R`Decision trees, game trees, the HTML DOM.`,R`Heaps (priority queues) and tries (autocomplete).`]}],
+ qa:[
+  [R`Define root, leaf, height and depth.`,R`Root: the top node with no parent. Leaf: a node with no children. Depth of a node: the number of edges from the root to it. Height of a tree: the number of edges on the longest path from the root to a leaf.`],
+  [R`What is the difference between a binary tree and a binary search tree?`,R`A binary tree only limits each node to two children. A BST adds an ordering rule: every value in a node’s left subtree is smaller than it and every value in its right subtree is larger (or equal).`],
+  [R`Distinguish full, complete and perfect binary trees.`,R`Full: every node has 0 or 2 children. Complete: all levels full except maybe the last, filled from the left. Perfect: every internal node has 2 children and all leaves are at the same level (it is both full and complete).`],
+  [R`Why does inorder traversal of a BST give sorted output?`,R`Inorder visits the left subtree (all smaller values), then the node, then the right subtree (all larger values), at every node. So values come out in increasing order.`],
+  [R`What is the worst-case search time in a BST and when does it happen?`,R`«O(n)», when the tree is skewed, for example after inserting already-sorted data. A balanced BST keeps it at «O(log n)».`],
+  [R`How do you delete a node that has two children?`,R`Replace its value with its inorder successor (smallest value in the right subtree) or inorder predecessor (largest in the left subtree), then delete that successor/predecessor node, which has at most one child.`],
+  [R`Which traversal uses a queue?`,R`Level-order traversal (breadth-first): enqueue the root, then repeatedly dequeue a node, visit it, and enqueue its children.`],
+  [R`What is the maximum number of nodes in a binary tree of height h?`,R`«2^(h+1) − 1» (counting height in edges, so a single node has height 0).`]]}
+};
+LESSONS.find(l=>l.id==='singly').ops.push({name:'REVERSE(head)',cost:'O(n)',lines:[['prev ← NULL; cur ← head','prev will end up as the new head.'],['WHILE cur ≠ NULL DO',''],['    nxt ← cur.next','Save the rest of the list first.'],['    cur.next ← prev','Turn this arrow around.'],['    prev ← cur; cur ← nxt','Step forward.'],['RETURN prev','The old last node is the new head.']]});
+LESSONS.find(l=>l.id==='doubly').ops.splice(1,0,{name:'INSERT-AFTER(p, x)',cost:'O(1)',lines:[['n ← NEW NODE; n.data ← x','Make the node.'],['n.prev ← p; n.next ← p.next','Wire the newcomer to both neighbours first.'],['IF p.next ≠ NULL THEN p.next.prev ← n','The old successor links back to n.'],['ELSE tail ← n','p was last: n is the new tail.'],['p.next ← n','Finally p links forward to n.']]});
+LESSONS.find(l=>l.id==='circular').ops.splice(1,0,{name:'INSERT-FRONT(x) with only tail',cost:'O(1)',lines:[['n ← NEW NODE; n.data ← x','Make the node.'],['IF tail = NULL THEN n.next ← n; tail ← n','First node: a ring of one.'],['ELSE n.next ← tail.next','The newcomer points at the old first node…'],['     tail.next ← n','…and the last node points at the newcomer, the new first node.']]});
+LESSONS.find(l=>l.id==='tree').ops.push({name:'BST-DELETE(r, key)',cost:'O(h)',lines:[['IF r = NULL THEN RETURN NULL','Key not found.'],['IF key < r.data THEN r.left ← BST-DELETE(r.left, key)','Search left…'],['ELSE IF key > r.data THEN r.right ← BST-DELETE(r.right, key)','…or right.'],['ELSE IF r.left = NULL THEN t ← r.right; FREE(r); RETURN t','Found with no left child (cases 1 and 2): its right child takes its place.'],['ELSE IF r.right = NULL THEN t ← r.left; FREE(r); RETURN t','Found with no right child: its left child takes its place.'],['ELSE s ← MIN(r.right); r.data ← s.data','Two children (case 3): copy the inorder successor’s value in…'],['     r.right ← BST-DELETE(r.right, s.data)','…then delete that successor from the right subtree.'],['RETURN r','']]},
+ {name:'LEVEL-ORDER(root)',cost:'O(n)',lines:[['IF root = NULL THEN RETURN',''],['ENQUEUE(root)','A queue holds the nodes waiting to be visited.'],['WHILE queue not empty DO','Level by level…'],['    n ← DEQUEUE(); VISIT(n)','…take the oldest waiting node…'],['    IF n.left ≠ NULL THEN ENQUEUE(n.left)','…and line up its children.'],['    IF n.right ≠ NULL THEN ENQUEUE(n.right)','']]});
+
+/* ================= progress (this browser only) ================= */
+let progress={};try{progress=JSON.parse(localStorage.getItem('frameops-progress')||'{}')||{};}catch(e){progress={};}
+const save=()=>{try{localStorage.setItem('frameops-progress',JSON.stringify(progress));}catch(e){}};
+const solved=(l,k)=>!!(progress[l]&&progress[l][k]);
+function markSolved(l,k){progress[l]=progress[l]||[];progress[l][k]=true;save();renderTabs();}
+
+/* ================= page ================= */
+const tabs=document.getElementById('tabs'),app=document.getElementById('app');
+document.getElementById('logo').innerHTML=mech(40);
+const curId=()=>{const h=location.hash.slice(1);return LESSONS.some(L=>L.id===h)?h:LESSONS[0].id;};
+function renderTabs(){const c=curId();tabs.innerHTML=LESSONS.map(L=>{const d=L.labs.filter((_,k)=>solved(L.id,k)).length;return `<a href="#${L.id}" ${L.id===c?'aria-current="page"':''}><span>${L.no} · ${d}/${L.labs.length}</span><b>${L.short}</b></a>`;}).join('');}
+const capHtml=s=>md(s).replace(/&lt;(\/?)b&gt;/g,'<$1b>');
+function ioHtml(i,o,hide){return `<div class="io"><div class="io-box"><span>SAMPLE INPUT</span><pre>${esc(i)}</pre></div><div class="io-box"><span>SAMPLE OUTPUT</span>${hide?'<pre class="hide">Work it out first</pre>':`<pre>${esc(o)}</pre>`}</div></div>`;}
+const pseudoHtml=c=>esc(c).replace(/\b(IF|THEN|ELSE|WHILE|DO|RETURN|REPEAT|UNTIL|TIMES|NEW NODE|NEW|NULL|AND|OR|FREE|MOD|START|VISIT|MAX|UNDERFLOW|OVERFLOW)\b/g,'<span class="kw">$1</span>');
+function everyHtml(p){const notes=p.notes||{};return `<details class="every"><summary>Every line, explained</summary><div class="ew"><table>${p.code.split('\n').map((l,k)=>l.trim()?`<tr><td class="n">${k+1}</td><td class="s">${hl(l)}</td><td class="t">${md(notes[k+1]||autoNote(l)||'')}</td></tr>`:'').join('')}</table></div></details>`;}
+
+function buildLesson(L,li){
+  const sec=document.createElement('section');sec.className='sortie';sec.hidden=true;
+  sec.innerHTML=`
+   <div class="brief">
+     <div class="hud btext"><div class="code-no">${L.no} // MISSION BRIEFING</div><h1>${L.title}</h1><p class="big">${md(L.big)}</p><ul class="keys">${L.keys.map(k=>`<li><span>${md(k)}</span></li>`).join('')}</ul></div>
+     <figure class="hud figure" style="margin:0"><div class="lbl">Tactical view <em>// example</em></div><div class="heap">${L.demo()}</div><figcaption class="cap">${capHtml(L.cap)}</figcaption></figure>
+   </div>
+   <div class="traps"><h3>⚠ Exam traps</h3><ul>${L.traps.map(x=>`<li>${md(x)}</li>`).join('')}</ul></div>
+   ${INTEL[L.id]?`<div class="sec"><h2>Intel: theory</h2><p>Definitions, comparisons, step-by-step diagrams and where each structure is used.</p></div>
+   <div class="igrid">${INTEL[L.id].blocks.map(intelHtml).join('')}</div>`:''}
+   <div class="sec"><h2>Tactics: pseudocode</h2><p>Each operation in plain steps, with what every line does and how fast it is.</p></div>
+   <div class="ops">${L.ops.map(o=>`<article class="hud op"><div class="op-h"><h3>${esc(o.name)}</h3><span class="cost">${esc(o.cost)}</span></div><ol class="pseudo">${o.lines.map(([c,e])=>`<li><span class="pc">${pseudoHtml(c)}</span><span class="pe">${esc(e)}</span></li>`).join('')}</ol></article>`).join('')}</div>
+   <div><div class="sec"><h2>Combat sim: the C code</h2><p>Run the real program line by line. The heap view draws every node and arrow as it changes.</p></div>
+     <div class="ptabs" role="tablist">${L.progs.map((p,k)=>`<button role="tab" type="button" aria-selected="${k===0}" data-p="${k}"><b>${esc(p.title)}</b><small>${esc(p.short)}</small></button>`).join('')}</div></div>
+   ${L.progs.map((p,k)=>`<article class="hud lab" data-panel="${k}" ${k?'hidden':''}><div class="lab-top"><div class="task"><h3>Mission</h3><p>${md(p.task)}</p></div>${ioHtml(p.sampleIn,p.sampleOut)}</div><div class="bh"></div>${everyHtml(p)}</article>`).join('')}
+   ${INTEL[L.id]?`<div class="sec"><h2>Exam theory questions</h2><p>Short-answer questions with model answers. Try answering aloud before you open each one.</p></div>
+   <div class="qas">${INTEL[L.id].qa.map(([q,a])=>`<details class="qa"><summary>${md(q)}</summary><div>${md(a)}</div></details>`).join('')}</div>`:''}
+   <div class="sec"><h2>Field tests</h2><p>Lab-style problems. Answer, then press “Run sim” to watch why.</p></div>
+   <div class="tests"></div>
+   <nav class="pager">${li>0?`<a class="btn" href="#${LESSONS[li-1].id}">◀ ${LESSONS[li-1].short}</a>`:'<span></span>'}${li<LESSONS.length-1?`<a class="btn go" href="#${LESSONS[li+1].id}">Next sortie: ${LESSONS[li+1].short} ▶</a>`:''}</nav>`;
+  const built={};
+  const openProg=k=>{sec.querySelectorAll('.ptabs button').forEach(b=>b.setAttribute('aria-selected',String(+b.dataset.p===k)));sec.querySelectorAll('.lab[data-panel]').forEach(a=>a.hidden=+a.dataset.panel!==k);
+    if(!built[k]){Bench(sec.querySelector(`.lab[data-panel="${k}"] .bh`),L.progs[k]);built[k]=true;}};
+  sec.querySelector('.ptabs').addEventListener('click',e=>{const b=e.target.closest('[data-p]');if(b)openProg(+b.dataset.p);});
+  sec._open=()=>{if(!built[0])openProg(0);};
+  const tests=sec.querySelector('.tests');L.labs.forEach((x,k)=>tests.appendChild(buildLab(L,x,k)));
+  return sec;
+}
+function buildLab(L,x,k){
+  const id=`t-${L.id}-${k}`,el=document.createElement('article');el.className='hud ex'+(solved(L.id,k)?' solved':'');
+  const fill=/⟦/.test(x.code),choice=!!x.options;
+  const codeHtml=x.code.split(/⟦(.+?)⟧/).map((p,i)=>i%2?`<input id="${id}" aria-label="Your answer" autocomplete="off" spellcheck="false" size="${Math.max(4,p.length+1)}">`:hl(p)).join('');
+  el.innerHTML=`<div class="ex-h"><span class="kind">${x.kind}</span><h3>${esc(x.title)}</h3><span class="tick" ${solved(L.id,k)?'':'hidden'}>✓ CLEARED</span></div>
+   <p>${md(x.story)}</p>${x.sampleIn!==undefined?ioHtml(x.sampleIn,x.sampleOut,x.hideOut):''}<p class="q">${md(x.q)}</p>
+   <details><summary class="lbl" style="cursor:pointer">Show the full program</summary><pre class="excode">${codeHtml}</pre></details>
+   ${choice?`<div class="choices">${x.options.map((o,j)=>`<label for="${id}-${j}"><input type="radio" name="${id}" id="${id}-${j}" value="${j}">${esc(o.c)}</label>`).join('')}</div>`:''}
+   ${!fill&&!choice?`<div class="ans"><label for="${id}"><b>Your answer</b></label><input id="${id}" autocomplete="off" spellcheck="false"></div>`:''}
+   <div class="acts"><button class="btn go" data-x="check" type="button">Check</button>${x.trace?'<button class="btn" data-x="watch" type="button">▶ Run sim</button>':''}<button class="btn" data-x="reveal" type="button" hidden>Show answer</button></div>
+   <div class="fb" hidden aria-live="polite"></div><div class="wv" hidden></div>`;
+  if(fill||!x.trace)el.querySelector('details').open=true;
+  let wrong=0,built=false;const fb=el.querySelector('.fb');const say=(c,h)=>{fb.className='fb '+c;fb.innerHTML=h;fb.hidden=false;};
+  const solCode=x.solution?x.code.replace(/\/\* which [^*]*\*\//,x.solution):x.code.replace(/⟦(.+?)⟧/g,'$1');
+  const showRun=()=>{if(!x.trace)return;const h=el.querySelector('.wv');if(!built){Bench(h,{...x,code:solCode});built=true;}h.hidden=false;};
+  el.addEventListener('click',e=>{const b=e.target.closest('[data-x]');if(!b)return;const a=b.dataset.x;
+    if(a==='watch'){showRun();return;}
+    if(a==='reveal'){say('',`<strong>ANSWER</strong><code style="white-space:pre-wrap">${esc(choice?x.options.find(o=>o.ok).c:x.answers[0])}</code><p>${md(x.explain)}</p>`);showRun();return;}
+    let ok,why='';
+    if(choice){const p=el.querySelector(`input[name="${id}"]:checked`);if(!p){say('','Pick one of the options first.');return;}const o=x.options[+p.value];ok=!!o.ok;why=o.why||'';}
+    else{const v=el.querySelector('#'+CSS.escape(id)).value;if(!v.trim()){say('','Type your answer first.');return;}ok=x.answers.map(ansNorm).includes(ansNorm(v));}
+    if(ok){say('ok',`<strong>TARGET CLEARED</strong>${md(x.explain)}`);el.classList.add('solved');el.querySelector('.tick').hidden=false;markSolved(L.id,k);Comm.launch(()=>Comm.say('Target cleared. '+x.explain));showRun();}
+    else{wrong++;say('bad',`<strong>NEGATIVE</strong>${md(why||('Hint: '+x.hint))}`);Comm.say(wrong>=2?'Still off target. You can press **Show answer**, pilot.':'Negative. Recalculate: read the hint and try again.');if(wrong>=2)el.querySelector('[data-x=reveal]').hidden=false;}});
+  el.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.matches('input:not([type=radio])')){e.preventDefault();el.querySelector('[data-x=check]').click();}});
+  return el;
+}
+const sections=LESSONS.map((L,i)=>{const s=buildLesson(L,i);app.appendChild(s);return s;});
+function show(scroll){const id=curId(),L=LESSONS.find(l=>l.id===id);sections.forEach((s,i)=>{s.hidden=LESSONS[i].id!==id;if(!s.hidden)s._open();});renderTabs();if(scroll)window.scrollTo({top:0,behavior:'auto'});
+  Comm.launch(()=>Comm.say(L.hello));}
+window.addEventListener('hashchange',()=>show(true));
+show(false);
+</script>
+
+</body>
+</html>
