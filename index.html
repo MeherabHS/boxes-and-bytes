@@ -1,0 +1,1425 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Learn C arrays, strings, functions and structs step by step with Mochi the cat.">
+<style>
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+<title>Boxes &amp; Bytes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bangers&family=Fredoka:wght@500;600;700&family=Lexend:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout (pastel, cat mascot "Mochi"): sticky lesson tabs on top; each lesson = friendly hero with a drawn analogy, then
+   lab-sheet programs (task, sample input/output, step-through bench), then scenario labs. */
+:root{
+  --bg:#fde8ef; --blob1:#f8cadd; --blob2:#e4d8fc; --blob3:#ffe0c9;
+  --surface:#fffafc; --surface-2:#fdf0f5; --bar:rgba(255,247,251,.88);
+  --ink:#3d2238; --muted:#86627b; --line:#f1d0e0;
+  --accent:#c23d7c; --accent-ink:#ffffff; --accent-soft:#fbe1ed;
+  --sun:#ffd98a; --sun-ink:#4a2f00; --sun-soft:#fff3dd;
+  --coral:#e0455b; --coral-soft:#fde2e6; --ok:#2a9a72; --ok-soft:#d9f3e8;
+  --tone-i:#7a4fd0; --tone-i-soft:#ece2fd; --tone-j:#d9467a; --tone-j-soft:#fde0ea;
+  --code-bg:#2e1b33; --code-ink:#f8e9f2; --code-dim:#ad8ea7; --code-kw:#ffb0d0; --code-type:#b5e8d5;
+  --code-str:#ffd89e; --code-num:#ffae9c; --code-fn:#d8c3ff; --code-cur:rgba(255,217,138,.2);
+  --cat-fur:#ffdcb8; --cat-line:#3d2238; --cat-ear:#f59bbd;
+  --shadow:0 10px 28px -16px rgba(170,50,110,.45);
+  --pop-bg:#ffffff; --dot:rgba(194,61,124,.11);
+  --f-display:"Fredoka","Trebuchet MS",system-ui,sans-serif;
+  --f-body:"Lexend","Segoe UI",system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#1e1221; --blob1:#3a1a35; --blob2:#2a1f45; --blob3:#3a2420; --surface:#2a1a2e; --surface-2:#331f37; --bar:rgba(34,20,38,.88);
+  --ink:#f8e8f2; --muted:#cba9c0; --line:#4b2f4e; --accent:#ff8cc0; --accent-ink:#2b0d1d; --accent-soft:#4b2142;
+  --sun:#ffcf75; --sun-ink:#3a2400; --sun-soft:#3e2c1c; --coral:#ff8a99; --coral-soft:#4a1f2a; --ok:#6fdcb0; --ok-soft:#183b2e;
+  --tone-i:#c4a8ff; --tone-i-soft:#36284f; --tone-j:#ff9dbc; --tone-j-soft:#4b2232; --code-bg:#180c1b;
+  --cat-fur:#f1c79e; --cat-line:#2a1a2e; --cat-ear:#f08fb5; --shadow:0 10px 28px -16px rgba(0,0,0,.65); --pop-bg:#2f1d33; --dot:rgba(255,140,192,.12);
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#1e1221; --blob1:#3a1a35; --blob2:#2a1f45; --blob3:#3a2420; --surface:#2a1a2e; --surface-2:#331f37; --bar:rgba(34,20,38,.88);
+  --ink:#f8e8f2; --muted:#cba9c0; --line:#4b2f4e; --accent:#ff8cc0; --accent-ink:#2b0d1d; --accent-soft:#4b2142;
+  --sun:#ffcf75; --sun-ink:#3a2400; --sun-soft:#3e2c1c; --coral:#ff8a99; --coral-soft:#4a1f2a; --ok:#6fdcb0; --ok-soft:#183b2e;
+  --tone-i:#c4a8ff; --tone-i-soft:#36284f; --tone-j:#ff9dbc; --tone-j-soft:#4b2232; --code-bg:#180c1b;
+  --cat-fur:#f1c79e; --cat-line:#2a1a2e; --cat-ear:#f08fb5; --shadow:0 10px 28px -16px rgba(0,0,0,.65); --pop-bg:#2f1d33; --dot:rgba(255,140,192,.12);
+  color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background-color:var(--bg);background-image:radial-gradient(circle at 8% 4%,var(--blob1),transparent 38%),radial-gradient(circle at 94% 18%,var(--blob2),transparent 34%),radial-gradient(circle at 40% 100%,var(--blob3),transparent 42%);background-attachment:fixed;color:var(--ink);font:17px/1.65 var(--f-body);margin:0}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+.wrap{max-width:1280px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3,h4{font-family:var(--f-display);font-weight:600;line-height:1.15;text-wrap:balance;margin:0}
+p{margin:0}
+code{font-family:var(--f-mono);font-size:.86em;background:var(--accent-soft);color:var(--ink);border-radius:5px;padding:.05em .35em}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+/* top bar */
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bar);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.bar-in{display:flex;align-items:center;gap:18px;min-height:62px;flex-wrap:wrap;padding-block:8px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);font:700 1.3rem var(--f-display)}
+.logo{display:flex;gap:3px}
+.logo i{width:16px;height:16px;border-radius:4px;border:2.5px solid var(--ink)}
+.logo i:nth-child(2){background:var(--sun)}
+.tabs{display:flex;gap:6px;overflow-x:auto;flex:1 1 auto;padding-block:2px}
+.tabs a{flex:0 0 auto;display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--ink);padding:7px 14px;border-radius:999px;font-weight:500;border:1.5px solid transparent}
+.tabs a:hover{background:var(--surface-2)}
+.tabs a[aria-current="page"]{background:var(--accent);color:var(--accent-ink)}
+.tabs .cnt{font-size:.75rem;opacity:.8;font-variant-numeric:tabular-nums}
+
+/* hero */
+.lesson{display:grid;gap:34px;padding-block:28px 64px}
+.hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px;align-items:center}
+.eyebrow{font:600 .8rem var(--f-body);text-transform:uppercase;letter-spacing:.1em;color:var(--accent)}
+.hero h1{font-size:clamp(2.4rem,5vw,3.4rem);margin:4px 0 10px}
+.hero .big{font-size:1.15rem;max-width:52ch}
+.keys{list-style:none;margin:16px 0 0;padding:0;display:grid;gap:8px}
+.keys li{display:grid;grid-template-columns:26px minmax(0,1fr);gap:10px;align-items:start}
+.keys li::before{content:"";width:18px;height:18px;margin-top:4px;border-radius:5px;background:var(--sun);border:2px solid var(--ink)}
+.fig{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:22px;display:grid;gap:14px;margin:0;min-width:0}
+.fig figcaption{font-size:.95rem;color:var(--muted)}
+.fig figcaption b{color:var(--ink)}
+.fig-row{display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:center}
+.arrow{font:600 1.4rem var(--f-display);color:var(--muted)}
+.machine{border:2.5px solid var(--ink);border-radius:14px;padding:12px 18px;background:var(--sun-soft);text-align:center;font:600 1.05rem var(--f-display)}
+.machine small{display:block;font:400 .78rem var(--f-body);color:var(--muted)}
+.how{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:.92rem;color:var(--muted);padding:12px 16px;background:var(--surface);border:1px dashed var(--line);border-radius:14px}
+.how b{color:var(--ink)}
+.how span{display:flex;gap:8px;align-items:center}
+.how span[data-n]::before{content:attr(data-n);width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent);font:600 .78rem var(--f-mono)}
+details.words{background:var(--surface);border:1px solid var(--line);border-radius:14px}
+details.words summary{cursor:pointer;padding:12px 18px;font-weight:600}
+.wordlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;padding:4px 18px 16px;margin:0}
+.wordlist div{background:var(--surface-2);border-radius:10px;padding:10px 12px;font-size:.92rem}
+.wordlist dt{font:600 .9rem var(--f-mono);color:var(--accent)}
+.wordlist dd{margin:2px 0 0}
+
+/* section heads + program tabs */
+.sec{display:grid;gap:4px}
+.sec h2{font-size:1.75rem}
+.sec p{color:var(--muted)}
+.ptabs{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.ptabs button{border:1.5px solid var(--line);background:var(--surface);border-radius:12px;padding:8px 14px;cursor:pointer;text-align:left;display:grid;line-height:1.3}
+.ptabs button small{font-size:.75rem;color:var(--muted)}
+.ptabs button[aria-selected="true"]{border-color:var(--accent);background:var(--accent-soft)}
+
+/* lab sheet */
+.lab{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:20px;display:grid;gap:18px;min-width:0}
+.lab-top{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:18px;align-items:start}
+.task h3{font-size:1.35rem;margin-bottom:6px}
+.io{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.io-box{border:1.5px solid var(--line);border-radius:12px;overflow:hidden;min-width:0}
+.io-box span{display:block;font:600 .72rem var(--f-body);text-transform:uppercase;letter-spacing:.08em;padding:6px 12px;background:var(--surface-2);color:var(--muted);border-bottom:1px solid var(--line)}
+.io-box pre{margin:0;padding:10px 12px;font:14px/1.5 var(--f-mono);white-space:pre-wrap;word-break:break-word}
+.io-box pre.hidden{color:var(--muted);font-style:italic;font-family:var(--f-body)}
+
+/* bench */
+.bench{display:grid;gap:14px}
+.inrow{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;background:var(--surface-2);border-radius:14px;padding:12px 14px}
+.inrow label{display:grid;gap:4px;font-size:.85rem;color:var(--muted);flex:1 1 220px}
+.inrow textarea{font:600 15px/1.5 var(--f-mono);border:1.5px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--surface);color:var(--ink);resize:vertical;min-height:2.6em;width:100%}
+.inerr{width:100%;color:var(--coral);font-size:.9rem}
+.btn{border:1.5px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 14px;font-weight:600;cursor:pointer;display:inline-flex;gap:6px;align-items:center;justify-content:center;color:var(--ink)}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.sun{background:var(--sun);border-color:var(--sun);color:var(--sun-ink)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.bgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
+.left,.right{display:grid;gap:12px;min-width:0}
+.code{background:var(--code-bg);color:var(--code-ink);border-radius:14px;padding:12px 0;overflow-x:auto;font:14px/1.75 var(--f-mono)}
+.ln{display:grid;grid-template-columns:2.8em max-content;min-width:100%;width:max-content;text-align:left;background:none;border:0;border-left:4px solid transparent;padding:0 16px 0 0;cursor:pointer;white-space:pre;font:inherit;color:inherit}
+.ln .num{color:var(--code-dim);text-align:right;padding-right:14px;user-select:none}
+.ln:hover{background:rgba(255,255,255,.06)}
+.ln.cur{background:var(--code-cur);border-left-color:var(--sun)}
+.ln.cur .num{color:var(--sun);font-weight:600}
+.ln.peek{outline:1.5px dashed var(--code-kw);outline-offset:-2px}
+.t-kw{color:var(--code-kw)}.t-type{color:var(--code-type)}.t-str{color:var(--code-str)}.t-num{color:var(--code-num)}.t-com{color:var(--code-dim);font-style:italic}.t-fn{color:var(--code-fn)}
+.ctrl{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.ctrl .next{flex:1 1 120px;font-size:1.05rem;padding:10px 16px}
+.prog{display:flex;align-items:center;gap:10px;font-size:.82rem;color:var(--muted);width:100%;font-variant-numeric:tabular-nums}
+.bar{flex:1;height:7px;border-radius:4px;background:var(--surface-2);border:1px solid var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);transition:width .25s}
+.bubble{background:var(--sun-soft);border:1.5px solid var(--sun);border-radius:16px;padding:14px 16px;display:grid;gap:8px}
+.bubble .bh{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.chip{font:600 .75rem var(--f-mono);background:var(--sun);color:var(--sun-ink);border-radius:6px;padding:2px 8px}
+.bubble .bh code{background:none;padding:0;white-space:pre-wrap;font-size:.85rem}
+.bubble .now{font-size:1.06rem;line-height:1.55}
+.bubble .about{font-size:.9rem;color:var(--muted);border-top:1px dashed var(--line);padding-top:8px}
+.bubble .about b{color:var(--ink);font-weight:600}
+.panel{border:1.5px solid var(--line);border-radius:14px;padding:12px 14px;background:var(--surface)}
+.ph{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font:600 .75rem var(--f-body);text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px}
+.ph em{font-style:normal;text-transform:none;letter-spacing:0;font-weight:400}
+.tape{display:grid;gap:6px;font:600 14px var(--f-mono)}
+.tline{display:flex;flex-wrap:wrap;gap:6px;font:600 14px var(--f-mono)}
+.tok{padding:3px 10px;border-radius:8px;border:1.5px solid var(--line);background:var(--surface-2)}
+.tok.used{opacity:.45;text-decoration:line-through}
+.tok.just{background:var(--sun);border-color:var(--sun);color:var(--sun-ink);opacity:1;text-decoration:none;animation:pop .5s}
+.tok.next{border-color:var(--accent);border-style:dashed}
+.frames{display:grid;gap:10px}
+.frame{border:2px solid var(--line);border-radius:14px;padding:10px 12px 12px}
+.frame.active{border-color:var(--accent)}
+.fh{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:8px;font-size:.8rem;color:var(--muted)}
+.fh b{font:600 .95rem var(--f-mono);color:var(--ink)}
+.frame.active .fh span{color:var(--accent);font-weight:600}
+.vars{display:flex;flex-wrap:wrap;gap:14px 18px;align-items:flex-start}
+.var{display:grid;gap:4px;min-width:0;max-width:100%}
+.var.wide{flex:1 1 100%}
+.vl{display:flex;gap:6px;align-items:baseline;flex-wrap:wrap}
+.vn{font:600 .92rem var(--f-mono)}
+.vt{font:.72rem var(--f-mono);color:var(--muted);border-bottom:1px dotted var(--muted);cursor:help}
+.empty{font-size:.88rem;color:var(--muted);font-style:italic}
+.box{min-width:46px;height:42px;padding:0 10px;border:2.5px solid var(--ink);border-radius:9px;display:grid;place-items:center;font:600 1rem var(--f-mono);background:var(--surface);font-variant-numeric:tabular-nums;justify-self:start}
+.junk{color:var(--muted);font-weight:400}
+.var.changed>.box,.cell.changed>.box,.field.changed>.box,td.changed .box{border-color:var(--ok);background:var(--ok-soft);animation:pop .55s ease}
+@keyframes pop{0%{transform:scale(.82)}60%{transform:scale(1.08)}100%{transform:scale(1)}}
+.cells{display:flex;flex-wrap:wrap;gap:5px;align-items:flex-start}
+.cell{display:grid;justify-items:center;gap:1px}
+.cell .box{min-width:42px;height:40px;padding:0 6px;border-radius:7px}
+.idx{font:.72rem var(--f-mono);color:var(--muted)}
+.cell.focus>.box{border-color:var(--tone-i);box-shadow:0 0 0 3px var(--tone-i-soft)}
+.cell.focus>.idx{color:var(--tone-i);font-weight:600}
+.ptrs{display:grid;justify-items:center}
+.ptr{font:600 .72rem var(--f-mono);line-height:1.2;white-space:nowrap}
+.tone-i{color:var(--tone-i)}.tone-j{color:var(--tone-j)}
+.ghost{align-self:start;font-size:.72rem;color:var(--muted);border:1.5px dashed var(--line);border-radius:7px;padding:4px 8px;line-height:1.3;height:40px;display:grid;place-items:center;text-align:center}
+.tile>.box{min-width:38px;font-size:1.05rem;border-radius:7px 7px 3px 3px;background:var(--sun-soft)}
+.ascii{font:.7rem var(--f-mono);color:var(--tone-i)}
+.tile.stop>.box{background:var(--coral-soft);border-color:var(--coral);color:var(--coral);border-style:dashed;font-size:.9rem}
+.tile.unk>.box{background:var(--surface);opacity:.55}
+.mini .tile>.box{min-width:28px;height:32px;font-size:.88rem}
+.card{border:2.5px solid var(--ink);border-radius:12px;padding:8px 10px;display:grid;gap:6px;background:var(--surface-2);min-width:0}
+.field{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:10px}
+.fname{font:600 .82rem var(--f-mono);color:var(--muted)}
+.field .box{height:34px;min-width:40px;font-size:.92rem}
+.scells{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start}
+.scell{display:grid;justify-items:center;gap:3px;min-width:0}
+.scell.focus>.card{border-color:var(--tone-i);box-shadow:0 0 0 3px var(--tone-i-soft)}
+.scell.changed>.card{border-color:var(--ok);background:var(--ok-soft)}
+.ref{border:2px dashed var(--accent);border-radius:9px;padding:8px 12px;font-size:.88rem;background:var(--accent-soft)}
+.gridwrap{overflow-x:auto;max-width:100%}
+table.grid{border-collapse:separate;border-spacing:4px}
+table.grid th{font:.72rem var(--f-mono);color:var(--muted);font-weight:400;padding:0 4px}
+table.grid th.hr{color:var(--tone-i);font-weight:600}
+table.grid th.hc{color:var(--tone-j);font-weight:600}
+table.grid td{padding:2px;border-radius:9px}
+table.grid td.inrowc{background:var(--tone-i-soft)}
+table.grid td.focus .box{border-color:var(--tone-j);box-shadow:0 0 0 3px var(--tone-j-soft)}
+.gnote{font-size:.78rem;color:var(--muted);margin-top:4px}
+.screen pre{margin:0;background:var(--code-bg);color:var(--code-ink);border-radius:10px;padding:10px 12px;font:14px/1.5 var(--f-mono);min-height:2.7em;white-space:pre-wrap;word-break:break-word}
+.screen pre.none{color:var(--code-dim);font-style:italic}
+.done{margin-top:8px;border-radius:10px;padding:8px 12px;font-size:.92rem}
+.done.ok{background:var(--ok-soft);border:1px solid var(--ok)}
+.done.info{background:var(--surface-2);border:1px solid var(--line)}
+details.every{border-top:1px solid var(--line);padding-top:6px}
+details.every summary{cursor:pointer;font-weight:600;padding:6px 0}
+.ew{overflow-x:auto}
+.ew table{border-collapse:collapse;width:100%;font-size:.92rem}
+.ew td{padding:8px 10px;border-top:1px solid var(--line);vertical-align:top}
+.ew td.n{font:600 .78rem var(--f-mono);color:var(--muted);text-align:right;width:2.6em}
+.ew td.s{font:13px/1.5 var(--f-mono);white-space:pre;background:var(--code-bg);color:var(--code-ink);min-width:15em}
+.ew td.t{min-width:16em}
+
+/* scenario labs */
+.labs{display:grid;gap:18px}
+.ex{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:18px 20px;display:grid;gap:14px;min-width:0}
+.ex.solved{border-color:var(--ok);box-shadow:0 0 0 2px var(--ok-soft)}
+.ex-h{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center}
+.kind{font:600 .72rem var(--f-body);text-transform:uppercase;letter-spacing:.08em;background:var(--accent-soft);color:var(--accent);padding:3px 9px;border-radius:6px}
+.ex-h h3{font-size:1.3rem;flex:1 1 14em}
+.tick{color:var(--ok);font-weight:600;font-size:.9rem}
+.story{font-size:1rem;max-width:72ch}
+.q{font-weight:600}
+.excode{background:var(--code-bg);color:var(--code-ink);border-radius:12px;padding:12px 16px;font:14px/1.75 var(--f-mono);white-space:pre;overflow-x:auto;margin:0}
+.excode input{font:600 14px var(--f-mono);background:#4d2b52;color:#fff;border:2px dashed var(--sun);border-radius:6px;padding:1px 6px}
+.ans{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.ans input{font:600 15px var(--f-mono);padding:8px 10px;border-radius:10px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);width:14em;max-width:100%}
+.choices{display:grid;gap:8px}
+.choices label{display:flex;gap:10px;align-items:center;padding:10px 12px;border:1.5px solid var(--line);border-radius:12px;cursor:pointer;font:14px var(--f-mono);overflow-x:auto;white-space:pre}
+.choices label:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+.acts{display:flex;flex-wrap:wrap;gap:8px}
+.fb{border-radius:12px;padding:10px 14px}
+.fb.ok{background:var(--ok-soft);border:1px solid var(--ok)}
+.fb.bad{background:var(--coral-soft);border:1px solid var(--coral)}
+.fb.hint{background:var(--surface-2);border:1px solid var(--line)}
+.fb strong{display:block}
+.pager{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.pager a{text-decoration:none}
+
+/* cats + softer cards */
+.fig,.lab,.ex,details.words,.how{box-shadow:var(--shadow)}
+.lab,.ex,.fig{border-radius:24px}
+.cat{flex:0 0 auto;display:block}
+.fig{position:relative;margin-top:36px}
+.cat.peek{position:absolute;top:-40px;right:26px;filter:drop-shadow(0 4px 6px rgba(120,40,90,.18))}
+.bubble .who{font:600 .95rem var(--f-display);color:var(--accent)}
+.done{display:flex;gap:10px;align-items:center}
+.fb.ok strong{display:flex;gap:8px;align-items:center}
+.empty{display:flex;gap:8px;align-items:center}
+.how .hi{color:var(--ink);font-weight:500;width:100%}
+.tabs a[aria-current="page"]{box-shadow:0 4px 12px -6px var(--accent)}
+.btn,.ptabs button{border-radius:14px}
+.box{border-radius:11px}
+/* comic Mochi: floating buddy, speech pops, roll across the screen */
+html,body{overflow-x:clip}
+.bubble{border:3px solid var(--ink);box-shadow:5px 5px 0 var(--ink);border-radius:20px;background-image:radial-gradient(var(--dot) 1.2px,transparent 1.6px);background-size:7px 7px}
+.bubble .who{font:400 1.25rem/1 "Bangers",var(--f-display);letter-spacing:.05em;color:var(--accent);text-shadow:1.5px 1.5px 0 var(--sun)}
+.buddy{position:fixed;right:calc(16px + env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:20;display:flex;flex-direction:column;align-items:flex-end;gap:14px;pointer-events:none}
+.buddy>*{pointer-events:auto}
+.buddy-cat{background:none;border:0;padding:0;cursor:pointer;animation:bob 3.2s ease-in-out infinite;filter:drop-shadow(0 6px 8px rgba(120,40,90,.28));transition:opacity .2s}
+.buddy.away .buddy-cat{opacity:0}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-6px) rotate(3deg)}}
+.pop{position:relative;max-width:min(290px,calc(100vw - 48px));margin-right:18px;background-color:var(--pop-bg);background-image:radial-gradient(var(--dot) 1.2px,transparent 1.6px);background-size:7px 7px;border:3px solid var(--ink);border-radius:20px;padding:12px 30px 12px 14px;box-shadow:5px 5px 0 var(--ink);font:500 .95rem/1.45 var(--f-body);color:var(--ink);transform-origin:85% 115%}
+.pop.in{animation:popin .42s cubic-bezier(.2,1.6,.4,1)}
+@keyframes popin{0%{transform:scale(.3) rotate(-8deg);opacity:0}100%{transform:scale(1) rotate(0);opacity:1}}
+.pop::before,.pop::after{content:"";position:absolute;width:0;height:0;border-style:solid}
+.pop::before{right:24px;bottom:-21px;border-width:21px 4px 0 20px;border-color:var(--ink) transparent transparent transparent}
+.pop::after{right:28.5px;bottom:-13px;border-width:14px 2px 0 13px;border-color:var(--pop-bg) transparent transparent transparent}
+.pop .shout{display:block;font:400 1.6rem/1 "Bangers",var(--f-display);letter-spacing:.05em;color:var(--accent);text-shadow:2px 2px 0 var(--sun);margin-bottom:6px;transform:rotate(-2deg);transform-origin:left}
+.pop-x{position:absolute;top:4px;right:8px;border:0;background:none;font:600 1.2rem var(--f-body);color:var(--muted);cursor:pointer;line-height:1;padding:2px}
+.roller{position:fixed;left:-90px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:19;pointer-events:none;visibility:hidden}
+.roller.go{visibility:visible;animation:roll 2.2s cubic-bezier(.5,.1,.35,1) forwards}
+@keyframes roll{0%{transform:translateX(0) rotate(0)}84%{transform:translateX(calc(100vw + 10px)) rotate(1080deg)}92%{transform:translateX(calc(100vw - 4px)) rotate(1072deg) scaleY(.9)}100%{transform:translateX(calc(100vw + 2px)) rotate(1080deg)}}
+.lesson{padding-bottom:140px}
+@media (max-width:520px){.buddy-cat .cat,.roller .cat{width:60px;height:70px}}
+/* outfits, sign, dance */
+.holder{position:relative;animation:bob 3.2s ease-in-out infinite}
+.buddy-cat{animation:none}
+.buddy.away .holder{opacity:0}
+.holder.dance{animation:dance .9s ease-in-out 3}
+@keyframes dance{0%,100%{transform:translateY(0) rotate(0)}15%{transform:translateY(-24px) rotate(-14deg)}30%{transform:translateY(0) rotate(10deg) scaleY(.9)}45%{transform:translateY(-20px) rotate(14deg)}60%{transform:translateY(0) rotate(-10deg)}78%{transform:translateY(-12px) rotate(0) scale(1.1)}}
+.sign{position:absolute;left:50%;bottom:-8px;transform:translateX(-50%) rotate(-5deg);background:var(--sun);color:var(--sun-ink);border:2.5px solid var(--ink);border-radius:7px;padding:3px 9px 1px;font:400 1.05rem/1 "Bangers",var(--f-display);letter-spacing:.06em;white-space:nowrap;box-shadow:2px 2px 0 var(--ink);pointer-events:none}
+.sign i{position:absolute;top:-6px;width:11px;height:9px;border-radius:6px 6px 4px 4px;background:var(--cat-fur);border:2px solid var(--ink)}
+.sign i:first-child{left:5px}.sign i:nth-child(2){right:5px}
+.confetti{position:fixed;inset:0;pointer-events:none;z-index:21;overflow:hidden}
+.confetti i{position:absolute;top:-16px;width:9px;height:14px;border-radius:3px;animation:fall 2.6s ease-in forwards}
+@keyframes fall{to{transform:translate(var(--dx),108vh) rotate(var(--r))}}
+@keyframes roll{0%{transform:translateX(0) rotate(0)}84%{transform:translateX(calc(100vw + 2px)) rotate(1080deg)}92%{transform:translateX(calc(100vw - 12px)) rotate(1072deg) scaleY(.9)}100%{transform:translateX(calc(100vw - 6px)) rotate(1080deg)}}
+@media (max-width:1000px){.bgrid{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:860px){.hero,.lab-top{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:520px){.io{grid-template-columns:minmax(0,1fr)}.lab,.ex{padding:14px}.code,.excode{font-size:13px}body{font-size:16px}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<header class="topbar"><div class="wrap bar-in">
+  <a class="brand" href="#basics"><span class="logo" aria-hidden="true"></span>Boxes &amp; Bytes</a>
+  <nav class="tabs" id="tabs" aria-label="Lessons"></nav>
+</div></header>
+<main class="wrap" id="app"></main>
+
+<script>
+/* ================= Mochi the cat ================= */
+let OUTFIT='bow';
+const OUTFITS={basics:'bow',arrays:'cap',strings:'scarf',functions:'chef',structs:'glasses'};
+const OUTFIT_LINE={bow:'Do you like my bow?',cap:'I put on my locker cap for arrays!',scarf:'A cosy striped scarf for string day.',chef:'Chef hat on: helpers cook up answers!',glasses:'Reading glasses on, for reading ID cards.'};
+function wear(o,L){
+  const st=`stroke="${L}" stroke-width="2.2" stroke-linejoin="round"`;
+  if(o==='bow')return `<g transform="translate(16 13) rotate(-25)"><path d="M0 0 L-10 -7 L-10 7 Z" fill="var(--accent)" ${st}/><path d="M0 0 L10 -7 L10 7 Z" fill="var(--accent)" ${st}/><circle r="3" fill="var(--sun)" ${st}/></g>`;
+  if(o==='cap')return `<path d="M12 19 Q32 -8 52 19 Q32 13 12 19 Z" fill="var(--tone-i)" ${st}/><path d="M50 17 Q61 15 67 21 Q58 23 49 21 Z" fill="var(--tone-i)" ${st}/><circle cx="32" cy="5" r="2.6" fill="var(--sun)" ${st}/>`;
+  if(o==='scarf')return `<path d="M11 50 Q32 61 53 50 L52 57 Q32 67 12 57 Z" fill="var(--coral)" ${st}/><path d="M40 59 L43 71 L50 69 L46 57 Z" fill="var(--coral)" ${st}/><path d="M18 54 L19 59 M26 57 L26.5 62 M35 58 L35 63 M43 61 L45 66" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>`;
+  if(o==='chef')return `<path d="M19 17 Q11 4 23 2 Q26 -9 35 -4 Q45 -9 46 3 Q55 6 45 17 Z" fill="#fff" ${st}/><rect x="19" y="13" width="26" height="7" rx="2.5" fill="#fff" ${st}/>`;
+  if(o==='glasses')return `<circle cx="24" cy="34" r="7.5" fill="rgba(255,255,255,.2)" ${st}/><circle cx="40" cy="34" r="7.5" fill="rgba(255,255,255,.2)" ${st}/><path d="M31.5 34 L32.5 34 M16.5 33 L9 30 M47.5 33 L55 30" ${st} fill="none" stroke-linecap="round"/>`;
+  return '';
+}
+function cat(size=48,{happy=false,cls='',outfit=OUTFIT}={}){
+  const L='var(--cat-line)',st=`stroke="${L}" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"`;
+  const eyes=happy?`<path d="M19 35 q4.5 -5 9 0 M36 35 q4.5 -5 9 0" fill="none" ${st}/>`
+    :`<ellipse cx="24" cy="34" rx="3.2" ry="4.2" fill="${L}"/><ellipse cx="40" cy="34" rx="3.2" ry="4.2" fill="${L}"/><circle cx="25.2" cy="32.4" r="1.1" fill="#fff"/><circle cx="41.2" cy="32.4" r="1.1" fill="#fff"/>`;
+  return `<svg class="cat ${cls}" width="${size}" height="${Math.round(size*84/72)}" viewBox="-4 -12 72 84" aria-hidden="true">
+    <path d="M9 30 L13 6 L29 18 Z" fill="var(--cat-fur)" ${st}/><path d="M55 30 L51 6 L35 18 Z" fill="var(--cat-fur)" ${st}/>
+    <path d="M15 22 L16 12 L23.5 17.5 Z" fill="var(--cat-ear)"/><path d="M49 22 L48 12 L40.5 17.5 Z" fill="var(--cat-ear)"/>
+    <ellipse cx="32" cy="37" rx="24" ry="20" fill="var(--cat-fur)" ${st}/>
+    <path d="M27 18 q5 4 10 0" fill="none" stroke="var(--cat-ear)" stroke-width="2.4" stroke-linecap="round"/>
+    ${eyes}<circle cx="17" cy="42" r="3.4" fill="var(--cat-ear)" opacity=".55"/><circle cx="47" cy="42" r="3.4" fill="var(--cat-ear)" opacity=".55"/>
+    <path d="M30 40 L34 40 L32 42.6 Z" fill="var(--cat-ear)" stroke="${L}" stroke-width="1.4" stroke-linejoin="round"/>
+    <path d="M32 42.6 q-2.6 3.6 -5.6 1.2 M32 42.6 q2.6 3.6 5.6 1.2" fill="none" stroke="${L}" stroke-width="1.8" stroke-linecap="round"/>
+    <path d="M6 38 L16 40 M6 44 L16 43 M58 38 L48 40 M58 44 L48 43" stroke="${L}" stroke-width="1.5" stroke-linecap="round"/>${wear(outfit,L)}</svg>`;
+}
+
+/* ================= small helpers ================= */
+const R=String.raw;
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+function md(s){const c=[];s=esc(s).replace(/«([^»]+)»/g,(m,x)=>{c.push(x);return '\u0001'+(c.length-1)+'\u0001';});
+  s=s.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>').replace(/\*([^*]+)\*/g,'<em>$1</em>');
+  return s.replace(/\u0001(\d+)\u0001/g,(m,k)=>'<code>'+c[k]+'</code>');}
+function hl(src){
+  const re=/(\/\/.*$|\/\*.*?\*\/)|(#include)|(<\w+\.h>)|("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')|\b(int|float|char|struct)\b|\b(return|for|while|if|else)\b|\b(\d+(?:\.\d+)?)\b|\b([A-Za-z_]\w*)(?=\s*\()/g;
+  let o='',l=0,m;while((m=re.exec(src))){o+=esc(src.slice(l,m.index));
+    const c=m[1]?'com':m[2]?'kw':m[3]?'str':m[4]?'str':m[5]?'type':m[6]?'kw':m[7]?'num':'fn';
+    o+=`<span class="t-${c}">${esc(m[0])}</span>`;l=re.lastIndex;}
+  return o+esc(src.slice(l));
+}
+const clone=o=>JSON.parse(JSON.stringify(o));
+const fmtF=v=>Number.isInteger(v)?v.toFixed(1):String(Number(v.toFixed(4)));
+const tiles=w=>w.split('').map(c=>`«'${c}'»`).join(' ');
+const outNorm=s=>String(s).replace(/[ \t]+$/gm,'').replace(/\n+$/,'');
+const ansNorm=s=>String(s).trim().replace(/;$/,'').replace(/\s+/g,'').replace(/^['"](.*)['"]$/,'$1').toLowerCase();
+
+/* ================= values drawn in memory ================= */
+const I=v=>({kind:'scalar',type:'int',value:v===null?null:String(v)});
+const FL=v=>({kind:'scalar',type:'float',value:v===null?null:fmtF(v)});
+const A=(type,cap,vals)=>({kind:'array',type,cap,values:vals.map(x=>x===null?null:String(x))});
+const G=(cap,rows)=>({kind:'grid',cap,values:rows.map(r=>r.map(x=>x===null?null:String(x)))});
+function S(cap,text,extra=2){
+  const shown=text===null?Math.min(cap,5):Math.min(cap,text.length+1+extra);
+  const chars=Array.from({length:shown},(_,k)=>text===null?null:k<text.length?text[k]:k===text.length?'\\0':null);
+  return {kind:'string',cap,len:text===null?-1:text.length,chars};
+}
+const ST=(type,fields)=>({kind:'struct',type,fields:fields.map(([n,v])=>({name:n,...v}))});
+const SA=(type,cap,items)=>({kind:'structarr',type,cap,items:items.map(f=>f.map(([n,v])=>({name:n,...v})))});
+const REF=target=>({kind:'ref',target});
+const F=(name,idx,label='i',tone='i')=>({name,idx,label,tone});
+
+/* ================= the recorder ================= */
+function tokenize(s){const o=[];String(s).replace(/\r/g,'').split('\n').forEach((l,li)=>l.split(/\s+/).filter(Boolean).forEach(w=>o.push({w,li})));return o;}
+class Tracer{
+  constructor(input=''){this.toks=tokenize(input);this.pos=0;this.just=[];this.steps=[];this.frames=[];this.out='';this.ch=[];this.frame('main()');}
+  frame(n){this.frames.push({name:n,vars:[]});}
+  pop(){this.frames.pop();}
+  top(){return this.frames[this.frames.length-1];}
+  set(name,v,key){const f=this.top();const i=f.vars.findIndex(x=>x.name===name);const e={name,...v};if(i<0)f.vars.push(e);else f.vars[i]=e;this.ch.push(key||name);}
+  del(name){const f=this.top();f.vars=f.vars.filter(v=>v.name!==name);}
+  read(){const t=this.toks[this.pos];this.just.push(this.pos);this.pos++;return t?t.w:'';}
+  print(s){this.out+=s;}
+  step(line,now,focus){this.steps.push({line,now,frames:clone(this.frames),out:this.out,ch:this.ch.slice(),focus:focus?[].concat(focus):[],pos:this.pos,just:this.just.slice()});this.ch=[];this.just=[];}
+}
+const START=R`The program starts here, in «main». Its memory is empty.`;
+const END=R`«return 0;» The program has finished with no errors.`;
+/* one counting loop: for (int i = from; i < n; i++) */
+function loop(t,n,forLine,name,body,{from=0,label='The loop',extra=()=>[]}={}){
+  for(let k=from;k<n;k++){t.set('i',I(k));
+    t.step(forLine,k===from?R`${label} starts with «i = ${from}». Is «${from} < ${n}»? Yes, so go inside.`:R`«i++» makes «i = ${k}». Is «${k} < ${n}»? Yes, go inside again.`,[...(name?[F(name,k)]:[]),...extra(k)]);
+    body(k);}
+  const e=Math.max(n,from);t.set('i',I(e));t.step(forLine,R`«i» is now «${e}». Is «${e} < ${n}»? No, so ${label.toLowerCase()} ends.`,extra(e));t.del('i');
+}
+function fillLoop(t,name,n,vals,cap,forLine,readLine,label='The filling loop'){
+  loop(t,n,forLine,name,k=>{const x=+t.read();vals[k]=x;t.set(name,A('int',cap,vals),name+'#'+k);t.step(readLine,R`scanf takes «${x}» from the keyboard and puts it in «${name}[${k}]».`,F(name,k));},{label});
+}
+
+/* ================= input checking ================= */
+const isInt=w=>/^-?\d{1,5}$/.test(w),isNum=w=>/^-?\d{1,5}(\.\d{1,3})?$/.test(w),isWord=w=>/^[A-Za-z0-9]{1,12}$/.test(w);
+function expect(toks,specs){
+  if(toks.length<specs.length)return `This program reads ${specs.length} value${specs.length>1?'s':''}, but only ${toks.length} ${toks.length===1?'was':'were'} typed.`;
+  for(let k=0;k<specs.length;k++){const w=toks[k];
+    if(specs[k]==='int'&&!isInt(w))return `“${w}” should be a whole number, like 7.`;
+    if(specs[k]==='num'&&!isNum(w))return `“${w}” should be a number, like 3.75.`;
+    if(specs[k]==='word'&&!isWord(w))return `“${w}” should be one word of up to 12 letters or digits.`;}
+  return null;
+}
+const countThen=(toks,lo,hi,per)=>{const e=expect(toks,['int']);if(e)return e;const n=+toks[0];if(n<lo||n>hi)return `Please choose a count from ${lo} to ${hi} so the picture stays readable.`;return expect(toks,['int',...Array(n*per.length).fill(0).map((_,k)=>per[k%per.length])]);};
+
+/* ================= drawing memory ================= */
+const JUNK='<span class="junk" title="Junk: this box has not been given a value yet">?</span>';
+const vh=v=>v===null?JUNK:esc(v);
+const ptrs=(focus,name,test)=>focus.filter(f=>f.name===name&&test(f)).map(f=>`<span class="ptr tone-${f.tone||'i'}">▲ ${esc(f.label)}</span>`).join('');
+function arrHtml(v,focus,chk,key){
+  const cells=v.values.map((x,i)=>{const p=ptrs(focus,key,f=>f.idx===i);
+    return `<div class="cell ${p?'focus':''} ${chk(key+'#'+i)?'changed':''}"><div class="box">${vh(x)}</div><div class="idx">[${i}]</div>${p?`<div class="ptrs">${p}</div>`:''}</div>`;}).join('');
+  const rest=v.cap-v.values.length;
+  return `<div class="cells">${cells}${rest>0?`<div class="ghost">+${rest} more<br>unused</div>`:''}</div>`;
+}
+function strHtml(v,focus,chk,key,mini){
+  const cells=v.chars.map((x,i)=>{const p=ptrs(focus,key,f=>f.idx===i);let cls='cell tile',top,code='';
+    if(x===null){cls+=' unk';top='?';}else if(x==='\\0'){cls+=' stop';top='\\0';code='0';}else{top=x;code=x.charCodeAt(0);}
+    return `<div class="${cls} ${p?'focus':''} ${chk(key+'#'+i)?'changed':''}"><div class="box" ${x===null?'title="Junk: not set yet"':''}>${esc(top)}</div>${mini?'':`<div class="ascii" title="ASCII code: the number the computer really stores">${code===''?'&nbsp;':code}</div>`}<div class="idx">[${i}]</div>${p?`<div class="ptrs">${p}</div>`:''}</div>`;}).join('');
+  const rest=v.cap-v.chars.length;
+  return `<div class="cells ${mini?'mini':''}">${cells}${rest>0?`<div class="ghost">+${rest}<br>unused</div>`:''}</div>`;
+}
+function gridHtml(v,focus,chk,key,note=true){
+  const fr=focus.filter(f=>f.name===key);const row=fr.find(f=>f.row!==undefined)?.row,col=fr.find(f=>f.col!==undefined)?.col;
+  const C=v.values[0].length;
+  const head=`<tr><th></th>${Array.from({length:C},(_,j)=>`<th class="${j===col?'hc':''}">[${j}]</th>`).join('')}</tr>`;
+  const rows=v.values.map((r,i)=>`<tr><th class="${i===row?'hr':''}">[${i}]</th>${r.map((x,j)=>`<td class="${i===row?'inrowc':''} ${j===col&&i===row?'focus':''} ${chk(key+'#'+i+','+j)?'changed':''}"><div class="box">${vh(x)}</div></td>`).join('')}</tr>`).join('');
+  return `<div class="gridwrap"><table class="grid">${head}${rows}</table></div>${note?`<div class="gnote">Grid size ${v.cap[0]} × ${v.cap[1]}; only the used ${v.values.length} × ${C} corner is drawn.${row!==undefined?` <b class="tone-i">row i = ${row}</b>`:''}${col!==undefined?` · <b class="tone-j">column j = ${col}</b>`:''}</div>`:''}`;
+}
+function cardHtml(fields,focus,chk,key){
+  return `<div class="card">${fields.map(fd=>{const k=key+'.'+fd.name;
+    const val=fd.kind==='scalar'?`<div class="box">${vh(fd.value)}</div>`:strHtml(fd,focus,chk,k,true);
+    return `<div class="field ${chk(k)?'changed':''}"><span class="fname">.${esc(fd.name)}</span>${val}</div>`;}).join('')}</div>`;
+}
+const HELP={int:'int: a whole number such as 7 or -12',float:'float: a number with a decimal point such as 3.75',char:'char: one character'};
+function varHtml(v,focus,chk){
+  let type,help,body,wide=false;
+  if(v.kind==='scalar'){type=v.type;help=HELP[v.type];body=`<div class="box">${vh(v.value)}</div>`;}
+  else if(v.kind==='array'){type=`${v.type}[${v.cap}]`;help=`An array: ${v.cap} ${v.type} boxes in a row, numbered from 0`;body=arrHtml(v,focus,chk,v.name);wide=true;}
+  else if(v.kind==='string'){type=`char[${v.cap}]`;help='A string: char boxes in a row, ending with the STOP tile \\0. The small number is the ASCII code.';body=strHtml(v,focus,chk,v.name);wide=true;}
+  else if(v.kind==='grid'){type=`int[${v.cap[0]}][${v.cap[1]}]`;help='A 2D array: a grid of rows and columns';body=gridHtml(v,focus,chk,v.name);wide=true;}
+  else if(v.kind==='struct'){type=`struct ${v.type}`;help='A struct: one box made of named parts';body=cardHtml(v.fields,focus,chk,v.name);}
+  else if(v.kind==='structarr'){type=`struct ${v.type}[${v.cap}]`;help='An array of structs: a row of cards';wide=true;
+    const rest=v.cap-v.items.length;
+    body=`<div class="scells">${v.items.map((it,i)=>{const p=ptrs(focus,v.name,f=>f.idx===i);return `<div class="scell ${p?'focus':''} ${chk(v.name+'#'+i)?'changed':''}"><div class="idx">[${i}]</div>${cardHtml(it,focus,chk,v.name+'#'+i)}${p?`<div class="ptrs">${p}</div>`:''}</div>`;}).join('')}${rest>0?`<div class="ghost">+${rest} more<br>unused</div>`:''}</div>`;}
+  else if(v.kind==='ref'){type='int[]';help='Arrays are passed by address, not copied';body=`<div class="ref">→ uses <b>${esc(v.target)}</b> directly (no copy)</div>`;}
+  return `<div class="var ${wide?'wide':''} ${chk(v.name)?'changed':''}"><div class="vl"><span class="vn">${esc(v.name)}</span><span class="vt" title="${esc(help)}">${esc(type)}</span></div>${body}</div>`;
+}
+function framesHtml(s){
+  const fs=s.frames,last=fs.length-1;
+  return fs.map((f,i)=>({f,i})).reverse().map(({f,i})=>{
+    const chk=n=>i===last&&s.ch.includes(n);
+    const cap=i===last?(i===0?'running':`running · called by ${fs[i-1].name}`):'paused, waiting for the call to finish';
+    return `<div class="frame ${i===last?'active':''}"><div class="fh"><b>${esc(f.name)}</b><span>${cap}</span></div><div class="vars">${f.vars.length?f.vars.map(v=>varHtml(v,s.focus,chk)).join(''):`<p class="empty">${cat(26,{happy:true})} No boxes yet.</p>`}</div></div>`;
+  }).join('');
+}
+function tapeHtml(toks,s){
+  if(!toks.length)return '<p class="empty">This program reads nothing.</p>';
+  const lines=[];toks.forEach((t,k)=>{(lines[t.li]=lines[t.li]||[]).push(`<span class="tok ${s.just.includes(k)?'just':k<s.pos?'used':k===s.pos?'next':''}">${esc(t.w)}</span>`);});
+  return lines.filter(Boolean).map(l=>`<div class="tline">${l.join('')}</div>`).join('');
+}
+
+/* ================= notes that every program shares ================= */
+const BLANK=R`An empty line. C ignores it; it only makes the code easier to read.`;
+function autoNote(line){
+  const s=line.trim();
+  if(!s)return BLANK;
+  if(s==='#include <stdio.h>')return R`Brings in the input/output toolbox, so we can use «scanf» (read from the keyboard) and «printf» (write on the screen).`;
+  if(s==='#include <string.h>')return R`Brings in the string toolbox, which contains «strlen» (count the letters).`;
+  if(s==='int main() {')return R`Every C program starts running here, inside «main». The «{» opens main’s block of code.`;
+  if(s==='return 0;')return R`Ends «main» and tells the computer “finished, no errors”.`;
+  if(s==='}')return R`A closing brace: the end of the block that was opened above.`;
+  if(s==='} else {')return R`Ends the «if» part. «else» starts the part that runs when the test was false.`;
+  if(s==='};')return R`Ends the struct design. A struct design needs the «;» after the brace.`;
+  if(/^struct \w+ \{$/.test(s))return R`Starts designing a struct: a new kind of box made of named parts. No memory is used until a real variable is made from it.`;
+  return '';
+}
+
+/* ================= Mochi, the floating buddy ================= */
+const Mochi=(()=>{
+  const reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const root=document.createElement('div');root.className='buddy';
+  root.innerHTML=`<div class="pop" role="status" aria-live="polite" hidden><button class="pop-x" type="button" aria-label="Close Mochi's message">×</button><p></p></div><div class="holder"><button class="buddy-cat" type="button" aria-label="Mochi the cat: click for a tip">${cat(80)}</button><div class="sign" hidden aria-hidden="true"><i></i><i></i><span></span></div></div>`;
+  const roller=document.createElement('div');roller.className='roller';roller.setAttribute('aria-hidden','true');roller.innerHTML=cat(80,{happy:true});
+  document.body.append(roller,root);
+  const pop=root.querySelector('.pop'),txt=pop.querySelector('p'),holder=root.querySelector('.holder'),me=root.querySelector('.buddy-cat'),board=root.querySelector('.sign'),boardTxt=board.querySelector('span');
+  let dancing=false;
+  function dress(o){OUTFIT=o;me.innerHTML=cat(80);roller.innerHTML=cat(80,{happy:true});}
+  function sign(n){boardTxt.textContent='Line '+n;board.hidden=false;}
+  function hideSign(){board.hidden=true;}
+  function confetti(){
+    const box=document.createElement('div');box.className='confetti';box.setAttribute('aria-hidden','true');
+    const cols=['var(--accent)','var(--sun)','var(--tone-i)','var(--ok)','var(--coral)'];
+    for(let k=0;k<30;k++){const c=document.createElement('i');c.style.left=(Math.random()*100)+'%';c.style.background=cols[k%cols.length];
+      c.style.animationDelay=(Math.random()*.6)+'s';c.style.setProperty('--dx',(Math.random()*160-80)+'px');c.style.setProperty('--r',(Math.random()*900-450)+'deg');box.appendChild(c);}
+    document.body.appendChild(box);setTimeout(()=>box.remove(),3600);
+  }
+  function dance(title){
+    say(`You solved every ${title} lab. Time for my happy dance!`,{shout:'ALL LABS DONE!',ms:6500});
+    if(reduce||dancing)return;dancing=true;me.innerHTML=cat(80,{happy:true});holder.classList.add('dance');confetti();
+    setTimeout(()=>{holder.classList.remove('dance');me.innerHTML=cat(80);dancing=false;},2800);
+  }
+  let hideT=null,rolling=false;
+  function say(text,{shout='',ms=4800}={}){
+    txt.innerHTML=(shout?`<b class="shout">${esc(shout)}</b>`:'')+md(text);
+    pop.hidden=false;pop.classList.remove('in');void pop.offsetWidth;pop.classList.add('in');
+    clearTimeout(hideT);hideT=setTimeout(()=>{pop.hidden=true;},ms);
+  }
+  function roll(then){
+    if(reduce||rolling){if(then)then();return;}
+    rolling=true;pop.hidden=true;root.classList.add('away');
+    roller.classList.remove('go');void roller.offsetWidth;roller.classList.add('go');
+    setTimeout(()=>{roller.classList.remove('go');root.classList.remove('away');rolling=false;if(then)then();},2250);
+  }
+  const TIPS=[['Tip!',R`Arrays start at «0». With 5 boxes the last one is «[4]».`],['Remember!',R`«scanf» needs «&» for int and float boxes, but not for strings.`],
+    ['Psst!',R`Every string ends with the STOP tile «'\0'».`],['Did you know?',R`Small and capital letters are exactly 32 apart in ASCII.`],
+    ['Hint!',R`Click any line of code and I will explain it.`],['Meow!',R`Use the dot to open one part of a struct: «s.roll».`],
+    ['Tip!',R`A «?» box holds junk until you give it a value.`],['Purr…',R`A helper gets **copies** of numbers, but it uses the caller’s own array.`]];
+  me.addEventListener('click',()=>{const t=TIPS[Math.floor(Math.random()*TIPS.length)];say(t[1],{shout:t[0]});});
+  root.querySelector('.pop-x').addEventListener('click',()=>{pop.hidden=true;});
+  return {say,roll,dress,sign,hideSign,dance};
+})();
+
+/* ================= the step-through bench ================= */
+let benchN=0;
+function Bench(host,prog,opts={}){
+  const id='b'+(++benchN);
+  let steps=[],idx=0,peek=null,timer=null,toks=[],input=prog.sampleIn,lastIdx=0,firstRead=false,touched=false;
+  const lines=prog.code.split('\n');
+  host.innerHTML=`<div class="bench">
+    <form class="inrow" novalidate>
+      <label for="${id}-in">Keyboard input (what the user types; change it and run again)<textarea id="${id}-in" rows="${Math.max(1,prog.sampleIn.split('\n').length)}" spellcheck="false">${esc(prog.sampleIn)}</textarea></label>
+      <button class="btn primary" type="submit">Run with this input</button>
+      <button class="btn" type="button" data-a="sample">Use sample input</button>
+      <p class="inerr" hidden></p>
+    </form>
+    <div class="bgrid">
+      <div class="left">
+        <div class="code" aria-label="Code. Click a line to read about it.">${lines.map((l,i)=>`<button class="ln" type="button" data-line="${i+1}"><span class="num">${i+1}</span><span>${hl(l)||' '}</span></button>`).join('')}</div>
+        <div class="ctrl">
+          <button class="btn" data-a="reset" type="button" title="Start again" aria-label="Start again">↺</button>
+          <button class="btn" data-a="back" type="button">◀ Back</button>
+          <button class="btn sun next" data-a="next" type="button">Next line ▶</button>
+          <button class="btn" data-a="play" type="button">▶ Auto</button>
+          <div class="prog"><span class="count"></span><div class="bar"><i></i></div></div>
+        </div>
+        <div class="bubble" aria-live="polite"></div>
+      </div>
+      <div class="right">
+        <div class="panel"><div class="ph"><span>Keyboard input</span><em>yellow = just read · crossed out = already used</em></div><div class="tape"></div></div>
+        <div class="panel"><div class="ph"><span>Memory</span><em>hover a type to see what it means</em></div><div class="frames"></div></div>
+        <div class="panel screen"><div class="ph"><span>Screen</span></div><pre></pre><div class="done" hidden></div></div>
+      </div>
+    </div></div>`;
+  const q=s=>host.querySelector(s),ta=q('textarea'),err=q('.inerr');
+  function run(text){
+    const e=prog.check(tokenize(text).map(t=>t.w));
+    if(e){err.textContent=e+' Fix the input and press Run again.';err.hidden=false;return;}
+    err.hidden=true;input=text;toks=tokenize(text);steps=prog.trace(text);idx=0;peek=null;lastIdx=0;firstRead=false;render();
+  }
+  function render(){
+    const s=steps[idx],ln=peek??s.line;
+    host.querySelectorAll('.ln').forEach(b=>{const n=+b.dataset.line;b.classList.toggle('cur',n===s.line);b.classList.toggle('peek',peek!==null&&n===peek&&n!==s.line);});
+    const about=prog.notes[ln]||autoNote(lines[ln-1]||'');
+    q('.bubble').innerHTML=`<div class="bh">${cat(40)}<span class="who">Mochi explains</span><span class="chip">Line ${ln}</span><code>${hl((lines[ln-1]||'').trim())}</code></div>`+
+      (peek!==null&&peek!==s.line?`<p class="now">${md(about)}</p><p class="about">You are reading line ${peek}. The program is still waiting on line ${s.line}; press <b>Next line</b> to carry on.</p>`
+      :`<p class="now">${md(s.now)}</p>${about?`<p class="about"><b>About this line:</b> ${md(about)}</p>`:''}`);
+    q('.tape').innerHTML=tapeHtml(toks,s);
+    q('.frames').innerHTML=framesHtml(s);
+    const pre=q('.screen pre');pre.textContent=s.out||'(nothing printed yet)';pre.classList.toggle('none',!s.out);
+    const done=q('.done');let matched=false;
+    if(idx===steps.length-1){
+      const sample=outNorm(input)===outNorm(prog.sampleIn)&&!opts.hideOut;
+      if(sample&&outNorm(s.out)===outNorm(prog.sampleOut)){matched=true;done.className='done ok';done.innerHTML=cat(34,{happy:true})+'<span><b>Purr-fect!</b> The screen matches the Sample Output exactly.</span>';}
+      else{done.className='done info';done.textContent='Finished. Try different input above and run it again.';}
+      done.hidden=false;
+    }else done.hidden=true;
+    if(idx===lastIdx+1)react(steps[lastIdx],s,matched);lastIdx=idx;if(touched)Mochi.sign(s.line);
+    q('.count').textContent=`Step ${idx+1} of ${steps.length}`;
+    q('.bar i').style.width=((idx+1)/steps.length*100)+'%';
+    q('[data-a=back]').disabled=idx===0;q('[data-a=next]').disabled=idx===steps.length-1;
+    q('[data-a=play]').textContent=timer?'❚❚ Pause':'▶ Auto';
+  }
+  function react(a,b,matched){
+    if(b.frames.length>a.frames.length){Mochi.say(R`A function call! «${b.frames[b.frames.length-1].name}» gets its own little room on top of main.`,{shout:'Ooh!'});return;}
+    if(b.frames.length<a.frames.length){Mochi.say(R`The helper is done. Its room is tidied away and the answer goes back to main.`,{shout:'Back home!'});return;}
+    if(b.just.length&&!firstRead){firstRead=true;const w=toks[b.just[0]]?toks[b.just[0]].w:'';Mochi.say(R`scanf just gobbled «${w}» from the keyboard. Watch it land in a box!`,{shout:'Nom nom!'});return;}
+    if(idx===steps.length-1){if(matched)Mochi.say('The screen matches the Sample Output exactly.',{shout:'Meow-velous!'});else Mochi.say('The program finished. Try your own input next!',{shout:'All done!'});}
+  }
+  const stop=()=>{if(timer){clearInterval(timer);timer=null;}};
+  const go=d=>{stop();peek=null;idx=Math.max(0,Math.min(steps.length-1,idx+d));render();};
+  host.addEventListener('click',e=>{
+    const ln=e.target.closest('.ln');if(ln){peek=+ln.dataset.line;render();return;}
+    const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a;touched=true;
+    if(a==='next')go(1);else if(a==='back')go(-1);else if(a==='reset'){stop();idx=0;peek=null;render();}
+    else if(a==='sample'){stop();ta.value=prog.sampleIn;run(prog.sampleIn);}
+    else if(a==='play'){if(timer){stop();render();return;}if(idx===steps.length-1)idx=0;peek=null;
+      timer=setInterval(()=>{if(idx>=steps.length-1){stop();render();return;}idx++;render();},1600);render();}
+  });
+  host.addEventListener('keydown',e=>{if(e.target.matches('textarea,input'))return;
+    if(e.key==='ArrowRight'){e.preventDefault();touched=true;go(1);}else if(e.key==='ArrowLeft'){e.preventDefault();touched=true;go(-1);}});
+  q('form').addEventListener('submit',e=>{e.preventDefault();stop();run(ta.value);});
+  run(prog.sampleIn);
+}
+
+/* ================= LESSONS ================= */
+const LESSONS=[
+/* ======================= 1. START HERE ======================= */
+{id:'basics',title:'Start here',sub:'Input & output',
+ big:'Every lab works the same way: the program reads numbers or words from the keyboard, keeps them in boxes called variables, works something out and prints the answer.',
+ keys:[R`A variable is a labelled box. «int» boxes hold whole numbers, «float» boxes hold decimals.`,R`«scanf» reads from the keyboard. «printf» writes on the screen.`,R`A new box holds junk «?» until you put something in it.`,R`Sample Input is what the user types. Sample Output is what your program must print.`],
+ fig:()=>`<div class="fig-row"><div class="tline"><span class="tok just">4</span><span class="tok just">7</span></div><span class="arrow">→</span>
+   <div class="var"><div class="vl"><span class="vn">a</span><span class="vt">int</span></div><div class="box">4</div></div>
+   <div class="var"><div class="vl"><span class="vn">b</span><span class="vt">int</span></div><div class="box">7</div></div><span class="arrow">→</span>
+   <div class="screen"><pre style="min-height:0">Sum = 11</pre></div></div>`,
+ cap:R`<b>Like a delivery:</b> the keyboard brings parcels (4 and 7), «scanf» drops each one into a labelled box, and «printf» shows the result on the screen.`,
+ words:[['variable','A named box that holds one value.'],['int','A whole number: 7, 0, -12.'],['float','A number with a decimal point: 3.75.'],['scanf','Reads values typed on the keyboard.'],['printf','Prints text on the screen.'],['%d','Slot for a whole number.'],['%f / %.2f','Slot for a decimal number (with 2 digits after the point).'],['&x','“The address of box x”, so scanf knows where to put the value.'],['\\n','New line, like pressing Enter.']],
+ progs:[
+  {title:'Add two numbers',short:'scanf, +, printf',task:'Read two whole numbers and print their sum.',sampleIn:'4 7',sampleOut:'Sum = 11',
+   code:R`#include <stdio.h>
+
+int main() {
+    int a, b;
+    scanf("%d %d", &a, &b);
+    int sum = a + b;
+    printf("Sum = %d\n", sum);
+    return 0;
+}`,
+   notes:{4:R`Makes two whole-number boxes named «a» and «b». Until we fill them they hold junk «?».`,
+    5:R`«scanf» reads from the keyboard. Each «%d» reads one whole number. «&a» means *the address of box a*, so scanf knows where to put it. *Like writing your house address on a parcel.*`,
+    6:R`Adds what is in «a» and «b» and keeps the answer in a new box «sum».`,
+    7:R`Prints «Sum = » followed by the number. «%d» is the slot for the number, «\n» moves to a new line.`},
+   check:t=>expect(t,['int','int']),
+   trace(inp){const t=new Tracer(inp);t.step(3,START);
+    t.set('a',I(null));t.set('b',I(null));t.step(4,R`Two boxes appear. The «?» means junk: nothing has been put in them yet.`);
+    const a=+t.read(),b=+t.read();t.set('a',I(a));t.set('b',I(b));t.step(5,R`scanf takes «${a}» from the keyboard into «a», then «${b}» into «b».`);
+    t.set('sum',I(a+b));t.step(6,R`«a + b» → «${a} + ${b}» → «${a+b}». The answer goes into «sum».`);
+    t.print(`Sum = ${a+b}\n`);t.step(7,R`The screen shows «Sum = ${a+b}».`);t.step(8,END);return t.steps;}},
+  {title:'Average of three marks',short:'float and %.2f',task:'Read three marks and print their average with 2 digits after the decimal point.',sampleIn:'80 75 90',sampleOut:'Average = 81.67',
+   code:R`#include <stdio.h>
+
+int main() {
+    int m1, m2, m3;
+    scanf("%d %d %d", &m1, &m2, &m3);
+    float avg = (m1 + m2 + m3) / 3.0;
+    printf("Average = %.2f\n", avg);
+    return 0;
+}`,
+   notes:{4:R`Three whole-number boxes, one per mark.`,5:R`Reads three whole numbers and fills the boxes in order.`,
+    6:R`Adds the marks, then divides by «3.0». Writing «3.0» instead of «3» keeps the decimal part. The answer goes into «avg», a «float» box that can hold decimals.`,
+    7:R`«%.2f» prints a float rounded to 2 digits after the point.`},
+   check:t=>expect(t,['int','int','int']),
+   trace(inp){const t=new Tracer(inp);t.step(3,START);
+    ['m1','m2','m3'].forEach(n=>t.set(n,I(null)));t.step(4,R`Three empty boxes, holding junk for now.`);
+    const m=[+t.read(),+t.read(),+t.read()];['m1','m2','m3'].forEach((n,k)=>t.set(n,I(m[k])));
+    t.step(5,R`scanf fills them in order: «m1 = ${m[0]}», «m2 = ${m[1]}», «m3 = ${m[2]}».`);
+    const s=m[0]+m[1]+m[2],avg=s/3;t.set('avg',FL(avg));
+    t.step(6,R`«(${m[0]} + ${m[1]} + ${m[2]}) / 3.0» → «${s} / 3.0» → «${fmtF(avg)}». Because of «3.0», the decimal part is kept.`);
+    t.print(`Average = ${avg.toFixed(2)}\n`);t.step(7,R`«%.2f» rounds to 2 decimal places: «${avg.toFixed(2)}».`);t.step(8,END);return t.steps;}}
+ ],
+ labs:[
+  {kind:'Fill the gap',title:'Ticket counter',story:'A cinema sells tickets for 250 taka each. The cashier types how many tickets were bought. Print the total price.',
+   sampleIn:'3',sampleOut:'Total = 750',q:'Fill in the missing operator.',
+   code:R`#include <stdio.h>
+
+int main() {
+    int n;
+    scanf("%d", &n);
+    int total = n ⟦*⟧ 250;
+    printf("Total = %d\n", total);
+    return 0;
+}`,answers:['*'],hint:'Which symbol means “times” in C? It is not the letter x.',explain:R`«*» multiplies: «3 * 250» is «750». The maths operators are «+ - * /» and «%» (remainder).`,
+   check:t=>expect(t,['int']),
+   trace(inp){const t=new Tracer(inp);t.step(3,START);t.set('n',I(null));t.step(4,R`A box for the number of tickets.`);
+    const n=+t.read();t.set('n',I(n));t.step(5,R`scanf reads «${n}» into «n».`);t.set('total',I(n*250));t.step(6,R`«n * 250» → «${n} * 250» → «${n*250}».`);
+    t.print(`Total = ${n*250}\n`);t.step(7,R`Screen: «Total = ${n*250}».`);t.step(8,END);return t.steps;}},
+  {kind:'Predict the output',title:'Sharing cat treats',story:'Mochi shares cat treats equally among her kitten friends. Whole treats only; the leftovers stay with Mochi.',
+   sampleIn:'17 5',sampleOut:'Each = 3, Left = 2',hideOut:true,q:'What does the program print for the sample input?',
+   code:R`#include <stdio.h>
+
+int main() {
+    int c, f;
+    scanf("%d %d", &c, &f);
+    printf("Each = %d, Left = %d\n", c / f, c % f);
+    return 0;
+}`,options:[{c:'Each = 3, Left = 2',ok:true},{c:'Each = 3.4, Left = 0',why:R`Both boxes are «int», so «/» gives a whole number and drops the «.4».`},{c:'Each = 3, Left = 0',why:R`«%» gives the remainder: 17 = 5 × 3 + 2, so 2 are left.`}],
+   explain:R`«17 / 5» is «3» (whole-number division drops the decimal part) and «17 % 5» is the remainder, «2».`,
+   check:t=>{const e=expect(t,['int','int']);return e||(+t[1]===0?'There must be at least 1 kitten: dividing by 0 is not allowed.':null);},
+   trace(inp){const t=new Tracer(inp);t.step(3,START);t.set('c',I(null));t.set('f',I(null));t.step(4,R`Boxes for treats («c») and kitten friends («f»).`);
+    const c=+t.read(),f=+t.read();t.set('c',I(c));t.set('f',I(f));t.step(5,R`«c = ${c}», «f = ${f}».`);
+    const e=Math.trunc(c/f),l=c%f;t.print(`Each = ${e}, Left = ${l}\n`);t.step(6,R`«${c} / ${f}» → «${e}» (decimal part dropped). «${c} % ${f}» → «${l}» (the remainder).`);t.step(7,END);return t.steps;}}
+ ]},
+
+/* ======================= 2. ARRAYS ======================= */
+{id:'arrays',title:'Arrays',sub:'Rows and grids of boxes',
+ big:'An array is a row of boxes that share one name. You read values into it with one loop and print them with another. A 2D array is a grid, like seats in a cinema.',
+ keys:[R`Boxes are numbered from «0». With 5 boxes the last one is «[4]».`,R`Loop 1 fills the boxes from the keyboard, loop 2 prints them.`,R`«i» is the box number the loop is visiting right now.`,R`A 2D array uses two numbers, «m[row][column]», and two loops, one inside the other.`],
+ fig:()=>`<div class="fig-row" style="flex-direction:column">
+   <div class="var"><div class="vl"><span class="vn">marks</span><span class="vt">int[5]</span></div>${arrHtml(A('int',5,[7,3,9,4,6]),[F('marks',2,'i = 2')],()=>false,'marks')}</div>
+   <div class="var"><div class="vl"><span class="vn">seats</span><span class="vt">int[2][3]</span></div>${gridHtml(G([2,3],[[1,0,1],[0,1,1]]),[{name:'s',row:1,col:2}],()=>false,'s',false)}</div></div>`,
+ cap:R`<b>A row of lockers</b> numbered from 0, and <b>a cinema hall</b>: to find a seat you need the row number <i>and</i> the seat number, like «seats[1][2]».`,
+ words:[['array','A row of boxes of the same type under one name.'],['index','A box’s number. Starts at 0.'],['marks[i]','The box at position i.'],['for loop','Repeats code: for (int i = 0; i < n; i++)'],['i++','Add 1 to i.'],['2D array','A grid: m[row][column].'],['nested loop','A loop inside a loop: for every row, visit every column.']],
+ progs:[
+  {title:'Read and print',short:'two for loops',task:'Read how many marks there are (n), then the n marks. Print them back on one line.',sampleIn:'5\n7 3 9 4 6',sampleOut:'7 3 9 4 6',
+   code:R`#include <stdio.h>
+
+int main() {
+    int n;
+    scanf("%d", &n);
+    int marks[100];
+    for (int i = 0; i < n; i++) {
+        scanf("%d", &marks[i]);
+    }
+    for (int i = 0; i < n; i++) {
+        printf("%d ", marks[i]);
+    }
+    printf("\n");
+    return 0;
+}`,
+   notes:{4:R`A box for how many marks will follow.`,5:R`Reads the first number, the count, into «n».`,
+    6:R`Makes an array: 100 «int» boxes in a row, all called «marks». We only use the first «n». *Like a corridor of 100 lockers: we use as many as we need.*`,
+    7:R`**Loop 1 (filling).** «int i = 0» starts at the first locker. «i < n» is checked before each round. «i++» moves to the next locker after each round.`,
+    8:R`Reads one number into locker «i». «&marks[i]» is that locker’s address.`,
+    10:R`**Loop 2 (printing).** Walks the same lockers again, from 0 to «n − 1».`,
+    11:R`Prints the number in locker «i» followed by a space.`,13:R`Finishes the line.`},
+   check:t=>countThen(t,1,8,['int']),
+   trace(inp){const t=new Tracer(inp);t.step(3,START);t.set('n',I(null));t.step(4,R`A box for the count.`);
+    const n=+t.read();t.set('n',I(n));t.step(5,R`scanf reads «${n}»: ${n} marks are coming next.`);
+    const v=Array(n).fill(null);t.set('marks',A('int',100,v));t.step(6,R`100 lockers called «marks» are made. Only the first ${n} are drawn. They hold junk «?» until we fill them.`);
+    fillLoop(t,'marks',n,v,100,7,8,'Loop 1 (filling)');
+    loop(t,n,10,'marks',k=>{t.print(v[k]+' ');t.step(11,R`Prints «marks[${k}]», which holds «${v[k]}», and a space.`,F('marks',k));},{label:'Loop 2 (printing)'});
+    t.print('\n');t.step(13,R`Moves to a new line.`);t.step(14,END);return t.steps;}},
+  {title:'Total and highest',short:'loop with if',task:'A batter played n matches. Read the runs for each match, then print the total runs and the highest score.',sampleIn:'5\n12 45 7 30 22',sampleOut:'Total = 116\nHighest = 45',
+   code:R`#include <stdio.h>
+
+int main() {
+    int n;
+    scanf("%d", &n);
+    int runs[100];
+    for (int i = 0; i < n; i++) {
+        scanf("%d", &runs[i]);
+    }
+    int total = 0;
+    int best = runs[0];
+    for (int i = 0; i < n; i++) {
+        total = total + runs[i];
+        if (runs[i] > best) {
+            best = runs[i];
+        }
+    }
+    printf("Total = %d\n", total);
+    printf("Highest = %d\n", best);
+    return 0;
+}`,
+   notes:{4:R`How many matches.`,5:R`Reads the count.`,6:R`100 boxes for runs; we use the first «n».`,7:R`Loop 1: fill the boxes.`,8:R`Read one match’s runs into box «i».`,
+    10:R`A running total that starts at 0. *Like a shop receipt adding up item by item.*`,11:R`The best score so far. We start by guessing the first match.`,
+    12:R`Loop 2: visit every match again.`,13:R`Add this match’s runs to the total.`,14:R`Is this match better than the best so far?`,15:R`Yes: remember it as the new best.`,
+    18:R`Prints the total.`,19:R`Prints the highest score.`},
+   check:t=>countThen(t,1,8,['int']),
+   trace(inp){const t=new Tracer(inp);t.step(3,START);t.set('n',I(null));t.step(4,R`A box for the number of matches.`);
+    const n=+t.read();t.set('n',I(n));t.step(5,R`«n = ${n}» matches.`);const v=Array(n).fill(null);t.set('runs',A('int',100,v));t.step(6,R`Boxes for the runs, junk for now.`);
+    fillLoop(t,'runs',n,v,100,7,8,'Loop 1 (filling)');
+    let tot=0,best=v[0];t.set('total',I(0));t.step(10,R`«total» starts at «0».`);t.set('best',I(best));t.step(11,R`«best» starts as the first match: «${best}».`,F('runs',0,'[0]'));
+    loop(t,n,12,'runs',k=>{const o=tot;tot+=v[k];t.set('total',I(tot));t.step(13,R`«total + runs[${k}]» → «${o} + ${v[k]}» → «${tot}».`,F('runs',k));
+      const y=v[k]>best;t.step(14,R`Is «runs[${k}]» («${v[k]}») bigger than «best» («${best}»)? ${y?'**Yes**.':'No, so skip the next line.'}`,F('runs',k));
+      if(y){best=v[k];t.set('best',I(best));t.step(15,R`New best: «best = ${best}».`,F('runs',k));}},{label:'Loop 2 (adding up)'});
+    t.print(`Total = ${tot}\n`);t.step(18,R`Screen: «Total = ${tot}».`);t.print(`Highest = ${best}\n`);t.step(19,R`Screen: «Highest = ${best}».`);t.step(20,END);return t.steps;}},
+  {title:'2D array: marks table',short:'grid + nested loops',task:'Read r students and c subjects, then the marks row by row. Print the table with each student’s total after a bar.',sampleIn:'2 3\n5 8 2\n7 1 9',sampleOut:'5 8 2 | 15\n7 1 9 | 17',
+   code:R`#include <stdio.h>
+
+int main() {
+    int r, c;
+    scanf("%d %d", &r, &c);
+    int m[10][10];
+    for (int i = 0; i < r; i++) {
+        for (int j = 0; j < c; j++) {
+            scanf("%d", &m[i][j]);
+        }
+    }
+    for (int i = 0; i < r; i++) {
+        int rowSum = 0;
+        for (int j = 0; j < c; j++) {
+            printf("%d ", m[i][j]);
+            rowSum = rowSum + m[i][j];
+        }
+        printf("| %d\n", rowSum);
+    }
+    return 0;
+}`,
+   notes:{4:R`Two boxes: the number of rows (students) and columns (subjects).`,5:R`Reads both.`,
+    6:R`A 2D array: a grid of 10 rows × 10 columns. «m[i][j]» is the box in row «i», column «j». *Like a cinema seat: row first, then seat number.*`,
+    7:R`**Outer loop:** chooses a row «i».`,8:R`**Inner loop:** walks across that row, column «j» = 0, 1, 2 … The inner loop runs completely for every single row.`,
+    9:R`Reads one number into row «i», column «j».`,12:R`Outer loop again: one row at a time for printing.`,13:R`This row’s total starts at 0.`,
+    14:R`Inner loop: across the columns of row «i».`,15:R`Prints the box at row «i», column «j».`,16:R`Adds it to the row total.`,18:R`Prints a bar, the row total and a new line. That finishes one row of the table.`},
+   check:t=>{const e=expect(t,['int','int']);if(e)return e;const r=+t[0],c=+t[1];if(r<1||r>4||c<1||c>4)return 'Please keep rows and columns between 1 and 4.';return expect(t,['int','int',...Array(r*c).fill('int')]);},
+   trace(inp){const t=new Tracer(inp);t.step(3,START);t.set('r',I(null));t.set('c',I(null));t.step(4,R`Two boxes for the size of the table.`);
+    const r=+t.read(),c=+t.read();t.set('r',I(r));t.set('c',I(c));t.step(5,R`«r = ${r}» rows (students) and «c = ${c}» columns (subjects).`);
+    const g=Array.from({length:r},()=>Array(c).fill(null));t.set('m',G([10,10],g));t.step(6,R`A 10 × 10 grid called «m». Only the ${r} × ${c} corner we use is drawn. Everything holds junk for now.`);
+    for(let i=0;i<r;i++){t.set('i',I(i));t.step(7,i===0?R`Outer loop starts: «i = 0», the first row. Is «0 < ${r}»? Yes.`:R`«i++» → «i = ${i}», the next row. Is «${i} < ${r}»? Yes.`,{name:'m',row:i});
+      for(let j=0;j<c;j++){t.set('j',I(j));t.step(8,j===0?R`Inner loop starts at column «j = 0». Is «0 < ${c}»? Yes.`:R`«j++» → column «j = ${j}». Is «${j} < ${c}»? Yes.`,{name:'m',row:i,col:j});
+        const x=+t.read();g[i][j]=x;t.set('m',G([10,10],g),`m#${i},${j}`);t.step(9,R`scanf reads «${x}» into «m[${i}][${j}]»: row ${i}, column ${j}.`,{name:'m',row:i,col:j});}
+      t.set('j',I(c));t.step(8,R`«j = ${c}». Is «${c} < ${c}»? No: row ${i} is full, so the inner loop ends.`,{name:'m',row:i});t.del('j');}
+    t.set('i',I(r));t.step(7,R`«i = ${r}». Is «${r} < ${r}»? No: every row is filled.`);t.del('i');
+    for(let i=0;i<r;i++){t.set('i',I(i));t.step(12,i===0?R`Printing starts with row «i = 0».`:R`Next row: «i = ${i}». Is «${i} < ${r}»? Yes.`,{name:'m',row:i});
+      let rs=0;t.set('rowSum',I(0));t.step(13,R`«rowSum» for row ${i} starts at «0».`,{name:'m',row:i});
+      for(let j=0;j<c;j++){t.set('j',I(j));t.step(14,R`Column «j = ${j}». Is «${j} < ${c}»? Yes.`,{name:'m',row:i,col:j});
+        t.print(g[i][j]+' ');t.step(15,R`Prints «m[${i}][${j}]», which is «${g[i][j]}».`,{name:'m',row:i,col:j});
+        const o=rs;rs+=g[i][j];t.set('rowSum',I(rs));t.step(16,R`«rowSum» → «${o} + ${g[i][j]}» → «${rs}».`,{name:'m',row:i,col:j});}
+      t.set('j',I(c));t.step(14,R`«j = ${c}». Is «${c} < ${c}»? No: the row is printed.`,{name:'m',row:i});t.del('j');
+      t.print(`| ${rs}\n`);t.step(18,R`Prints «| ${rs}» and a new line. Row ${i} is done.`,{name:'m',row:i});t.del('rowSum');}
+    t.set('i',I(r));t.step(12,R`«i = ${r}». Is «${r} < ${r}»? No: the whole table is printed.`);t.del('i');t.step(20,END);return t.steps;}}
+ ],
+ labs:[
+  {kind:'Predict the output',title:'Temperature log',story:'A weather station stores the temperature for n days. The program prints them from the last day back to the first.',
+   sampleIn:'4\n30 32 29 35',sampleOut:'35 29 32 30',hideOut:true,q:'Type exactly what is printed for the sample input.',
+   code:R`#include <stdio.h>
+
+int main() {
+    int n;
+    scanf("%d", &n);
+    int t[100];
+    for (int i = 0; i < n; i++) {
+        scanf("%d", &t[i]);
+    }
+    for (int i = n - 1; i >= 0; i--) {
+        printf("%d ", t[i]);
+    }
+    return 0;
+}`,answers:['35 29 32 30'],hint:R`The second loop starts at «i = n - 1» (the last box) and «i--» walks backwards.`,explain:R`The second loop visits «t[3], t[2], t[1], t[0]»: «35 29 32 30».`,
+   check:t=>countThen(t,1,8,['int']),
+   trace(inp){const t=new Tracer(inp);t.step(3,START);t.set('n',I(null));t.step(4,R`Box for the number of days.`);const n=+t.read();t.set('n',I(n));t.step(5,R`«n = ${n}».`);
+    const v=Array(n).fill(null);t.set('t',A('int',100,v));t.step(6,R`Boxes for the temperatures.`);fillLoop(t,'t',n,v,100,7,8,'Loop 1 (filling)');
+    let shown='';for(let k=n-1;k>=0;k--){t.set('i',I(k));t.step(10,k===n-1?R`Loop 2 starts at the **last** box: «i = n - 1 = ${k}». Is «${k} >= 0»? Yes.`:R`«i--» → «i = ${k}». Is «${k} >= 0»? Yes.`,F('t',k));
+      t.print(v[k]+' ');shown+=v[k]+' ';t.step(11,R`Prints «t[${k}]» = «${v[k]}». The screen now shows «${shown.trim()}».`,F('t',k));}
+    t.set('i',I(-1));t.step(10,R`«i = -1». Is «-1 >= 0»? No, the loop ends.`);t.del('i');t.step(13,END);return t.steps;}},
+  {kind:'Fill the gap',title:'Pass counter',story:'A teacher wants to know how many students passed. The pass mark is 40 or more.',
+   sampleIn:'5\n55 30 40 72 18',sampleOut:'Passed = 3',q:'Fill in the comparison so that a mark of exactly 40 also counts as a pass.',
+   code:R`#include <stdio.h>
+
+int main() {
+    int n;
+    scanf("%d", &n);
+    int m[100];
+    for (int i = 0; i < n; i++) {
+        scanf("%d", &m[i]);
+    }
+    int passed = 0;
+    for (int i = 0; i < n; i++) {
+        if (m[i] ⟦>=⟧ 40) {
+            passed++;
+        }
+    }
+    printf("Passed = %d\n", passed);
+    return 0;
+}`,answers:['>='],hint:R`«>» would leave out exactly 40. Which comparison means “greater than or equal to”?`,explain:R`«>=» counts 55, 40 and 72: «Passed = 3».`,
+   check:t=>countThen(t,1,8,['int']),
+   trace(inp){const t=new Tracer(inp);t.step(3,START);t.set('n',I(null));t.step(4,R`Box for the number of students.`);const n=+t.read();t.set('n',I(n));t.step(5,R`«n = ${n}».`);
+    const v=Array(n).fill(null);t.set('m',A('int',100,v));t.step(6,R`Boxes for the marks.`);fillLoop(t,'m',n,v,100,7,8,'Loop 1 (filling)');
+    let p=0;t.set('passed',I(0));t.step(10,R`«passed» starts at 0.`);
+    loop(t,n,11,'m',k=>{const y=v[k]>=40;t.step(12,R`Is «m[${k}]» («${v[k]}») «>= 40»? ${y?'**Yes**, a pass.':'No.'}`,F('m',k));if(y){p++;t.set('passed',I(p));t.step(13,R`«passed++» → «${p}».`,F('m',k));}},{label:'Loop 2 (counting)'});
+    t.print(`Passed = ${p}\n`);t.step(16,R`Screen: «Passed = ${p}».`);t.step(17,END);return t.steps;}},
+  {kind:'Pick the right line',title:'Cinema seats',story:'A cinema hall stores 1 for a booked seat and 0 for a free seat. Count how many seats are booked.',
+   sampleIn:'2 3\n1 0 1\n1 1 0',sampleOut:'Booked = 4',q:'Which line correctly reads the seat at row i, column j?',
+   code:R`#include <stdio.h>
+
+int main() {
+    int r, c;
+    scanf("%d %d", &r, &c);
+    int s[10][10];
+    int booked = 0;
+    for (int i = 0; i < r; i++) {
+        for (int j = 0; j < c; j++) {
+            /* which line goes here? */
+            booked = booked + s[i][j];
+        }
+    }
+    printf("Booked = %d\n", booked);
+    return 0;
+}`,options:[{c:'scanf("%d", &s[i][j]);',ok:true},{c:'scanf("%d", &s[i, j]);',why:R`In C each index has its own brackets: «s[i][j]».`},{c:'scanf("%d", s[i][j]);',why:R`scanf needs the *address* of the box, so it needs «&».`}],
+   explain:R`«&s[i][j]» is the address of the seat at row «i», column «j».`,
+   check:t=>{const e=expect(t,['int','int']);if(e)return e;const r=+t[0],c=+t[1];if(r<1||r>4||c<1||c>4)return 'Keep rows and columns between 1 and 4.';return expect(t,['int','int',...Array(r*c).fill('int')]);},
+   trace(inp){const t=new Tracer(inp);t.step(3,START);t.set('r',I(null));t.set('c',I(null));t.step(4,R`Boxes for the hall size.`);const r=+t.read(),c=+t.read();t.set('r',I(r));t.set('c',I(c));t.step(5,R`${r} rows, ${c} seats per row.`);
+    const g=Array.from({length:r},()=>Array(c).fill(null));t.set('s',G([10,10],g));t.step(6,R`A grid for the seats.`);let b=0;t.set('booked',I(0));t.step(7,R`«booked» starts at 0.`);
+    for(let i=0;i<r;i++){t.set('i',I(i));t.step(8,R`Row «i = ${i}».`,{name:'s',row:i});for(let j=0;j<c;j++){t.set('j',I(j));t.step(9,R`Seat «j = ${j}».`,{name:'s',row:i,col:j});
+      const x=+t.read();g[i][j]=x;t.set('s',G([10,10],g),`s#${i},${j}`);t.step(10,R`Reads «${x}» into «s[${i}][${j}]».`,{name:'s',row:i,col:j});
+      b+=x;t.set('booked',I(b));t.step(11,R`«booked» → «${b}».`,{name:'s',row:i,col:j});}t.del('j');}
+    t.del('i');t.print(`Booked = ${b}\n`);t.step(14,R`Screen: «Booked = ${b}».`);t.step(15,END);return t.steps;},
+   solution:'scanf("%d", &s[i][j]);'}
+ ]},
+
+/* ======================= 3. STRINGS ======================= */
+{id:'strings',title:'Strings',sub:'Letter tiles',
+ big:'C stores text as a row of char boxes, one letter per box, followed by a STOP tile written \'\\0\'. Every letter is secretly a number called its ASCII code.',
+ keys:[R`A string is a char array: «char name[20]» has room for 19 letters + the STOP tile.`,R`The text always ends with «'\0'». Loops walk the tiles until they reach it.`,R`Each letter is a number: «'A'» is 65, «'a'» is 97. Small and capital letters are 32 apart.`,R`«scanf("%s", name)» reads one word. No «&» for arrays.`],
+ fig:()=>`<div class="fig-row"><div class="var wide"><div class="vl"><span class="vn">name</span><span class="vt">char[20]</span></div>${strHtml(S(20,'Mochi'),[F('name',5,'STOP','j')],()=>false,'name')}</div></div>`,
+ cap:R`<b>Like Scrabble tiles on a rack:</b> one letter per tile, then a red STOP tile. The small blue number under each tile is the number the computer really stores (ASCII).`,
+ words:[['char','One character, in single quotes: \'a\'.'],['string','Characters in double quotes: "Rafi". Ends with \'\\0\'.'],['\'\\0\'','The STOP tile (null character). Its code is 0.'],['ASCII','The number behind each character: A = 65, a = 97, 0 = 48.'],['%s / %c','printf slots for a whole string / one character.'],['strlen(s)','Counts the letters before \'\\0\'. Needs <string.h>.']],
+ progs:[
+  {title:'Count the letters',short:'walk to the STOP tile',task:'Read a name and print how many letters it has.',sampleIn:'Rafi',sampleOut:'Rafi has 4 letters',
+   code:R`#include <stdio.h>
+
+int main() {
+    char name[20];
+    scanf("%s", name);
+    int len = 0;
+    while (name[len] != '\0') {
+        len++;
+    }
+    printf("%s has %d letters\n", name, len);
+    return 0;
+}`,
+   notes:{4:R`Makes 20 «char» boxes in a row called «name». Each holds one character. Right now they hold junk.`,
+    5:R`Reads one word and copies it in, one letter per box, then adds the STOP tile «'\0'». No «&» here: an array’s name already tells scanf where its boxes are.`,
+    6:R`A counter that starts at 0.`,7:R`Repeat while the box at position «len» is **not** the STOP tile. «!=» means “is not equal to”.`,
+    8:R`«len++» adds 1: count this letter and move to the next box.`,10:R`«%s» prints the letters up to «'\0'». «%d» prints the count.`},
+   check:t=>expect(t,['word']),
+   trace(inp){const t=new Tracer(inp);t.step(3,START);t.set('name',S(20,null));t.step(4,R`20 char boxes appear, holding junk.`);
+    const w=t.read(),n=w.length;t.set('name',S(20,w));t.step(5,R`scanf copies ${tiles(w)} into the boxes and puts the STOP tile «'\0'» straight after. The blue numbers are the ASCII codes.`);
+    t.set('len',I(0));t.step(6,R`«len» starts at «0».`,F('name',0,'len'));
+    for(let k=0;k<n;k++){t.step(7,R`«name[${k}]» is «'${w[k]}'» (code ${w.charCodeAt(k)}). Not the STOP tile, so go inside.`,F('name',k,'len'));
+      t.set('len',I(k+1));t.step(8,R`Counted: «len» is now «${k+1}».`,F('name',k+1,'len'));}
+    t.step(7,R`«name[${n}]» is the STOP tile «'\0'». The loop ends.`,F('name',n,'len'));
+    t.print(`${w} has ${n} letters\n`);t.step(10,R`Screen: «${w} has ${n} letters».`);t.step(11,END);return t.steps;}},
+  {title:'Print it backwards',short:'strlen + i--',task:'Read a word and print it backwards.',sampleIn:'code',sampleOut:'edoc',
+   code:R`#include <stdio.h>
+#include <string.h>
+
+int main() {
+    char w[20];
+    scanf("%s", w);
+    int n = strlen(w);
+    for (int i = n - 1; i >= 0; i--) {
+        printf("%c", w[i]);
+    }
+    printf("\n");
+    return 0;
+}`,
+   notes:{5:R`20 char boxes for the word.`,6:R`Reads one word into «w».`,7:R`«strlen(w)» counts the letters before «'\0'». The last letter is at position «n − 1», because counting starts at 0.`,
+    8:R`Start at the last letter and walk **backwards**: «i--» subtracts 1 each round. Stop when «i» drops below 0.`,9:R`«%c» prints one single character: the letter in box «i».`,11:R`Finishes the line.`},
+   check:t=>expect(t,['word']),
+   trace(inp){const t=new Tracer(inp);t.step(4,START);t.set('w',S(20,null));t.step(5,R`Boxes for the word.`);
+    const w=t.read(),n=w.length;t.set('w',S(20,w));t.step(6,R`scanf stores ${tiles(w)} and the STOP tile.`);
+    t.set('n',I(n));t.step(7,R`«strlen(w)» counts «${n}» letters. The last one sits at «[${n-1}]».`,F('w',n-1,'n - 1'));
+    let sh='';for(let k=n-1;k>=0;k--){t.set('i',I(k));t.step(8,k===n-1?R`Start at the last letter: «i = ${k}». Is «${k} >= 0»? Yes.`:R`«i--» → «i = ${k}». Is «${k} >= 0»? Yes.`,F('w',k));
+      t.print(w[k]);sh+=w[k];t.step(9,R`Prints «'${w[k]}'». The screen now shows «${sh}».`,F('w',k));}
+    t.set('i',I(-1));t.step(8,R`«i = -1». Is «-1 >= 0»? No, the loop ends.`);t.del('i');t.print('\n');t.step(11,R`New line.`);t.step(12,END);return t.steps;}},
+  {title:'SHOUT IT',short:'ASCII: small → CAPITAL',task:'Read a word and print it in capital letters. Letters that are already capital, and digits, stay the same.',sampleIn:'hello',sampleOut:'HELLO',
+   code:R`#include <stdio.h>
+
+int main() {
+    char s[20];
+    scanf("%s", s);
+    for (int i = 0; s[i] != '\0'; i++) {
+        if (s[i] >= 'a' && s[i] <= 'z') {
+            s[i] = s[i] - 32;
+        }
+    }
+    printf("%s\n", s);
+    return 0;
+}`,
+   notes:{4:R`20 char boxes.`,5:R`Reads the word.`,6:R`Visit each tile until the STOP tile. This time the loop’s test looks at the tile itself instead of comparing «i» with a length.`,
+    7:R`Is it a small letter? «'a'» is 97 and «'z'» is 122, so this checks whether the code is between 97 and 122. «&&» means *and*: both tests must be true.`,
+    8:R`Small and capital letters are exactly 32 apart in ASCII («'h'» = 104, «'H'» = 72). Subtracting 32 turns a small letter into a capital one.`,11:R`Prints the changed word.`},
+   check:t=>expect(t,['word']),
+   trace(inp){const t=new Tracer(inp);t.step(3,START);t.set('s',S(20,null));t.step(4,R`Boxes for the word.`);
+    const w=t.read(),n=w.length,arr=w.split('');t.set('s',S(20,w));t.step(5,R`scanf stores ${tiles(w)}. Look at the blue ASCII numbers.`);
+    for(let k=0;k<n;k++){const c=arr[k],code=c.charCodeAt(0);t.set('i',I(k));
+      t.step(6,k===0?R`Start with «i = 0». «s[0]» is «'${c}'», not the STOP tile, so go inside.`:R`«i++» → «i = ${k}». «s[${k}]» is «'${c}'», not the STOP tile, so go inside.`,F('s',k));
+      const small=c>='a'&&c<='z';t.step(7,small?R`Is «${code}» between 97 («'a'») and 122 («'z'»)? **Yes**, «'${c}'» is a small letter.`:R`Is «${code}» between 97 and 122? No, «'${c}'» is not a small letter, so it stays as it is.`,F('s',k));
+      if(small){const up=String.fromCharCode(code-32);arr[k]=up;t.set('s',S(20,arr.join('')),'s#'+k);t.step(8,R`«${code} − 32 = ${code-32}», which is the code of «'${up}'». The tile changes from «'${c}'» to «'${up}'».`,F('s',k));}}
+    t.set('i',I(n));t.step(6,R`«s[${n}]» is the STOP tile. The loop ends.`,F('s',n));t.del('i');
+    t.print(arr.join('')+'\n');t.step(11,R`Screen: «${arr.join('')}».`);t.step(12,END);return t.steps;}}
+ ],
+ labs:[
+  {kind:'Predict the output',title:'Vowel points',story:'In a word game, every vowel (a, e, i, o, u) scores one point.',sampleIn:'banana',sampleOut:'Vowels = 3',hideOut:true,q:'What does the program print for the sample input?',
+   code:R`#include <stdio.h>
+
+int main() {
+    char w[20];
+    scanf("%s", w);
+    int v = 0;
+    for (int i = 0; w[i] != '\0'; i++) {
+        if (w[i] == 'a' || w[i] == 'e' || w[i] == 'i' || w[i] == 'o' || w[i] == 'u') {
+            v++;
+        }
+    }
+    printf("Vowels = %d\n", v);
+    return 0;
+}`,answers:['Vowels = 3','3'],hint:R`Go tile by tile through «b a n a n a». «||» means *or*: any one match is enough.`,explain:R`Only the three «'a'» tiles match, so «Vowels = 3».`,
+   check:t=>expect(t,['word']),
+   trace(inp){const t=new Tracer(inp);t.step(3,START);t.set('w',S(20,null));t.step(4,R`Boxes for the word.`);const w=t.read(),n=w.length;t.set('w',S(20,w));t.step(5,R`Stored: ${tiles(w)}.`);
+    let v=0;t.set('v',I(0));t.step(6,R`«v» starts at 0.`);
+    for(let k=0;k<n;k++){t.set('i',I(k));t.step(7,R`«w[${k}]» is «'${w[k]}'», not the STOP tile.`,F('w',k));const y='aeiou'.includes(w[k]);
+      t.step(8,R`Is «'${w[k]}'» one of a, e, i, o, u? ${y?'**Yes**.':'No.'}`,F('w',k));if(y){v++;t.set('v',I(v));t.step(9,R`«v++» → «${v}».`,F('w',k));}}
+    t.set('i',I(n));t.step(7,R`STOP tile reached.`,F('w',n));t.del('i');t.print(`Vowels = ${v}\n`);t.step(12,R`Screen: «Vowels = ${v}».`);t.step(13,END);return t.steps;}},
+  {kind:'Fill the gap',title:'Library card initials',story:'The library card shows only initials. Read a first name and a last name and print the first letter of each, with dots.',
+   sampleIn:'Nusrat Jahan',sampleOut:'N.J.',q:'Which position holds the first letter of a string?',
+   code:R`#include <stdio.h>
+
+int main() {
+    char first[20], last[20];
+    scanf("%s %s", first, last);
+    printf("%c.%c.\n", first[⟦0⟧], last[0]);
+    return 0;
+}`,answers:['0'],hint:'Box numbers start at 0, not 1.',explain:R`«first[0]» is the first tile, «'N'». «%c» prints one character.`,
+   check:t=>expect(t,['word','word']),
+   trace(inp){const t=new Tracer(inp);t.step(3,START);t.set('first',S(20,null));t.set('last',S(20,null));t.step(4,R`Two strings, junk for now.`);
+    const a=t.read(),b=t.read();t.set('first',S(20,a,0));t.set('last',S(20,b,0));t.step(5,R`«first» gets ${tiles(a)}, «last» gets ${tiles(b)}.`);
+    t.print(`${a[0]}.${b[0]}.\n`);t.step(6,R`«first[0]» is «'${a[0]}'» and «last[0]» is «'${b[0]}'». Screen: «${a[0]}.${b[0]}.».`,[F('first',0,'[0]'),F('last',0,'[0]')]);t.step(7,END);return t.steps;}},
+  {kind:'Pick the right line',title:'Palindrome checker',story:'A palindrome reads the same both ways, like “level” or “madam”. Compare the first and last letters, then move one step inwards from both ends.',
+   sampleIn:'level',sampleOut:'Palindrome',q:'Which test finds a mismatch between the two ends?',
+   code:R`#include <stdio.h>
+#include <string.h>
+
+int main() {
+    char w[20];
+    scanf("%s", w);
+    int n = strlen(w);
+    int same = 1;
+    for (int i = 0; i < n / 2; i++) {
+        if (/* which test? */) {
+            same = 0;
+        }
+    }
+    if (same == 1) {
+        printf("Palindrome\n");
+    } else {
+        printf("Not palindrome\n");
+    }
+    return 0;
+}`,options:[{c:'w[i] != w[n - 1 - i]',ok:true},{c:'w[i] != w[n - i]',why:R`When «i» is 0 this looks at «w[n]», which is the STOP tile, not the last letter.`},{c:'w[i] == w[n - 1 - i]',why:R`This sets «same = 0» when the letters *match*, the opposite of what we want.`}],
+   explain:R`The partner of position «i» from the other end is «n - 1 - i». If they differ, it is not a palindrome.`,
+   check:t=>expect(t,['word']),
+   trace(inp){const t=new Tracer(inp);t.step(4,START);t.set('w',S(20,null));t.step(5,R`Boxes for the word.`);const w=t.read(),n=w.length;t.set('w',S(20,w));t.step(6,R`Stored: ${tiles(w)}.`);
+    t.set('n',I(n));t.step(7,R`«n = ${n}».`);let same=1;t.set('same',I(1));t.step(8,R`Assume it is a palindrome: «same = 1».`);const half=Math.floor(n/2);
+    for(let k=0;k<half;k++){const j=n-1-k,fs=[F('w',k,'i'),F('w',j,'n-1-i','j')];t.set('i',I(k));t.step(9,R`«i = ${k}». Is «${k} < ${half}» (half the length)? Yes.`,fs);
+      const bad=w[k]!==w[j];t.step(10,R`Compare «w[${k}]» «'${w[k]}'» with its partner «w[${j}]» «'${w[j]}'». ${bad?'**Different!**':'Same, keep going.'}`,fs);
+      if(bad){same=0;t.set('same',I(0));t.step(11,R`Mismatch found: «same = 0».`,fs);}}
+    t.set('i',I(half));t.step(9,R`«i = ${half}». Is «${half} < ${half}»? No: every pair has been checked.`);t.del('i');
+    t.step(14,R`Is «same == 1»? ${same?'Yes.':'No.'}`);if(same){t.print('Palindrome\n');t.step(15,R`Screen: «Palindrome».`);}else{t.step(16,R`The test was false, so jump to «else».`);t.print('Not palindrome\n');t.step(17,R`Screen: «Not palindrome».`);}
+    t.step(19,END);return t.steps;},
+   solution:'w[i] != w[n - 1 - i]'}
+ ]},
+
+/* ======================= 4. FUNCTIONS ======================= */
+{id:'functions',title:'Functions',sub:'Helpers that return answers',
+ big:'A function is a helper with a name. You hand it some values, it works in its own private room, and it hands one answer back with return. Every function on this page returns a value.',
+ keys:[R`Write the helper once, call it as often as you like: «add(4, 7)».`,R`The inputs (parameters) are **copies** of what you pass in.`,R`«return» hands the answer back and leaves the function.`,R`An array is not copied: the helper works on the caller’s boxes.`],
+ fig:()=>`<div class="fig-row"><div class="tline"><span class="tok">4</span><span class="tok">7</span></div><span class="arrow">→</span><div class="machine">add(a, b)<small>works in its own room</small></div><span class="arrow">→</span><div class="var"><div class="vl"><span class="vn">result</span><span class="vt">int</span></div><div class="box">11</div></div></div>`,
+ cap:R`<b>Like asking a friend to do a sum:</b> you hand them copies of your numbers, they work it out on their own paper, and they hand you back one answer.`,
+ words:[['function','A named helper: int add(int a, int b) { … }'],['parameter','An input slot of the helper (a, b).'],['argument','The value you pass in when calling (x, y).'],['call','Running the helper: add(x, y).'],['return','Hand the answer back and leave.'],['return type','The int before the name: the kind of answer it gives back.']],
+ progs:[
+  {title:'A helper that adds',short:'call and return',task:'Read two numbers. Use a function add to add them, then print the result.',sampleIn:'4 7',sampleOut:'11',
+   code:R`#include <stdio.h>
+
+int add(int a, int b) {
+    int s = a + b;
+    return s;
+}
+
+int main() {
+    int x, y;
+    scanf("%d %d", &x, &y);
+    int result = add(x, y);
+    printf("%d\n", result);
+    return 0;
+}`,
+   notes:{3:R`Defines a helper called «add». It takes two whole numbers, «a» and «b», and gives back a whole number (the first «int»). Writing it here does not run it yet.`,
+    4:R`Inside the helper: add the two inputs into «s».`,5:R`«return» hands the value in «s» back to whoever called «add».`,
+    9:R`Two boxes for the numbers.`,10:R`Reads both numbers.`,11:R`Calls «add». Copies of «x» and «y» go in as «a» and «b». The answer that comes back is stored in «result».`,12:R`Prints the result.`},
+   check:t=>expect(t,['int','int']),
+   trace(inp){const t=new Tracer(inp);t.step(8,R`The program starts in «main», even though «add» is written above it.`);
+    t.set('x',I(null));t.set('y',I(null));t.step(9,R`Two empty boxes.`);const x=+t.read(),y=+t.read();t.set('x',I(x));t.set('y',I(y));t.step(10,R`«x = ${x}», «y = ${y}».`);
+    t.step(11,R`To fill «result», C must first call «add(${x}, ${y})». main pauses on this line.`);
+    t.frame('add()');t.set('a',I(x));t.set('b',I(y));t.step(3,R`add gets its own room on top of main. «a» is a **copy** of x («${x}»), «b» a copy of y («${y}»).`);
+    t.set('s',I(x+y));t.step(4,R`«a + b» → «${x} + ${y}» → «${x+y}».`);t.step(5,R`add hands back «${x+y}».`);
+    t.pop();t.set('result',I(x+y));t.step(11,R`add’s room is cleared away. The returned «${x+y}» lands in «result».`);
+    t.print(`${x+y}\n`);t.step(12,R`Screen: «${x+y}».`);t.step(13,END);return t.steps;}},
+  {title:'Even or odd?',short:'return 1 or 0',task:'Read a number. A function isEven returns 1 if it is even and 0 if it is odd. Print the answer as a sentence.',sampleIn:'7',sampleOut:'7 is odd',
+   code:R`#include <stdio.h>
+
+int isEven(int n) {
+    if (n % 2 == 0) {
+        return 1;
+    }
+    return 0;
+}
+
+int main() {
+    int num;
+    scanf("%d", &num);
+    if (isEven(num) == 1) {
+        printf("%d is even\n", num);
+    } else {
+        printf("%d is odd\n", num);
+    }
+    return 0;
+}`,
+   notes:{3:R`A helper that answers a yes/no question with a number: «1» means yes, «0» means no.`,4:R`«n % 2» is the remainder after dividing by 2. Even numbers leave 0.`,
+    5:R`Even: hand back «1» and leave the function straight away.`,7:R`We only get here if the number was odd: hand back «0».`,
+    11:R`A box for the number.`,12:R`Reads it.`,13:R`Calls «isEven». If it hands back «1», run the next line; otherwise jump to «else».`,14:R`Prints that it is even.`,16:R`Prints that it is odd.`},
+   check:t=>expect(t,['int']),
+   trace(inp){const t=new Tracer(inp);t.step(10,START);t.set('num',I(null));t.step(11,R`A box for the number.`);const x=+t.read();t.set('num',I(x));t.step(12,R`«num = ${x}».`);
+    t.step(13,R`To check the «if», C first calls «isEven(${x})». main pauses.`);t.frame('isEven()');t.set('n',I(x));t.step(3,R`«n» gets a copy: «${x}».`);
+    const rem=x%2,ev=rem===0;t.step(4,R`«${x} % 2» is «${rem}». Is it «0»? ${ev?'**Yes**.':'No.'}`);
+    if(ev)t.step(5,R`Hands back «1» (yes, even).`);else t.step(7,R`Hands back «0» (no, odd).`);
+    t.pop();const r=ev?1:0;t.step(13,R`isEven gave back «${r}». Is «${r} == 1»? ${ev?'Yes.':'No.'}`);
+    if(ev){t.print(`${x} is even\n`);t.step(14,R`Screen: «${x} is even».`);}else{t.step(15,R`The test was false, so jump to «else».`);t.print(`${x} is odd\n`);t.step(16,R`Screen: «${x} is odd».`);}
+    t.step(18,END);return t.steps;}},
+  {title:'Passing an array',short:'no copy for arrays',task:'Read n numbers into an array. A function sum adds them up and returns the total.',sampleIn:'4\n3 8 1 6',sampleOut:'Sum = 18',
+   code:R`#include <stdio.h>
+
+int sum(int a[], int n) {
+    int total = 0;
+    for (int i = 0; i < n; i++) {
+        total = total + a[i];
+    }
+    return total;
+}
+
+int main() {
+    int n;
+    scanf("%d", &n);
+    int nums[100];
+    for (int i = 0; i < n; i++) {
+        scanf("%d", &nums[i]);
+    }
+    printf("Sum = %d\n", sum(nums, n));
+    return 0;
+}`,
+   notes:{3:R`A helper that adds up an array. «int a[]» receives the array, «int n» says how many boxes to add. *Arrays are not copied: the helper uses the caller’s own boxes, like borrowing a locker key.*`,
+    4:R`The running total starts at 0.`,5:R`Visit boxes 0 to «n − 1».`,6:R`Add box «i» to the total.`,8:R`Hand the total back.`,
+    12:R`How many numbers.`,13:R`Reads the count.`,14:R`100 boxes; we use «n».`,15:R`Fill the array.`,16:R`Reads one number into box «i».`,18:R`Calls «sum» with the array and the count, then prints the number it returns.`},
+   check:t=>countThen(t,1,8,['int']),
+   trace(inp){const t=new Tracer(inp);t.step(11,START);t.set('n',I(null));t.step(12,R`A box for the count.`);const n=+t.read();t.set('n',I(n));t.step(13,R`«n = ${n}».`);
+    const v=Array(n).fill(null);t.set('nums',A('int',100,v));t.step(14,R`Boxes for the numbers.`);fillLoop(t,'nums',n,v,100,15,16);
+    t.step(18,R`Before printing, C calls «sum(nums, ${n})». main pauses.`);
+    t.frame('sum()');t.set('a',REF('nums in main()'));t.set('n',I(n));t.step(3,R`sum gets «a», which points at main’s «nums» (no copy), and «n = ${n}».`);
+    let tot=0;t.set('total',I(0));t.step(4,R`«total» starts at 0.`);
+    loop(t,n,5,'nums',k=>{const o=tot;tot+=v[k];t.set('total',I(tot));t.step(6,R`«a[${k}]» is main’s «nums[${k}]» = «${v[k]}». «total» → «${o} + ${v[k]}» → «${tot}».`,F('nums',k,'a[i]'));});
+    t.step(8,R`Hands back «${tot}».`);t.pop();t.print(`Sum = ${tot}\n`);t.step(18,R`sum gave back «${tot}». Screen: «Sum = ${tot}».`);t.step(19,END);return t.steps;}}
+ ],
+ labs:[
+  {kind:'Predict the output',title:'Shop discount',story:'A shop takes 100 taka off any price above 1000.',sampleIn:'1500',sampleOut:'Pay 1400',hideOut:true,q:'What does the program print for the sample input?',
+   code:R`#include <stdio.h>
+
+int finalPrice(int price) {
+    if (price > 1000) {
+        return price - 100;
+    }
+    return price;
+}
+
+int main() {
+    int p;
+    scanf("%d", &p);
+    printf("Pay %d\n", finalPrice(p));
+    return 0;
+}`,answers:['Pay 1400','1400'],hint:R`Is 1500 bigger than 1000? Which «return» runs?`,explain:R`1500 > 1000, so the first «return» hands back «1500 - 100 = 1400».`,
+   check:t=>expect(t,['int']),
+   trace(inp){const t=new Tracer(inp);t.step(10,START);t.set('p',I(null));t.step(11,R`A box for the price.`);const p=+t.read();t.set('p',I(p));t.step(12,R`«p = ${p}».`);
+    t.step(13,R`printf needs «finalPrice(${p})» first.`);t.frame('finalPrice()');t.set('price',I(p));t.step(3,R`«price» is a copy: «${p}».`);const big=p>1000;
+    t.step(4,R`Is «${p} > 1000»? ${big?'Yes.':'No.'}`);const r=big?p-100:p;if(big)t.step(5,R`Hands back «${p} - 100 = ${r}».`);else t.step(7,R`Hands back «${p}» unchanged.`);
+    t.pop();t.print(`Pay ${r}\n`);t.step(13,R`Screen: «Pay ${r}».`);t.step(14,END);return t.steps;}},
+  {kind:'Fill the gap',title:'Square rooms',story:'A tiler needs the floor area of square rooms. Finish the helper so it returns side × side.',sampleIn:'6',sampleOut:'Area = 36',q:'What should the helper return?',
+   code:R`#include <stdio.h>
+
+int square(int n) {
+    return ⟦n * n⟧;
+}
+
+int main() {
+    int side;
+    scanf("%d", &side);
+    printf("Area = %d\n", square(side));
+    return 0;
+}`,answers:['n*n','(n*n)'],hint:R`Multiply the parameter by itself. Use «n», not 6, so it works for any room.`,explain:R`«return n * n;» works for any side: with 6 it gives 36.`,
+   check:t=>expect(t,['int']),
+   trace(inp){const t=new Tracer(inp);t.step(7,START);t.set('side',I(null));t.step(8,R`A box for the side.`);const s=+t.read();t.set('side',I(s));t.step(9,R`«side = ${s}».`);
+    t.step(10,R`printf needs «square(${s})» first.`);t.frame('square()');t.set('n',I(s));t.step(3,R`«n» gets a copy: «${s}».`);t.step(4,R`«n * n» → «${s} * ${s}» → «${s*s}», handed back.`);
+    t.pop();t.print(`Area = ${s*s}\n`);t.step(10,R`Screen: «Area = ${s*s}».`);t.step(11,END);return t.steps;}},
+  {kind:'Pick the right line',title:'Copies, not originals',story:'Rina hands a helper her number. The helper adds 10 to its copy and returns it.',sampleIn:'5',sampleOut:'x = 5, y = 15',hideOut:true,q:'What does the program print for the sample input?',
+   code:R`#include <stdio.h>
+
+int addTen(int n) {
+    n = n + 10;
+    return n;
+}
+
+int main() {
+    int x;
+    scanf("%d", &x);
+    int y = addTen(x);
+    printf("x = %d, y = %d\n", x, y);
+    return 0;
+}`,options:[{c:'x = 5, y = 15',ok:true},{c:'x = 15, y = 15',why:R`«n» is a copy of «x». Changing the copy never changes «x».`},{c:'x = 5, y = 5',why:R`The helper returns its changed copy, 15, and that is stored in «y».`}],
+   explain:R`The helper changed only its copy «n». «x» stays 5; the returned 15 goes into «y».`,
+   check:t=>expect(t,['int']),
+   trace(inp){const t=new Tracer(inp);t.step(8,START);t.set('x',I(null));t.step(9,R`A box for x.`);const x=+t.read();t.set('x',I(x));t.step(10,R`«x = ${x}».`);
+    t.step(11,R`Call «addTen(${x})».`);t.frame('addTen()');t.set('n',I(x));t.step(3,R`«n» is a **copy** of x: «${x}».`);t.set('n',I(x+10));t.step(4,R`The copy becomes «${x+10}». Look below: «x» in main is still «${x}».`);
+    t.step(5,R`Hands back «${x+10}».`);t.pop();t.set('y',I(x+10));t.step(11,R`«y = ${x+10}». «x» was never touched.`);t.print(`x = ${x}, y = ${x+10}\n`);t.step(12,R`Screen: «x = ${x}, y = ${x+10}».`);t.step(13,END);return t.steps;}}
+ ]},
+
+/* ======================= 5. STRUCTS ======================= */
+{id:'structs',title:'Structs',sub:'ID cards',
+ big:'A struct keeps different pieces of information about one thing together, like a student’s name, roll number and CGPA on one ID card. An array of structs is a stack of cards.',
+ keys:[R`Design the card once: «struct Student { … };». No memory is used yet.`,R`Make real cards from the design: «struct Student s;».`,R`Reach one part with a dot: «s.roll».`,R`A row of cards: «s[i].marks» is the marks on card «i».`],
+ fig:()=>`<div class="fig-row"><div class="var"><div class="vl"><span class="vn">s</span><span class="vt">struct Student</span></div>${cardHtml(ST('Student',[['name',S(20,'Tania',0)],['roll',I(12)],['cgpa',FL(3.75)]]).fields,[],()=>false,'s')}</div></div>`,
+ cap:R`<b>Like a student ID card:</b> the design has a name line, a roll line and a CGPA line. Each real card fills them in, and «s.roll» reads one line.`,
+ words:[['struct','A custom type made of several named parts.'],['field','One part of the struct (name, roll, cgpa).'],['s.roll','The dot reaches one field.'],['struct Student s[10]','An array of 10 cards.'],['s[i].marks','The marks field on card i.'],['copy','q = p copies every field into a separate card.']],
+ progs:[
+  {title:'Student ID card',short:'fields and the dot',task:'Read a student’s name, roll number and CGPA, then print them on three lines.',sampleIn:'Tania 12 3.75',sampleOut:'Name: Tania\nRoll: 12\nCGPA: 3.75',
+   code:R`#include <stdio.h>
+
+struct Student {
+    char name[20];
+    int roll;
+    float cgpa;
+};
+
+int main() {
+    struct Student s;
+    scanf("%s %d %f", s.name, &s.roll, &s.cgpa);
+    printf("Name: %s\n", s.name);
+    printf("Roll: %d\n", s.roll);
+    printf("CGPA: %.2f\n", s.cgpa);
+    return 0;
+}`,
+   notes:{3:R`Designs a new type called «struct Student». *Like designing a blank ID card.* No memory is used yet.`,4:R`Part 1: a name of up to 19 letters.`,5:R`Part 2: a roll number.`,6:R`Part 3: a CGPA, which can have decimals.`,7:R`Ends the design. A struct design needs the «;» after the brace.`,
+    10:R`Makes one real card called «s». Its parts hold junk for now.`,11:R`Reads a word, a whole number and a decimal into the three parts. «s.name» needs no «&» because it is an array; the other two do.`,
+    12:R`Prints the name part, reached with the dot.`,13:R`Prints the roll part.`,14:R`Prints the CGPA with 2 digits after the point.`},
+   check:t=>expect(t,['word','int','num']),
+   trace(inp){const t=new Tracer(inp);const card=(n,r,g)=>ST('Student',[['name',S(20,n,0)],['roll',I(r)],['cgpa',FL(g)]]);
+    t.step(9,R`Lines 3–7 only designed the card. The program starts in «main».`);t.set('s',card(null,null,null));t.step(10,R`One real card «s» appears. Every part holds junk.`);
+    const n=t.read(),r=+t.read(),g=+t.read();t.set('s',card(n,r,g));t.step(11,R`scanf fills the parts: «s.name = "${n}"», «s.roll = ${r}», «s.cgpa = ${fmtF(g)}».`);
+    t.print(`Name: ${n}\n`);t.step(12,R`Screen: «Name: ${n}».`);t.print(`Roll: ${r}\n`);t.step(13,R`Screen: «Roll: ${r}».`);t.print(`CGPA: ${g.toFixed(2)}\n`);t.step(14,R`Screen: «CGPA: ${g.toFixed(2)}».`);t.step(15,END);return t.steps;}},
+  {title:'Find the topper',short:'array of structs',task:'Read n students (name and marks). Print the student with the highest marks.',sampleIn:'3\nRafi 72\nNila 91\nSami 85',sampleOut:'Topper: Nila (91)',
+   code:R`#include <stdio.h>
+
+struct Student {
+    char name[20];
+    int marks;
+};
+
+int main() {
+    int n;
+    scanf("%d", &n);
+    struct Student s[10];
+    for (int i = 0; i < n; i++) {
+        scanf("%s %d", s[i].name, &s[i].marks);
+    }
+    int top = 0;
+    for (int i = 1; i < n; i++) {
+        if (s[i].marks > s[top].marks) {
+            top = i;
+        }
+    }
+    printf("Topper: %s (%d)\n", s[top].name, s[top].marks);
+    return 0;
+}`,
+   notes:{3:R`Designs a Student card with a name and marks.`,4:R`Part 1: the name.`,5:R`Part 2: the marks.`,6:R`Ends the design.`,9:R`How many students.`,10:R`Reads the count.`,
+    11:R`An array of 10 Student cards: «s[0]», «s[1]» … *A stack of ID cards.*`,12:R`Fill the first «n» cards.`,13:R`Reads a name and marks into card «i».`,
+    15:R`«top» remembers **which card** is best so far. Start with card 0.`,16:R`Compare the other cards, starting from card 1.`,17:R`Does card «i» have more marks than the best card?`,18:R`Yes: card «i» becomes the new best.`,21:R`Prints the name and marks from the best card.`},
+   check:t=>{const e=expect(t,['int']);if(e)return e;const n=+t[0];if(n<1||n>5)return 'Please choose from 1 to 5 students.';return expect(t,['int',...Array(n).fill(0).flatMap(()=>['word','int'])]);},
+   trace(inp){const t=new Tracer(inp);const card=(n,m)=>[['name',S(20,n,0)],['marks',I(m)]];
+    t.step(8,R`The design is ready. The program starts in «main».`);t.set('n',I(null));t.step(9,R`A box for the count.`);const n=+t.read();t.set('n',I(n));t.step(10,R`«n = ${n}» students.`);
+    const items=Array.from({length:n},()=>card(null,null)),names=[],marks=[];t.set('s',SA('Student',10,items));t.step(11,R`10 cards are made. The first ${n} are drawn, holding junk.`);
+    loop(t,n,12,'s',k=>{const nm=t.read(),mk=+t.read();names[k]=nm;marks[k]=mk;items[k]=card(nm,mk);t.set('s',SA('Student',10,items),'s#'+k);t.step(13,R`Card «s[${k}]» gets «${nm}» and «${mk}».`,F('s',k));},{label:'The filling loop'});
+    let top=0;t.set('top',I(0));t.step(15,R`«top = 0»: card 0 (${names[0]}, ${marks[0]}) is the best so far.`,F('s',0,'top','j'));
+    loop(t,n,16,'s',k=>{const y=marks[k]>marks[top];t.step(17,R`Is «s[${k}].marks» («${marks[k]}») > «s[top].marks» («${marks[top]}»)? ${y?'**Yes**.':'No.'}`,[F('s',k),F('s',top,'top','j')]);
+      if(y){top=k;t.set('top',I(top));t.step(18,R`«top = ${k}»: ${names[k]} is the new best.`,[F('s',k),F('s',top,'top','j')]);}},{from:1,label:'The comparing loop',extra:()=>[F('s',top,'top','j')]});
+    t.print(`Topper: ${names[top]} (${marks[top]})\n`);t.step(21,R`Card «s[${top}]» wins. Screen: «Topper: ${names[top]} (${marks[top]})».`,F('s',top,'top','j'));t.step(22,END);return t.steps;}}
+ ],
+ labs:[
+  {kind:'Fill the gap',title:'Book labels',story:'A library prints a label for each book in the form “Title by Author”.',sampleIn:'Matilda Dahl',sampleOut:'Matilda by Dahl',q:'Which field holds the author?',
+   code:R`#include <stdio.h>
+
+struct Book {
+    char title[30];
+    char author[30];
+};
+
+int main() {
+    struct Book b;
+    scanf("%s %s", b.title, b.author);
+    printf("%s by %s\n", b.title, b.⟦author⟧);
+    return 0;
+}`,answers:['author'],hint:'Look at the two parts in the Book design.',explain:R`«b.author» is the second part of the card.`,
+   check:t=>expect(t,['word','word']),
+   trace(inp){const t=new Tracer(inp);const card=(a,b)=>ST('Book',[['title',S(30,a,0)],['author',S(30,b,0)]]);t.step(8,R`The program starts in «main».`);t.set('b',card(null,null));t.step(9,R`One Book card, junk inside.`);
+    const a=t.read(),b=t.read();t.set('b',card(a,b));t.step(10,R`«b.title = "${a}"», «b.author = "${b}"».`);t.print(`${a} by ${b}\n`);t.step(11,R`Screen: «${a} by ${b}».`);t.step(12,END);return t.steps;}},
+  {kind:'Predict the output',title:'Photocopied price card',story:'Shop Q photocopies shop P’s price card and then changes the price on its own copy.',sampleIn:'100 5',sampleOut:'P = 100',hideOut:true,q:'What does the program print for the sample input?',
+   code:R`#include <stdio.h>
+
+struct Item {
+    int price;
+    int stock;
+};
+
+int main() {
+    struct Item p;
+    scanf("%d %d", &p.price, &p.stock);
+    struct Item q = p;
+    q.price = 80;
+    printf("P = %d\n", p.price);
+    return 0;
+}`,answers:['P = 100','100'],hint:R`Does «q = p» make a second card, or a second name for the same card?`,explain:R`«q = p» copies every field into a separate card. Changing «q.price» leaves «p» alone.`,
+   check:t=>expect(t,['int','int']),
+   trace(inp){const t=new Tracer(inp);const card=(a,b)=>ST('Item',[['price',I(a)],['stock',I(b)]]);t.step(8,R`The program starts in «main».`);t.set('p',card(null,null));t.step(9,R`Card «p», junk inside.`);
+    const a=+t.read(),b=+t.read();t.set('p',card(a,b));t.step(10,R`«p.price = ${a}», «p.stock = ${b}».`);t.set('q',card(a,b));t.step(11,R`«q» is a separate **copy** of p.`);
+    t.set('q',card(80,b),'q.price');t.step(12,R`Only «q.price» changes to 80. «p.price» is still «${a}».`);t.print(`P = ${a}\n`);t.step(13,R`Screen: «P = ${a}».`);t.step(14,END);return t.steps;}},
+  {kind:'Pick the right line',title:'Roll number entry',story:'A form reads a student’s name, then the roll number, into one ID card.',sampleIn:'Arif 7',sampleOut:'Arif is roll 7',q:'Which line reads the roll number correctly?',
+   code:R`#include <stdio.h>
+
+struct Student {
+    char name[20];
+    int roll;
+};
+
+int main() {
+    struct Student s;
+    scanf("%s", s.name);
+    /* which line goes here? */
+    printf("%s is roll %d\n", s.name, s.roll);
+    return 0;
+}`,options:[{c:'scanf("%d", &s.roll);',ok:true},{c:'scanf("%d", s.roll);',why:R`«roll» is a single int box, so scanf needs its address: «&s.roll».`},{c:'scanf("%d", &roll.s);',why:R`The card’s name comes first, then the dot, then the part: «s.roll».`}],
+   explain:R`«&s.roll» is the address of the roll part of card «s».`,
+   check:t=>expect(t,['word','int']),
+   trace(inp){const t=new Tracer(inp);const card=(a,b)=>ST('Student',[['name',S(20,a,0)],['roll',I(b)]]);t.step(8,R`The program starts in «main».`);t.set('s',card(null,null));t.step(9,R`Card «s», junk inside.`);
+    const a=t.read();t.set('s',card(a,null),'s.name');t.step(10,R`«s.name = "${a}"».`);const b=+t.read();t.set('s',card(a,b),'s.roll');t.step(11,R`«&s.roll» tells scanf where the roll box is: it gets «${b}».`);
+    t.print(`${a} is roll ${b}\n`);t.step(12,R`Screen: «${a} is roll ${b}».`);t.step(13,END);return t.steps;},
+   solution:'scanf("%d", &s.roll);'}
+ ]}
+];
+
+/* ================= progress (this browser only) ================= */
+let progress={};try{progress=JSON.parse(localStorage.getItem('bb2-progress')||'{}')||{};}catch(e){progress={};}
+const save=()=>{try{localStorage.setItem('bb2-progress',JSON.stringify(progress));}catch(e){}};
+const solved=(l,k)=>!!(progress[l]&&progress[l][k]);
+function markSolved(l,k){const was=solved(l,k);progress[l]=progress[l]||[];progress[l][k]=true;save();renderTabs();const L=LESSONS.find(x=>x.id===l);if(!was&&L.labs.every((_,j)=>solved(l,j)))setTimeout(()=>Mochi.dance(L.title),2600);}
+
+/* ================= page ================= */
+const tabs=document.getElementById('tabs'),app=document.getElementById('app');
+document.querySelector('.logo').innerHTML=cat(36);
+const curId=()=>{const h=location.hash.slice(1);return LESSONS.some(L=>L.id===h)?h:LESSONS[0].id;};
+function renderTabs(){const c=curId();tabs.innerHTML=LESSONS.map(L=>{const d=L.labs.filter((_,k)=>solved(L.id,k)).length;
+  return `<a href="#${L.id}" ${L.id===c?'aria-current="page"':''}>${L.title}<span class="cnt">${d}/${L.labs.length}</span></a>`;}).join('');}
+function ioHtml(i,o,hide){return `<div class="io"><div class="io-box"><span>Sample Input</span><pre>${esc(i)}</pre></div><div class="io-box"><span>Sample Output</span>${hide?'<pre class="hidden">Work it out first</pre>':`<pre>${esc(o)}</pre>`}</div></div>`;}
+function everyHtml(p){return `<details class="every"><summary>Every line, explained</summary><div class="ew"><table>${p.code.split('\n').map((l,k)=>l.trim()?`<tr><td class="n">${k+1}</td><td class="s">${hl(l)}</td><td class="t">${md(p.notes[k+1]||autoNote(l))}</td></tr>`:'').join('')}</table></div></details>`;}
+const capHtml=s=>md(s).replace(/&lt;(\/?)(b|i)&gt;/g,'<$1$2>');
+
+function buildLesson(L,li){
+  const sec=document.createElement('section');sec.className='lesson';sec.hidden=true;
+  sec.innerHTML=`
+   <div class="hero">
+     <div><div class="eyebrow">Lesson ${li+1} of ${LESSONS.length} · ${esc(L.sub)}</div><h1>${L.title}</h1><p class="big">${md(L.big)}</p>
+       <ul class="keys">${L.keys.map(k=>`<li><span>${md(k)}</span></li>`).join('')}</ul></div>
+     <figure class="fig">${cat(70,{cls:'peek',outfit:OUTFITS[L.id]})}${L.fig()}<figcaption>${capHtml(L.cap)}</figcaption></figure>
+   </div>
+   ${li===0?`<div class="how"><span class="hi">${cat(44)} Hi, I’m <b>Mochi</b>! I’ll sit next to the code and explain every line for you.</span><span data-n="1"><b>Read</b>&nbsp;the idea</span><span data-n="2">Press&nbsp;<b>Next line</b>&nbsp;and watch the boxes</span><span data-n="3">Click any line to read about it</span><span data-n="4">Change the input and run again</span><span data-n="5">Solve the&nbsp;<b>scenario labs</b></span></div>`:''}
+   <details class="words"><summary>Words to know (${L.words.length})</summary><dl class="wordlist">${L.words.map(w=>`<div><dt>${esc(w[0])}</dt><dd>${esc(w[1])}</dd></div>`).join('')}</dl></details>
+   <div><div class="sec"><h2>Programs to step through</h2><p>Each one is a small lab: read the task, check the sample input and output, then run it line by line.</p></div>
+     <div class="ptabs" role="tablist">${L.progs.map((p,k)=>`<button role="tab" type="button" aria-selected="${k===0}" data-p="${k}">Program ${k+1}: ${esc(p.title)}<small>${esc(p.short)}</small></button>`).join('')}</div></div>
+   <div class="pp">${L.progs.map((p,k)=>`<article class="lab" data-panel="${k}" ${k?'hidden':''}><div class="lab-top"><div class="task"><h3>${esc(p.title)}</h3><p>${md(p.task)}</p></div>${ioHtml(p.sampleIn,p.sampleOut)}</div><div class="bh-host"></div>${everyHtml(p)}</article>`).join('')}</div>
+   <div class="sec"><h2>Scenario labs</h2><p>Real-life problems in lab format. Answer, then press “Watch it run” to see why.</p></div>
+   <div class="labs"></div>
+   <nav class="pager">${li>0?`<a class="btn" href="#${LESSONS[li-1].id}">← ${LESSONS[li-1].title}</a>`:'<span></span>'}${li<LESSONS.length-1?`<a class="btn primary" href="#${LESSONS[li+1].id}">Next: ${LESSONS[li+1].title} →</a>`:''}</nav>`;
+  const built={};
+  const openProg=k=>{sec.querySelectorAll('.ptabs button').forEach(b=>b.setAttribute('aria-selected',String(+b.dataset.p===k)));
+    sec.querySelectorAll('.lab[data-panel]').forEach(a=>a.hidden=+a.dataset.panel!==k);
+    if(!built[k]){Bench(sec.querySelector(`.lab[data-panel="${k}"] .bh-host`),L.progs[k]);built[k]=true;}};
+  sec.querySelector('.ptabs').addEventListener('click',e=>{const b=e.target.closest('[data-p]');if(b)openProg(+b.dataset.p);});
+  sec._open=()=>{if(!built[0])openProg(0);};
+  const labs=sec.querySelector('.labs');L.labs.forEach((x,k)=>labs.appendChild(buildLab(L,x,k)));
+  return sec;
+}
+function buildLab(L,x,k){
+  const id=`lab-${L.id}-${k}`,el=document.createElement('article');el.className='ex'+(solved(L.id,k)?' solved':'');
+  const fill=/⟦/.test(x.code),choice=!!x.options;
+  const codeHtml=x.code.split(/⟦(.+?)⟧/).map((p,i)=>i%2?`<input id="${id}" aria-label="Your answer" autocomplete="off" spellcheck="false" size="${Math.max(3,p.length+1)}">`:hl(p)).join('');
+  el.innerHTML=`<div class="ex-h"><span class="kind">${x.kind}</span><h3>${esc(x.title)}</h3><span class="tick" ${solved(L.id,k)?'':'hidden'}>✓ Solved</span></div>
+   <p class="story">${md(x.story)}</p>${ioHtml(x.sampleIn,x.sampleOut,x.hideOut)}
+   <p class="q">${md(x.q)}</p><pre class="excode">${codeHtml}</pre>
+   ${choice?`<div class="choices">${x.options.map((o,j)=>`<label for="${id}-${j}"><input type="radio" name="${id}" id="${id}-${j}" value="${j}">${esc(o.c)}</label>`).join('')}</div>`:''}
+   ${!fill&&!choice?`<div class="ans"><label for="${id}"><b>Your answer</b></label><input id="${id}" autocomplete="off" spellcheck="false"></div>`:''}
+   <div class="acts"><button class="btn primary" data-x="check" type="button">Check</button><button class="btn" data-x="watch" type="button">▶ Watch it run</button><button class="btn" data-x="reveal" type="button" hidden>Show answer</button></div>
+   <div class="fb" hidden aria-live="polite"></div><div class="wv" hidden></div>`;
+  let wrong=0,built=false;const fb=el.querySelector('.fb');
+  const say=(c,h)=>{fb.className='fb '+c;fb.innerHTML=h;fb.hidden=false;};
+  const solCode=x.solution?x.code.replace(/\/\* which [^*]*\*\//,x.solution):x.code.replace(/⟦(.+?)⟧/g,'$1');
+  const showRun=()=>{const h=el.querySelector('.wv');if(!built){Bench(h,{...x,code:solCode,notes:x.notes||{}});built=true;}h.hidden=false;el.querySelector('[data-x=watch]').textContent='▶ Running below';};
+  el.addEventListener('click',e=>{const b=e.target.closest('[data-x]');if(!b)return;const a=b.dataset.x;
+    if(a==='watch'){showRun();return;}
+    if(a==='reveal'){say('hint',`<strong>Answer: <code>${esc(choice?x.options.find(o=>o.ok).c:x.answers[0])}</code></strong>${md(x.explain)}`);showRun();return;}
+    let ok,why='';
+    if(choice){const p=el.querySelector(`input[name="${id}"]:checked`);if(!p){say('hint','Pick one of the options first.');return;}const o=x.options[+p.value];ok=!!o.ok;why=o.why||'';}
+    else{const v=el.querySelector('#'+CSS.escape(id)).value;if(!v.trim()){say('hint','Type your answer first.');return;}ok=x.answers.map(ansNorm).includes(ansNorm(v));}
+    if(ok){Mochi.roll(()=>Mochi.say(x.explain,{shout:'PURR-FECT!',ms:6500}));say('ok',`<strong>${cat(30,{happy:true})} Purr-fect, that’s right!</strong>${md(x.explain)}`);el.classList.add('solved');el.querySelector('.tick').hidden=false;markSolved(L.id,k);showRun();}
+    else{wrong++;Mochi.say(wrong>=2?'Still not it. You can press **Show answer** now.':'Not quite. Read the hint and give it another go!',{shout:'Mrrp?'});say('bad',`<strong>Not quite.</strong>${md(why||('Hint: '+x.hint))}`);if(wrong>=2)el.querySelector('[data-x=reveal]').hidden=false;}
+  });
+  el.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.matches('input:not([type=radio])')){e.preventDefault();el.querySelector('[data-x=check]').click();}});
+  return el;
+}
+const sections=LESSONS.map((L,i)=>{const s=buildLesson(L,i);app.appendChild(s);return s;});
+const HELLO={basics:R`Hi, I’m Mochi! Press **Next line** and I’ll explain every line. Click me any time for a tip.`,
+  arrays:R`Lockers in a row, numbered from «0». Let’s fill them and print them!`,strings:R`Letter tiles and a red STOP tile. Every letter is secretly a number!`,
+  functions:R`Little helpers with their own rooms. Each one hands back an answer.`,structs:R`ID cards with named parts. Open a part with the dot!`};
+function show(scroll){const id=curId(),L=LESSONS.find(l=>l.id===id);Mochi.dress(OUTFITS[id]);Mochi.hideSign();sections.forEach((s,i)=>{s.hidden=LESSONS[i].id!==id;if(!s.hidden)s._open();});renderTabs();if(scroll)window.scrollTo({top:0,behavior:'auto'});
+  Mochi.roll(()=>Mochi.say(HELLO[id]+' *'+OUTFIT_LINE[OUTFITS[id]]+'*',{shout:id==='basics'?'Hello!':`${L.title}!`}));}
+window.addEventListener('hashchange',()=>show(true));
+show(false);
+</script>
+
+</body>
+</html>
