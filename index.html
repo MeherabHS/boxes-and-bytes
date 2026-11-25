@@ -72,7 +72,8 @@ button{font:inherit;color:inherit}
 .tabs .cnt{font-size:.75rem;opacity:.8;font-variant-numeric:tabular-nums}
 
 /* hero */
-.lesson{display:grid;gap:34px;padding-block:28px 64px}
+.lesson{display:grid;grid-template-columns:minmax(0,1fr);gap:34px;padding-block:28px 64px}
+.lesson>*,.hero>*,.pp,.lab>*,.bench>*{min-width:0}
 .hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px;align-items:center}
 .eyebrow{font:600 .8rem var(--f-body);text-transform:uppercase;letter-spacing:.1em;color:var(--accent)}
 .hero h1{font-size:clamp(2.4rem,5vw,3.4rem);margin:4px 0 10px}
@@ -284,7 +285,7 @@ html,body{overflow-x:clip}
 .roller.go{visibility:visible;animation:roll 2.2s cubic-bezier(.5,.1,.35,1) forwards}
 @keyframes roll{0%{transform:translateX(0) rotate(0)}84%{transform:translateX(calc(100vw + 10px)) rotate(1080deg)}92%{transform:translateX(calc(100vw - 4px)) rotate(1072deg) scaleY(.9)}100%{transform:translateX(calc(100vw + 2px)) rotate(1080deg)}}
 .lesson{padding-bottom:140px}
-@media (max-width:520px){.buddy-cat .cat,.roller .cat{width:60px;height:70px}}
+@media (max-width:520px){.buddy-cat .cat,.roller .cat{width:60px;height:70px}.pop{max-width:min(240px,calc(100vw - 48px));font-size:.88rem}}
 /* outfits, sign, dance */
 .holder{position:relative;animation:bob 3.2s ease-in-out infinite}
 .buddy-cat{animation:none}
