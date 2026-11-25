@@ -36,7 +36,7 @@ So I built two courses where every program can be run **one line at a time**, wi
 | Theory and code are separate | Each data structure has an **Intel** section: definitions, comparison tables (array vs linked list, stack vs queue …), step-by-step storyboards drawn with the same node diagrams, applications, pros and cons, plus **pseudocode with a meaning for every line and its Big-O cost**. |
 | Exam mistakes | Every lesson has an **Exam traps** box. Many exercises are built around those traps, such as `<` vs `<=`, the missing `&`, and the missing `rear = NULL`. |
 | Exam theory questions | Frame Ops has **36 short-answer theory questions with model answers**, for example "Differentiate array and linked list", "Why a circular queue?" and "Delete a node with two children". |
-| Motivation | Mochi rolls across the screen, wears a different outfit in each lesson, holds up the current line number and does a happy dance when a lesson's labs are all solved. KESTREL launches across a cockpit HUD and radios in when nodes are created or freed. Progress dots and counters track solved labs. |
+| Motivation | Mochi rolls across the screen, wears a different outfit in each lesson, holds up the current line number and does a happy dance when a lesson's labs are all solved. Wrong answers make Mochi more and more cross (encouraging, then stern, then scratching the screen, then a red-screen **MROWR!**), and a lab you run out of tries on comes back later as a **practice round**. KESTREL launches across a cockpit HUD and radios in when nodes are created or freed. Progress dots and counters track solved labs. |
 | Studying anywhere | It's a static website: it works on phones and needs no account. Progress is saved in the student's own browser. |
 
 ---
@@ -54,7 +54,35 @@ So I built two courses where every program can be run **one line at a time**, wi
 | Pointers | `&x`, `*p`; changing a caller's variable through a pointer; walking an array with `p++` | Moving one pointer between two boxes, swap through pointers, point before use |
 | Structs | Student ID card (`.`); array of structs (find the topper); pointer to a struct (`->`) | Book labels, photocopied price card, roll entry, bank withdrawal |
 
-19 programs and 20 labs in total. Every lab is *predict the output*, *fill the gap* or *pick the right line*, with hints, an answer reveal after two tries, and **Watch it run**.
+19 programs and 20 labs in total, plus 40 practice rounds. Every lab is *predict the output*, *fill the gap* or *pick the right line*, with hints, an answer reveal after four tries, and **Watch it run**.
+
+### Angry Mochi and practice rounds 😾
+
+Mochi reacts to each wrong answer on a lab, a little crosser every time:
+
+| Try | Mochi |
+|---|---|
+| 1st miss | Encourages you and points at the hint. |
+| 2nd miss | Gets stern: “Slow down, read that line one symbol at a time.” |
+| 3rd miss | Hisses and rakes claw marks across the screen. |
+| 4th miss | The screen goes red, **MROWR!** Mochi saves the lab as a weak spot, then calms down, says something hopeful and shows the answer with **Watch it run**. |
+
+Next time you open the site, Mochi says welcome back, reopens your last lesson and brings **practice rounds** for your weak spots (look for the ★ on the lesson tabs). A practice round drills the same trap in a new way:
+
+- *Predict the output*: the same program with a new sample input. The right answer is computed by the program's own trace, so it is always correct.
+- *Fill the gap*: the same program with a different exam trap blanked out (the `&` in `scanf`, `%d`, the `'\0'` STOP tile, `==`, the `;` after a struct …).
+- *Pick the right line*: the same right line with new wrong options, each explaining why it is wrong.
+
+Each lab has at most **3 rounds** (the lab itself plus two pre-written practice rounds). Nothing is generated on the fly. Solving a practice round fixes the weak spot. Missing round 3 four times retires it. All of this is saved only in the student's own browser, like lesson progress.
+
+| | |
+|---|---|
+| ![1st miss: Mochi encourages](screenshots/mochi-try1-encourage.png) | ![2nd miss: Mochi gets stern](screenshots/mochi-try2-stern.png) |
+| **1st miss**: “You can do it!” and a hint. | **2nd miss**: a stern Mochi: “Hmm. Focus.” |
+| ![3rd miss: claw scratches](screenshots/mochi-try3-scratch.png) | ![4th miss: red screen, angry Mochi](screenshots/mochi-try4-angry.png) |
+| **3rd miss**: “HSSS!” and claw marks across the screen. | **4th miss**: the screen goes red: **MROWR!** |
+| ![After the red screen: hopeful message and the answer](screenshots/mochi-after-hopeful.png) | ![Next visit: a practice round](screenshots/mochi-practice-round.png) |
+| **Then**: a deep breath, the weak spot is saved, and the answer is shown. | **Next visit**: welcome back, ★1 on the tab, and practice round 2 of 3 (this time the `&` in `scanf` is the gap). |
 
 | | |
 |---|---|
@@ -131,7 +159,7 @@ screenshots/      Images used in this README
 README.md
 ```
 
-Each part is one self-contained HTML file with vanilla JavaScript and CSS: no frameworks, no build tools, no tracking. The only outside request is for Google Fonts. Lesson progress is stored only in the visitor's own browser (`localStorage`).
+Each part is one self-contained HTML file with vanilla JavaScript and CSS: no frameworks, no build tools, no tracking. The only outside request is for Google Fonts. Lesson progress, Mochi's saved weak spots and the last lesson visited are stored only in the visitor's own browser (`localStorage`). A new visit (a new browser tab session) is what brings practice rounds back.
 
 ## A note on the characters
 
