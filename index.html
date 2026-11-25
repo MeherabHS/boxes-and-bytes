@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="Learn C arrays, strings, functions and structs step by step with Mochi the cat.">
+<meta name="description" content="Get ready for C finals: arrays, strings, functions, recursion, pointers and structs, step by step with Mochi the cat.">
 <style>
 :root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 img{max-width:100%}
@@ -299,6 +299,14 @@ html,body{overflow-x:clip}
 .confetti i{position:absolute;top:-16px;width:9px;height:14px;border-radius:3px;animation:fall 2.6s ease-in forwards}
 @keyframes fall{to{transform:translate(var(--dx),108vh) rotate(var(--r))}}
 @keyframes roll{0%{transform:translateX(0) rotate(0)}84%{transform:translateX(calc(100vw + 2px)) rotate(1080deg)}92%{transform:translateX(calc(100vw - 12px)) rotate(1072deg) scaleY(.9)}100%{transform:translateX(calc(100vw - 6px)) rotate(1080deg)}}
+/* pointers + exam traps */
+.addr{font:600 .7rem var(--f-mono);color:var(--tone-j);background:var(--tone-j-soft);border-radius:5px;padding:0 5px}
+.ptrbox{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ptrbox .box{border-style:dashed;border-color:var(--tone-j);color:var(--tone-j)}
+.pto{font-size:.85rem;color:var(--tone-j)}
+.traps{background:var(--coral-soft);border:2px solid var(--coral);border-radius:20px;padding:16px 20px;box-shadow:var(--shadow)}
+.traps h3{font-size:1.3rem;display:flex;gap:10px;align-items:center;margin-bottom:8px}
+.traps ul{margin:0;padding-left:1.2em;display:grid;gap:6px}
 @media (max-width:1000px){.bgrid{grid-template-columns:minmax(0,1fr)}}
 @media (max-width:860px){.hero,.lab-top{grid-template-columns:minmax(0,1fr)}}
 @media (max-width:520px){.io{grid-template-columns:minmax(0,1fr)}.lab,.ex{padding:14px}.code,.excode{font-size:13px}body{font-size:16px}}
@@ -316,8 +324,8 @@ html,body{overflow-x:clip}
 <script>
 /* ================= Mochi the cat ================= */
 let OUTFIT='bow';
-const OUTFITS={basics:'bow',arrays:'cap',strings:'scarf',functions:'chef',structs:'glasses'};
-const OUTFIT_LINE={bow:'Do you like my bow?',cap:'I put on my locker cap for arrays!',scarf:'A cosy striped scarf for string day.',chef:'Chef hat on: helpers cook up answers!',glasses:'Reading glasses on, for reading ID cards.'};
+const OUTFITS={basics:'bow',arrays:'cap',strings:'scarf',functions:'chef',pointers:'detective',structs:'glasses'};
+const OUTFIT_LINE={bow:'Do you like my bow?',cap:'I put on my locker cap for arrays!',scarf:'A cosy striped scarf for string day.',chef:'Chef hat on: helpers cook up answers!',glasses:'Reading glasses on, for reading ID cards.',detective:'Detective hat on: we follow addresses to find boxes!'};
 function wear(o,L){
   const st=`stroke="${L}" stroke-width="2.2" stroke-linejoin="round"`;
   if(o==='bow')return `<g transform="translate(16 13) rotate(-25)"><path d="M0 0 L-10 -7 L-10 7 Z" fill="var(--accent)" ${st}/><path d="M0 0 L10 -7 L10 7 Z" fill="var(--accent)" ${st}/><circle r="3" fill="var(--sun)" ${st}/></g>`;
@@ -325,6 +333,7 @@ function wear(o,L){
   if(o==='scarf')return `<path d="M11 50 Q32 61 53 50 L52 57 Q32 67 12 57 Z" fill="var(--coral)" ${st}/><path d="M40 59 L43 71 L50 69 L46 57 Z" fill="var(--coral)" ${st}/><path d="M18 54 L19 59 M26 57 L26.5 62 M35 58 L35 63 M43 61 L45 66" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>`;
   if(o==='chef')return `<path d="M19 17 Q11 4 23 2 Q26 -9 35 -4 Q45 -9 46 3 Q55 6 45 17 Z" fill="#fff" ${st}/><rect x="19" y="13" width="26" height="7" rx="2.5" fill="#fff" ${st}/>`;
   if(o==='glasses')return `<circle cx="24" cy="34" r="7.5" fill="rgba(255,255,255,.2)" ${st}/><circle cx="40" cy="34" r="7.5" fill="rgba(255,255,255,.2)" ${st}/><path d="M31.5 34 L32.5 34 M16.5 33 L9 30 M47.5 33 L55 30" ${st} fill="none" stroke-linecap="round"/>`;
+  if(o==='detective')return `<path d="M12 19 Q32 -6 52 19 Q32 14 12 19 Z" fill="#b08a63" ${st}/><path d="M13 18 Q4 22 3 14 Q9 12 15 15 Z" fill="#b08a63" ${st}/><path d="M51 18 Q60 22 61 14 Q55 12 49 15 Z" fill="#b08a63" ${st}/><path d="M19 11 Q32 5 45 11" fill="none" stroke="#7a5a3c" stroke-width="2"/><circle cx="32" cy="3" r="2.6" fill="#7a5a3c" ${st}/>`;
   return '';
 }
 function cat(size=48,{happy=false,cls='',outfit=OUTFIT}={}){
@@ -374,6 +383,7 @@ function S(cap,text,extra=2){
 const ST=(type,fields)=>({kind:'struct',type,fields:fields.map(([n,v])=>({name:n,...v}))});
 const SA=(type,cap,items)=>({kind:'structarr',type,cap,items:items.map(f=>f.map(([n,v])=>({name:n,...v})))});
 const REF=target=>({kind:'ref',target});
+const PTR=(to,val,type='int*')=>({kind:'ptr',to,type,val:val===null?null:String(val)});
 const F=(name,idx,label='i',tone='i')=>({name,idx,label,tone});
 
 /* ================= the recorder ================= */
@@ -385,6 +395,7 @@ class Tracer{
   top(){return this.frames[this.frames.length-1];}
   set(name,v,key){const f=this.top();const i=f.vars.findIndex(x=>x.name===name);const e={name,...v};if(i<0)f.vars.push(e);else f.vars[i]=e;this.ch.push(key||name);}
   del(name){const f=this.top();f.vars=f.vars.filter(v=>v.name!==name);}
+  setIn(fi,name,v){const f=this.frames[fi];const i=f.vars.findIndex(x=>x.name===name);const e={name,...v};if(i<0)f.vars.push(e);else f.vars[i]=e;this.ch.push('@'+fi+':'+name);}
   read(){const t=this.toks[this.pos];this.just.push(this.pos);this.pos++;return t?t.w:'';}
   print(s){this.out+=s;}
   step(line,now,focus){this.steps.push({line,now,frames:clone(this.frames),out:this.out,ch:this.ch.slice(),focus:focus?[].concat(focus):[],pos:this.pos,just:this.just.slice()});this.ch=[];this.just=[];}
@@ -409,6 +420,7 @@ function expect(toks,specs){
   for(let k=0;k<specs.length;k++){const w=toks[k];
     if(specs[k]==='int'&&!isInt(w))return `“${w}” should be a whole number, like 7.`;
     if(specs[k]==='num'&&!isNum(w))return `“${w}” should be a number, like 3.75.`;
+    if(specs[k]==='char'&&w.length!==1)return `“${w}” should be one single character.`;
     if(specs[k]==='word'&&!isWord(w))return `“${w}” should be one word of up to 12 letters or digits.`;}
   return null;
 }
@@ -454,13 +466,14 @@ function varHtml(v,focus,chk){
   else if(v.kind==='structarr'){type=`struct ${v.type}[${v.cap}]`;help='An array of structs: a row of cards';wide=true;
     const rest=v.cap-v.items.length;
     body=`<div class="scells">${v.items.map((it,i)=>{const p=ptrs(focus,v.name,f=>f.idx===i);return `<div class="scell ${p?'focus':''} ${chk(v.name+'#'+i)?'changed':''}"><div class="idx">[${i}]</div>${cardHtml(it,focus,chk,v.name+'#'+i)}${p?`<div class="ptrs">${p}</div>`:''}</div>`;}).join('')}${rest>0?`<div class="ghost">+${rest} more<br>unused</div>`:''}</div>`;}
+  else if(v.kind==='ptr'){type=v.type;help='A pointer: a box that stores the address of another box';body=`<div class="ptrbox"><div class="box">${vh(v.val)}</div><span class="pto">${v.val===null?'points nowhere yet':'→ points at <b>'+esc(v.to)+'</b>'}</span></div>`;}
   else if(v.kind==='ref'){type='int[]';help='Arrays are passed by address, not copied';body=`<div class="ref">→ uses <b>${esc(v.target)}</b> directly (no copy)</div>`;}
-  return `<div class="var ${wide?'wide':''} ${chk(v.name)?'changed':''}"><div class="vl"><span class="vn">${esc(v.name)}</span><span class="vt" title="${esc(help)}">${esc(type)}</span></div>${body}</div>`;
+  return `<div class="var ${wide?'wide':''} ${chk(v.name)?'changed':''}"><div class="vl"><span class="vn">${esc(v.name)}</span><span class="vt" title="${esc(help)}">${esc(type)}</span>${v.addr!==undefined?`<span class="addr" title="Address: where this box lives in memory">@${v.addr}</span>`:''}</div>${body}</div>`;
 }
 function framesHtml(s){
   const fs=s.frames,last=fs.length-1;
   return fs.map((f,i)=>({f,i})).reverse().map(({f,i})=>{
-    const chk=n=>i===last&&s.ch.includes(n);
+    const chk=n=>(i===last&&s.ch.includes(n))||s.ch.includes('@'+i+':'+n);
     const cap=i===last?(i===0?'running':`running · called by ${fs[i-1].name}`):'paused, waiting for the call to finish';
     return `<div class="frame ${i===last?'active':''}"><div class="fh"><b>${esc(f.name)}</b><span>${cap}</span></div><div class="vars">${f.vars.length?f.vars.map(v=>varHtml(v,s.focus,chk)).join(''):`<p class="empty">${cat(26,{happy:true})} No boxes yet.</p>`}</div></div>`;
   }).join('');
@@ -980,7 +993,42 @@ int main() {
       const small=c>='a'&&c<='z';t.step(7,small?R`Is «${code}» between 97 («'a'») and 122 («'z'»)? **Yes**, «'${c}'» is a small letter.`:R`Is «${code}» between 97 and 122? No, «'${c}'» is not a small letter, so it stays as it is.`,F('s',k));
       if(small){const up=String.fromCharCode(code-32);arr[k]=up;t.set('s',S(20,arr.join('')),'s#'+k);t.step(8,R`«${code} − 32 = ${code-32}», which is the code of «'${up}'». The tile changes from «'${c}'» to «'${up}'».`,F('s',k));}}
     t.set('i',I(n));t.step(6,R`«s[${n}]» is the STOP tile. The loop ends.`,F('s',n));t.del('i');
-    t.print(arr.join('')+'\n');t.step(11,R`Screen: «${arr.join('')}».`);t.step(12,END);return t.steps;}}
+    t.print(arr.join('')+'\n');t.step(11,R`Screen: «${arr.join('')}».`);t.step(12,END);return t.steps;}},
+  {title:'string.h toolbox',short:'strlen strcpy strcat strcmp',task:'Read two words. Print the length of the first, join them into a third string, and say whether the two words are the same.',sampleIn:'sun flower',sampleOut:'Length of a = 3\nJoined = sunflower\nDifferent words',
+   code:R`#include <stdio.h>
+#include <string.h>
+
+int main() {
+    char a[20], b[20], c[40];
+    scanf("%s %s", a, b);
+    int len = strlen(a);
+    printf("Length of a = %d\n", len);
+    strcpy(c, a);
+    strcat(c, b);
+    printf("Joined = %s\n", c);
+    if (strcmp(a, b) == 0) {
+        printf("Same words\n");
+    } else {
+        printf("Different words\n");
+    }
+    return 0;
+}`,
+   notes:{5:R`Three char arrays. «c» is bigger so it can hold both words joined, plus the STOP tile.`,6:R`Reads two words, one into each string.`,
+    7:R`«strlen(a)» counts the letters before «'\0'». It does **not** count the STOP tile.`,8:R`Prints the length.`,
+    9:R`«strcpy(dest, src)» copies src into dest, STOP tile included. You cannot copy a string with «=».`,10:R`«strcat(dest, src)» adds src onto the end of dest, starting where dest’s STOP tile was.`,
+    11:R`Prints the joined string.`,12:R`«strcmp(a, b)» returns «0» when the strings are equal, a negative number when a comes first in dictionary order, and a positive number when b comes first. Never compare strings with «==».`,13:R`Runs when strcmp returned 0.`,15:R`Runs when the words differ.`},
+   check:t=>expect(t,['word','word']),
+   trace(inp){const t=new Tracer(inp);t.step(4,START);t.set('a',S(20,null));t.set('b',S(20,null));t.set('c',S(40,null));t.step(5,R`Three strings, holding junk for now.`);
+    const wa=t.read(),wb=t.read();t.set('a',S(20,wa));t.set('b',S(20,wb));t.step(6,R`«a» gets ${tiles(wa)}, «b» gets ${tiles(wb)}.`);
+    t.set('len',I(wa.length));t.step(7,R`«strlen(a)» counts the tiles before the STOP tile: «${wa.length}».`,F('a',wa.length,'STOP','j'));
+    t.print(`Length of a = ${wa.length}\n`);t.step(8,R`Screen: «Length of a = ${wa.length}».`);
+    t.set('c',S(40,wa));t.step(9,R`«strcpy(c, a)» copies every tile of a, including the STOP tile, into c. Now c is «"${wa}"».`);
+    t.set('c',S(40,wa+wb));t.step(10,R`«strcat(c, b)» glues b on where c’s STOP tile was. Now c is «"${wa+wb}"».`,F('c',wa.length,'b starts','j'));
+    t.print(`Joined = ${wa+wb}\n`);t.step(11,R`Screen: «Joined = ${wa+wb}».`);
+    let k=0;while(k<wa.length&&k<wb.length&&wa[k]===wb[k])k++;const same=wa===wb,ca=k<wa.length?wa[k]:'\\0',cb=k<wb.length?wb[k]:'\\0';
+    t.step(12,same?R`«strcmp» compares tile by tile. Every tile matches, so it returns «0».`:R`«strcmp» compares tile by tile. The first difference is at «[${k}]»: «'${ca}'» vs «'${cb}'». It returns a ${wa<wb?'negative':'positive'} number, not 0.`,[F('a',k,'compare','j'),F('b',k,'compare','j')]);
+    if(same){t.print('Same words\n');t.step(13,R`Screen: «Same words».`);}else{t.step(14,R`The test was false, so jump to «else».`);t.print('Different words\n');t.step(15,R`Screen: «Different words».`);}
+    t.step(17,END);return t.steps;}}
  ],
  labs:[
   {kind:'Predict the output',title:'Vowel points',story:'In a word game, every vowel (a, e, i, o, u) scores one point.',sampleIn:'banana',sampleOut:'Vowels = 3',hideOut:true,q:'What does the program print for the sample input?',
@@ -1050,7 +1098,28 @@ int main() {
     t.set('i',I(half));t.step(9,R`«i = ${half}». Is «${half} < ${half}»? No: every pair has been checked.`);t.del('i');
     t.step(14,R`Is «same == 1»? ${same?'Yes.':'No.'}`);if(same){t.print('Palindrome\n');t.step(15,R`Screen: «Palindrome».`);}else{t.step(16,R`The test was false, so jump to «else».`);t.print('Not palindrome\n');t.step(17,R`Screen: «Not palindrome».`);}
     t.step(19,END);return t.steps;},
-   solution:'w[i] != w[n - 1 - i]'}
+   solution:'w[i] != w[n - 1 - i]'},
+  {kind:'Fill the gap',title:'Letter counter',story:'A spelling game asks how many times one letter appears in a word.',sampleIn:'banana a',sampleOut:'Count = 3',q:'What should each tile be compared with?',
+   code:R`#include <stdio.h>
+
+int main() {
+    char w[20], ch;
+    scanf("%s %c", w, &ch);
+    int count = 0;
+    for (int i = 0; w[i] != '\0'; i++) {
+        if (w[i] == ⟦ch⟧) {
+            count++;
+        }
+    }
+    printf("Count = %d\n", count);
+    return 0;
+}`,answers:['ch'],hint:R`The letter we are looking for was read into a char box. What is it called?`,explain:R`«w[i] == ch» compares each tile with the letter we are counting.`,
+   check:t=>expect(t,['word','char']),
+   trace(inp){const t=new Tracer(inp);t.step(3,START);t.set('w',S(20,null));t.set('ch',{kind:'scalar',type:'char',value:null});t.step(4,R`A string and a char box.`);
+    const w=t.read(),c=t.read();t.set('w',S(20,w));t.set('ch',{kind:'scalar',type:'char',value:`'${c}'`});t.step(5,R`«w» gets ${tiles(w)}; «ch» gets «'${c}'».`);
+    let n=0;t.set('count',I(0));t.step(6,R`«count» starts at 0.`);
+    for(let k=0;k<w.length;k++){t.set('i',I(k));t.step(7,R`«w[${k}]» is «'${w[k]}'», not the STOP tile.`,F('w',k));const y=w[k]===c;t.step(8,R`Is «'${w[k]}' == '${c}'»? ${y?'**Yes**.':'No.'}`,F('w',k));if(y){n++;t.set('count',I(n));t.step(9,R`«count++» → «${n}».`,F('w',k));}}
+    t.set('i',I(w.length));t.step(7,R`STOP tile reached. The loop ends.`,F('w',w.length));t.del('i');t.print(`Count = ${n}\n`);t.step(12,R`Screen: «Count = ${n}».`);t.step(13,END);return t.steps;}}
  ]},
 
 /* ======================= 4. FUNCTIONS ======================= */
@@ -1149,7 +1218,35 @@ int main() {
     t.frame('sum()');t.set('a',REF('nums in main()'));t.set('n',I(n));t.step(3,R`sum gets «a», which points at main’s «nums» (no copy), and «n = ${n}».`);
     let tot=0;t.set('total',I(0));t.step(4,R`«total» starts at 0.`);
     loop(t,n,5,'nums',k=>{const o=tot;tot+=v[k];t.set('total',I(tot));t.step(6,R`«a[${k}]» is main’s «nums[${k}]» = «${v[k]}». «total» → «${o} + ${v[k]}» → «${tot}».`,F('nums',k,'a[i]'));});
-    t.step(8,R`Hands back «${tot}».`);t.pop();t.print(`Sum = ${tot}\n`);t.step(18,R`sum gave back «${tot}». Screen: «Sum = ${tot}».`);t.step(19,END);return t.steps;}}
+    t.step(8,R`Hands back «${tot}».`);t.pop();t.print(`Sum = ${tot}\n`);t.step(18,R`sum gave back «${tot}». Screen: «Sum = ${tot}».`);t.step(19,END);return t.steps;}},
+  {title:'Recursion: factorial',short:'a function calling itself',task:'Read n and print n! (n factorial) using a function that calls itself.',sampleIn:'4',sampleOut:'4! = 24',
+   code:R`#include <stdio.h>
+
+int fact(int n) {
+    if (n <= 1) {
+        return 1;
+    }
+    return n * fact(n - 1);
+}
+
+int main() {
+    int n;
+    scanf("%d", &n);
+    printf("%d! = %d\n", n, fact(n));
+    return 0;
+}`,
+   notes:{3:R`A **recursive** function: to answer for «n», it asks itself about «n − 1». *Like a stack of Russian dolls: each opens a smaller one until the smallest.*`,
+    4:R`The **base case**: the smallest problem, answered directly. Without it the calls would never stop.`,5:R`«fact(1)» is simply 1.`,
+    7:R`The **recursive case**: «n! = n × (n − 1)!». This call waits until «fact(n − 1)» comes back.`,11:R`A box for n.`,12:R`Reads n.`,13:R`printf needs «fact(n)», which starts the chain of calls.`},
+   check:t=>{const e=expect(t,['int']);if(e)return e;const n=+t[0];return n<1||n>7?'Please choose n from 1 to 7 so the stack of calls fits on screen.':null;},
+   trace(inp){const t=new Tracer(inp);t.step(10,START);t.set('n',I(null));t.step(11,R`A box for n.`);const n=+t.read();t.set('n',I(n));t.step(12,R`«n = ${n}».`);
+    t.step(13,R`printf needs «fact(${n})». That call starts a chain of calls.`);
+    const rec=k=>{t.frame(`fact(${k})`);t.set('n',I(k));t.step(3,R`A new room for «fact(${k})». It has its own «n», which is «${k}».`);
+      const base=k<=1;t.step(4,R`Base case test: is «${k} <= 1»? ${base?'**Yes**.':'No.'}`);
+      if(base){t.step(5,R`«fact(${k})» returns «1» straight away. Now the waiting rooms can finish, one by one.`);t.pop();return 1;}
+      t.step(7,R`«${k} * fact(${k-1})»: this room must wait for «fact(${k-1})». Watch the stack of rooms grow.`);
+      const r=rec(k-1);t.step(7,R`«fact(${k-1})» came back with «${r}». «${k} * ${r} = ${k*r}», handed back.`);t.pop();return k*r;};
+    const r=rec(n);t.print(`${n}! = ${r}\n`);t.step(13,R`All rooms are cleared. Screen: «${n}! = ${r}».`);t.step(14,END);return t.steps;}}
  ],
  labs:[
   {kind:'Predict the output',title:'Shop discount',story:'A shop takes 100 taka off any price above 1000.',sampleIn:'1500',sampleOut:'Pay 1400',hideOut:true,q:'What does the program print for the sample input?',
@@ -1209,7 +1306,184 @@ int main() {
    check:t=>expect(t,['int']),
    trace(inp){const t=new Tracer(inp);t.step(8,START);t.set('x',I(null));t.step(9,R`A box for x.`);const x=+t.read();t.set('x',I(x));t.step(10,R`«x = ${x}».`);
     t.step(11,R`Call «addTen(${x})».`);t.frame('addTen()');t.set('n',I(x));t.step(3,R`«n» is a **copy** of x: «${x}».`);t.set('n',I(x+10));t.step(4,R`The copy becomes «${x+10}». Look below: «x» in main is still «${x}».`);
-    t.step(5,R`Hands back «${x+10}».`);t.pop();t.set('y',I(x+10));t.step(11,R`«y = ${x+10}». «x» was never touched.`);t.print(`x = ${x}, y = ${x+10}\n`);t.step(12,R`Screen: «x = ${x}, y = ${x+10}».`);t.step(13,END);return t.steps;}}
+    t.step(5,R`Hands back «${x+10}».`);t.pop();t.set('y',I(x+10));t.step(11,R`«y = ${x+10}». «x» was never touched.`);t.print(`x = ${x}, y = ${x+10}\n`);t.step(12,R`Screen: «x = ${x}, y = ${x+10}».`);t.step(13,END);return t.steps;}},
+  {kind:'Fill the gap',title:'Power tower',story:'A science club needs b to the power e. Finish the recursive helper: each call multiplies by b once and asks for one power less.',sampleIn:'2 5',sampleOut:'32',q:'What should the smaller call ask for?',
+   code:R`#include <stdio.h>
+
+int power(int b, int e) {
+    if (e == 0) {
+        return 1;
+    }
+    return b * power(b, ⟦e - 1⟧);
+}
+
+int main() {
+    int b, e;
+    scanf("%d %d", &b, &e);
+    printf("%d\n", power(b, e));
+    return 0;
+}`,answers:['e-1'],hint:R`Each call should get one step closer to the base case «e == 0».`,explain:R`«power(b, e - 1)» shrinks the exponent by 1 each time until it reaches 0, where the answer is 1.`,
+   check:t=>{const e=expect(t,['int','int']);if(e)return e;const b=+t[0],x=+t[1];return b<-9||b>9||x<0||x>6?'Keep b between -9 and 9, and e between 0 and 6.':null;},
+   trace(inp){const t=new Tracer(inp);t.step(10,START);t.set('b',I(null));t.set('e',I(null));t.step(11,R`Boxes for the base and the exponent.`);const b=+t.read(),e=+t.read();t.set('b',I(b));t.set('e',I(e));t.step(12,R`«b = ${b}», «e = ${e}».`);
+    t.step(13,R`printf needs «power(${b}, ${e})».`);
+    const rec=k=>{t.frame(`power(${b}, ${k})`);t.set('b',I(b));t.set('e',I(k));t.step(3,R`A new room: «b = ${b}», «e = ${k}».`);const base=k===0;t.step(4,R`Is «${k} == 0»? ${base?'**Yes**, the base case.':'No.'}`);
+      if(base){t.step(5,R`Anything to the power 0 is «1».`);t.pop();return 1;}
+      t.step(7,R`«${b} * power(${b}, ${k-1})»: wait for the smaller power.`);const r=rec(k-1);t.step(7,R`Got «${r}». «${b} * ${r} = ${b*r}», handed back.`);t.pop();return b*r;};
+    const r=rec(e);t.print(`${r}\n`);t.step(13,R`Screen: «${r}».`);t.step(14,END);return t.steps;}}
+ ]},
+
+/* ======================= 4b. POINTERS ======================= */
+{id:'pointers',title:'Pointers',sub:'Addresses and arrows',
+ big:'Every box in memory has an address, like a house number. A pointer is a box that stores an address, so it can point at another box and change it from a distance.',
+ keys:[R`«&x» gives the address of «x». That is exactly why scanf needs «&»!`,R`«int *p;» makes a pointer that can hold the address of an int.`,R`«*p» means “the box p points at”. Changing «*p» changes that box.`,R`Pass «&x» to a function when the function must change your «x».`],
+ fig:()=>`<div class="fig-row"><div class="var"><div class="vl"><span class="vn">x</span><span class="vt">int</span><span class="addr">@1004</span></div><div class="box">7</div></div><span class="arrow">←</span><div class="var"><div class="vl"><span class="vn">p</span><span class="vt">int*</span><span class="addr">@1008</span></div><div class="ptrbox"><div class="box">1004</div><span class="pto">→ points at <b>x</b></span></div></div></div>`,
+ cap:R`<b>Like a house address written on a card:</b> «p» holds x’s address (1004). Follow the address with «*p» and you arrive at x’s box itself.`,
+ words:[['address','Where a box lives in memory, like a house number.'],['&x','The address of x.'],['int *p','A pointer that can hold the address of an int.'],['*p','The box p points at (follow the arrow).'],['p = &x','Make p point at x.'],['p++','Move p to the next box of its type.'],['NULL','A pointer that points nowhere on purpose.']],
+ progs:[
+  {title:'Address and value',short:'&x, int *p, *p',task:'Read a number into x. Make a pointer p point at x, then double x through the pointer.',sampleIn:'7',sampleOut:'x = 7\nx = 14',
+   code:R`#include <stdio.h>
+
+int main() {
+    int x;
+    scanf("%d", &x);
+    int *p = &x;
+    printf("x = %d\n", x);
+    *p = *p * 2;
+    printf("x = %d\n", x);
+    return 0;
+}`,
+   notes:{4:R`A whole-number box «x». Like every box it has an address; here we pretend it is «1004». (Real addresses look like «0x7ffd5c1a…».)`,5:R`«&x» is x’s address. scanf needs it to know **where** to put the number.`,
+    6:R`«int *p» makes a pointer box. «= &x» stores x’s address in it, so p now points at x.`,7:R`Prints x normally.`,8:R`«*p» follows the arrow to x. This reads x, doubles it and writes the answer back into x, all through the pointer.`,9:R`Prints x again: it really changed.`},
+   check:t=>expect(t,['int']),
+   trace(inp){const t=new Tracer(inp);t.step(3,START);
+    t.set('x',{...I(null),addr:1004});t.step(4,R`Box «x» appears at address «1004». It holds junk for now.`);
+    const x=+t.read();t.set('x',{...I(x),addr:1004});t.step(5,R`«&x» is «1004». scanf puts «${x}» into the box at address 1004, which is x.`);
+    t.set('p',{...PTR('x',1004),addr:1008});t.step(6,R`Pointer «p» stores «1004», the address of x. The arrow shows that p points at x.`);
+    t.print(`x = ${x}\n`);t.step(7,R`Screen: «x = ${x}».`);
+    t.set('x',{...I(2*x),addr:1004});t.step(8,R`«*p» follows the arrow to x. «*p * 2» → «${x} * 2» → «${2*x}», written back into x through the pointer.`);
+    t.print(`x = ${2*x}\n`);t.step(9,R`x really changed. Screen: «x = ${2*x}».`);t.step(10,END);return t.steps;}},
+  {title:'Change it from a function',short:'pass &s',task:'Read a score s and a bonus b. A function addBonus adds the bonus to the caller’s score through a pointer and returns the new score.',sampleIn:'70 5',sampleOut:'s = 75, now = 75',
+   code:R`#include <stdio.h>
+
+int addBonus(int *score, int bonus) {
+    *score = *score + bonus;
+    return *score;
+}
+
+int main() {
+    int s, b;
+    scanf("%d %d", &s, &b);
+    int now = addBonus(&s, b);
+    printf("s = %d, now = %d\n", s, now);
+    return 0;
+}`,
+   notes:{3:R`«int *score» receives an **address**, not a copy of a number. Through it, the function can reach the caller’s box.`,4:R`«*score» is the caller’s variable. Adding the bonus here changes main’s «s» directly.`,5:R`Also hands back the new value.`,
+    9:R`Two boxes.`,10:R`Reads both.`,11:R`Passes «&s» (the address of s) and «b» (a copy). In the Functions lesson, helpers only ever got copies.`,12:R`Both «s» and «now» show the new score.`},
+   check:t=>expect(t,['int','int']),
+   trace(inp){const t=new Tracer(inp);t.step(8,START);
+    t.set('s',{...I(null),addr:1004});t.set('b',{...I(null),addr:1008});t.step(9,R`Two boxes, at addresses 1004 and 1008.`);
+    const s=+t.read(),b=+t.read();t.set('s',{...I(s),addr:1004});t.set('b',{...I(b),addr:1008});t.step(10,R`«s = ${s}», «b = ${b}».`);
+    t.step(11,R`Calls «addBonus(&s, b)»: it passes the **address** of s («1004») and a copy of b. main pauses.`);
+    t.frame('addBonus()');t.set('score',PTR('s in main()',1004));t.set('bonus',I(b));t.step(3,R`«score» holds address 1004, so it points at main’s «s». «bonus» is a plain copy: «${b}».`);
+    const ns=s+b;t.setIn(0,'s',{...I(ns),addr:1004});t.step(4,R`«*score» is main’s s. «${s} + ${b} = ${ns}» is written straight into main’s box. Look below: main’s «s» changed!`);
+    t.step(5,R`Hands back «*score», which is «${ns}».`);
+    t.pop();t.set('now',I(ns));t.step(11,R`«now = ${ns}». And «s» is ${ns} too, because the helper changed it through the pointer.`);
+    t.print(`s = ${ns}, now = ${ns}\n`);t.step(12,R`Screen: «s = ${ns}, now = ${ns}».`);t.step(13,END);return t.steps;}},
+  {title:'Walking an array',short:'p++ and *p',task:'Read n numbers into an array. Add them up by moving a pointer from box to box.',sampleIn:'4\n2 4 6 8',sampleOut:'Sum = 20',
+   code:R`#include <stdio.h>
+
+int main() {
+    int n;
+    scanf("%d", &n);
+    int a[100];
+    for (int i = 0; i < n; i++) {
+        scanf("%d", &a[i]);
+    }
+    int *p = a;
+    int sum = 0;
+    for (int i = 0; i < n; i++) {
+        sum = sum + *p;
+        p++;
+    }
+    printf("Sum = %d\n", sum);
+    return 0;
+}`,
+   notes:{4:R`How many numbers.`,5:R`Reads n.`,6:R`100 int boxes in a row. Each int takes 4 bytes, so the addresses go 2000, 2004, 2008 …`,7:R`Fill the array.`,8:R`Reads one number into box i.`,
+    10:R`An array’s name is the address of its first box, so «p = a» makes p point at «a[0]».`,11:R`A running total.`,12:R`Visit n boxes.`,13:R`«*p» is whichever box p points at right now. Add it to the total.`,
+    14:R`«p++» moves the pointer to the **next box** (4 bytes further), not to the next number.`,16:R`Prints the total.`},
+   check:t=>countThen(t,1,8,['int']),
+   trace(inp){const t=new Tracer(inp);t.step(3,START);t.set('n',I(null));t.step(4,R`A box for the count.`);const n=+t.read();t.set('n',I(n));t.step(5,R`«n = ${n}».`);
+    const v=Array(n).fill(null);t.set('a',{...A('int',100,v),addr:2000});t.step(6,R`100 int boxes starting at address 2000: «a[0]» is at 2000, «a[1]» at 2004, and so on.`);
+    loop(t,n,7,'a',k=>{const x=+t.read();v[k]=x;t.set('a',{...A('int',100,v),addr:2000},'a#'+k);t.step(8,R`scanf puts «${x}» into «a[${k}]» (address ${2000+4*k}).`,F('a',k));},{label:'The filling loop'});
+    t.set('p',PTR('a[0]',2000));t.step(10,R`«p = a»: p points at «a[0]», address 2000.`,F('a',0,'p','j'));
+    let s=0;t.set('sum',I(0));t.step(11,R`«sum» starts at 0.`,F('a',0,'p','j'));
+    for(let k=0;k<n;k++){t.set('i',I(k));t.step(12,k===0?R`Loop starts: «i = 0». Is «0 < ${n}»? Yes.`:R`«i++» → «i = ${k}». Is «${k} < ${n}»? Yes.`,F('a',k,'p','j'));
+      const o=s;s+=v[k];t.set('sum',I(s));t.step(13,R`«*p» is the box p points at: «a[${k}] = ${v[k]}». sum → «${o} + ${v[k]}» → «${s}».`,F('a',k,'p','j'));
+      t.set('p',PTR(`a[${k+1}]`,2000+4*(k+1)));t.step(14,R`«p++» moves 4 bytes: «${2000+4*k}» → «${2000+4*(k+1)}». p now points at «a[${k+1}]».`,F('a',k+1,'p','j'));}
+    t.set('i',I(n));t.step(12,R`«i = ${n}». Is «${n} < ${n}»? No, the loop ends.`);t.del('i');
+    t.print(`Sum = ${s}\n`);t.step(16,R`Screen: «Sum = ${s}».`);t.step(17,END);return t.steps;}}
+ ],
+ labs:[
+  {kind:'Predict the output',title:'One arrow, two boxes',story:'A pointer first points at a, then is moved to point at b. Every write through «*p» goes to whichever box it points at **at that moment**.',sampleIn:'3 9',sampleOut:'a = 9, b = 0',hideOut:true,q:'Type exactly what is printed for the sample input.',
+   code:R`#include <stdio.h>
+
+int main() {
+    int a, b;
+    scanf("%d %d", &a, &b);
+    int *p = &a;
+    *p = b;
+    p = &b;
+    *p = 0;
+    printf("a = %d, b = %d\n", a, b);
+    return 0;
+}`,answers:['a = 9, b = 0'],hint:R`Follow the arrow step by step. «*p = b» writes into whatever p points at **then**.`,explain:R`First p points at a, so «*p = b» makes a = 9. Then p moves to b, and «*p = 0» makes b = 0.`,
+   check:t=>expect(t,['int','int']),
+   trace(inp){const t=new Tracer(inp);t.step(3,START);t.set('a',{...I(null),addr:1004});t.set('b',{...I(null),addr:1008});t.step(4,R`Boxes a (1004) and b (1008).`);
+    const a=+t.read(),b=+t.read();t.set('a',{...I(a),addr:1004});t.set('b',{...I(b),addr:1008});t.step(5,R`«a = ${a}», «b = ${b}».`);
+    t.set('p',PTR('a',1004));t.step(6,R`p points at a.`);t.set('a',{...I(b),addr:1004});t.step(7,R`«*p = b»: the box p points at (a) gets «${b}».`);
+    t.set('p',PTR('b',1008));t.step(8,R`p now points at b instead.`);t.set('b',{...I(0),addr:1008});t.step(9,R`«*p = 0»: b becomes 0.`);
+    t.print(`a = ${b}, b = 0\n`);t.step(10,R`Screen: «a = ${b}, b = 0».`);t.step(11,END);return t.steps;}},
+  {kind:'Fill the gap',title:'Swap two numbers',story:'A helper swaps two numbers in the caller’s boxes. It needs their addresses, not copies.',sampleIn:'4 9',sampleOut:'9 4',q:'What should be passed as the first argument?',
+   code:R`#include <stdio.h>
+
+int swap(int *x, int *y) {
+    int t = *x;
+    *x = *y;
+    *y = t;
+    return 0;
+}
+
+int main() {
+    int a, b;
+    scanf("%d %d", &a, &b);
+    swap(⟦&a⟧, &b);
+    printf("%d %d\n", a, b);
+    return 0;
+}`,answers:['&a'],hint:R`The parameter is «int *x», an address. How do you get the address of «a»?`,explain:R`«&a» passes a’s address, so the helper can write into a. (It returns 0 just to say “done”.)`,
+   check:t=>expect(t,['int','int']),
+   trace(inp){const t=new Tracer(inp);t.step(10,START);t.set('a',{...I(null),addr:1004});t.set('b',{...I(null),addr:1008});t.step(11,R`Boxes a and b.`);
+    const a=+t.read(),b=+t.read();t.set('a',{...I(a),addr:1004});t.set('b',{...I(b),addr:1008});t.step(12,R`«a = ${a}», «b = ${b}».`);
+    t.step(13,R`Passes the addresses «&a» (1004) and «&b» (1008).`);t.frame('swap()');t.set('x',PTR('a in main()',1004));t.set('y',PTR('b in main()',1008));t.step(3,R`x points at main’s a, y points at main’s b.`);
+    t.set('t',I(a));t.step(4,R`Save «*x» («${a}») in «t» so it is not lost.`);t.setIn(0,'a',{...I(b),addr:1004});t.step(5,R`«*x = *y»: main’s a becomes «${b}».`);
+    t.setIn(0,'b',{...I(a),addr:1008});t.step(6,R`«*y = t»: main’s b becomes «${a}». Swapped!`);t.step(7,R`Returns 0 to say it finished.`);t.pop();
+    t.step(13,R`Back in main: a and b really swapped.`);t.print(`${b} ${a}\n`);t.step(14,R`Screen: «${b} ${a}».`);t.step(15,END);return t.steps;}},
+  {kind:'Pick the right line',title:'Point before you use it',story:'A pointer must be given an address before «*p» can be used.',sampleIn:'41',sampleOut:'42',q:'Which line makes p point at x?',
+   code:R`#include <stdio.h>
+
+int main() {
+    int x;
+    scanf("%d", &x);
+    int *p;
+    /* which line goes here? */
+    printf("%d\n", *p + 1);
+    return 0;
+}`,options:[{c:'p = &x;',ok:true},{c:'*p = x;',why:R`p does not point anywhere yet, so «*p» is not a real box. Point it first with «p = &x;».`},{c:'p = x;',why:R`p must hold an **address**. «x» is a number; «&x» is its address.`}],
+   explain:R`«p = &x;» stores x’s address in p. Then «*p + 1» is «x + 1».`,
+   check:t=>expect(t,['int']),
+   trace(inp){const t=new Tracer(inp);t.step(3,START);t.set('x',{...I(null),addr:1004});t.step(4,R`Box x at 1004.`);const x=+t.read();t.set('x',{...I(x),addr:1004});t.step(5,R`«x = ${x}».`);
+    t.set('p',PTR('x',null));t.step(6,R`Pointer p exists but holds junk: it points nowhere yet.`);t.set('p',PTR('x',1004));t.step(7,R`«p = &x»: p now holds 1004 and points at x.`);
+    t.print(`${x+1}\n`);t.step(8,R`«*p + 1» → «${x} + 1» → «${x+1}».`);t.step(9,END);return t.steps;},
+   solution:'p = &x;'}
  ]},
 
 /* ======================= 5. STRUCTS ======================= */
@@ -1280,7 +1554,35 @@ int main() {
     let top=0;t.set('top',I(0));t.step(15,R`«top = 0»: card 0 (${names[0]}, ${marks[0]}) is the best so far.`,F('s',0,'top','j'));
     loop(t,n,16,'s',k=>{const y=marks[k]>marks[top];t.step(17,R`Is «s[${k}].marks» («${marks[k]}») > «s[top].marks» («${marks[top]}»)? ${y?'**Yes**.':'No.'}`,[F('s',k),F('s',top,'top','j')]);
       if(y){top=k;t.set('top',I(top));t.step(18,R`«top = ${k}»: ${names[k]} is the new best.`,[F('s',k),F('s',top,'top','j')]);}},{from:1,label:'The comparing loop',extra:()=>[F('s',top,'top','j')]});
-    t.print(`Topper: ${names[top]} (${marks[top]})\n`);t.step(21,R`Card «s[${top}]» wins. Screen: «Topper: ${names[top]} (${marks[top]})».`,F('s',top,'top','j'));t.step(22,END);return t.steps;}}
+    t.print(`Topper: ${names[top]} (${marks[top]})\n`);t.step(21,R`Card «s[${top}]» wins. Screen: «Topper: ${names[top]} (${marks[top]})».`,F('s',top,'top','j'));t.step(22,END);return t.steps;}},
+  {title:'Pointer to a struct',short:'the arrow ->',task:'Read a rectangle’s width and height into a struct. A function receives the struct’s address and returns the area.',sampleIn:'6 4',sampleOut:'Area = 24',
+   code:R`#include <stdio.h>
+
+struct Rect {
+    int w;
+    int h;
+};
+
+int area(struct Rect *r) {
+    return r->w * r->h;
+}
+
+int main() {
+    struct Rect box;
+    scanf("%d %d", &box.w, &box.h);
+    printf("Area = %d\n", area(&box));
+    return 0;
+}`,
+   notes:{3:R`Designs a Rect card with a width and a height.`,4:R`Part 1: the width.`,5:R`Part 2: the height.`,6:R`Ends the design.`,
+    8:R`«struct Rect *r» receives the **address** of a Rect card, so no copy of the card is made.`,9:R`«r->w» means «(*r).w»: follow the arrow to the card, then open its «w» part. Use the dot for a struct, the arrow for a pointer to a struct.`,
+    13:R`One real Rect card called «box».`,14:R`Reads the two parts. Each needs «&» because they are single int boxes.`,15:R`Passes «&box» (the card’s address) and prints the area it returns.`},
+   check:t=>expect(t,['int','int']),
+   trace(inp){const t=new Tracer(inp);const card=(w,h)=>({...ST('Rect',[['w',I(w)],['h',I(h)]]),addr:3000});
+    t.step(12,R`The design is ready. The program starts in «main».`);t.set('box',card(null,null));t.step(13,R`One Rect card «box» at address 3000, junk inside.`);
+    const w=+t.read(),h=+t.read();t.set('box',card(w,h));t.step(14,R`«box.w = ${w}», «box.h = ${h}».`);
+    t.step(15,R`printf needs «area(&box)»: pass the card’s address, 3000.`);t.frame('area()');t.set('r',PTR('box in main()',3000,'struct Rect*'));t.step(8,R`«r» points at main’s «box». No copy of the card is made.`);
+    t.step(9,R`«r->w» → «${w}», «r->h» → «${h}». «${w} * ${h} = ${w*h}», handed back.`);t.pop();
+    t.print(`Area = ${w*h}\n`);t.step(15,R`Screen: «Area = ${w*h}».`);t.step(16,END);return t.steps;}}
  ],
  labs:[
   {kind:'Fill the gap',title:'Book labels',story:'A library prints a label for each book in the form “Title by Author”.',sampleIn:'Matilda Dahl',sampleOut:'Matilda by Dahl',q:'Which field holds the author?',
@@ -1340,9 +1642,42 @@ int main() {
    trace(inp){const t=new Tracer(inp);const card=(a,b)=>ST('Student',[['name',S(20,a,0)],['roll',I(b)]]);t.step(8,R`The program starts in «main».`);t.set('s',card(null,null));t.step(9,R`Card «s», junk inside.`);
     const a=t.read();t.set('s',card(a,null),'s.name');t.step(10,R`«s.name = "${a}"».`);const b=+t.read();t.set('s',card(a,b),'s.roll');t.step(11,R`«&s.roll» tells scanf where the roll box is: it gets «${b}».`);
     t.print(`${a} is roll ${b}\n`);t.step(12,R`Screen: «${a} is roll ${b}».`);t.step(13,END);return t.steps;},
-   solution:'scanf("%d", &s.roll);'}
+   solution:'scanf("%d", &s.roll);'},
+  {kind:'Fill the gap',title:'Bank withdrawal',story:'A bank account card has an id and a balance. A withdrawal only goes through when there is enough money.',sampleIn:'101 500 120',sampleOut:'Account 101: 380',q:'Fill in the operator that takes the money out.',
+   code:R`#include <stdio.h>
+
+struct Account {
+    int id;
+    int balance;
+};
+
+int main() {
+    struct Account acc;
+    int w;
+    scanf("%d %d %d", &acc.id, &acc.balance, &w);
+    if (w <= acc.balance) {
+        acc.balance = acc.balance ⟦-⟧ w;
+    }
+    printf("Account %d: %d\n", acc.id, acc.balance);
+    return 0;
+}`,answers:['-'],hint:'Withdrawing makes the balance smaller.',explain:R`«acc.balance = acc.balance - w;» takes the money out: «500 - 120 = 380».`,
+   check:t=>expect(t,['int','int','int']),
+   trace(inp){const t=new Tracer(inp);const card=(i,b)=>ST('Account',[['id',I(i)],['balance',I(b)]]);t.step(8,R`The program starts in «main».`);t.set('acc',card(null,null));t.step(9,R`One Account card, junk inside.`);t.set('w',I(null));t.step(10,R`A box for the withdrawal.`);
+    const id=+t.read(),bal=+t.read(),w=+t.read();t.set('acc',card(id,bal));t.set('w',I(w));t.step(11,R`«acc.id = ${id}», «acc.balance = ${bal}», «w = ${w}».`);
+    const ok=w<=bal;t.step(12,R`Is «${w} <= ${bal}»? ${ok?'**Yes**, there is enough money.':'No, not enough money: the balance stays the same.'}`);let nb=bal;
+    if(ok){nb=bal-w;t.set('acc',card(id,nb),'acc.balance');t.step(13,R`«${bal} - ${w} = ${nb}» goes back into «acc.balance».`);}
+    t.print(`Account ${id}: ${nb}\n`);t.step(15,R`Screen: «Account ${id}: ${nb}».`);t.step(16,END);return t.steps;}}
  ]}
 ];
+
+const MISTAKES={
+  basics:[R`Forgetting «&» in scanf for int and float boxes: «scanf("%d", x)» is wrong, «scanf("%d", &x)» is right.`,R`Printing a float with «%d», or an int with «%f».`,R`Integer division: «7 / 2» is «3», not 3.5. Write «7 / 2.0» to keep the decimals.`,R`Using a variable before giving it a value: it holds junk.`],
+  arrays:[R`Indexes run from «0» to «n − 1». «a[n]» is outside the array.`,R`A loop with «i <= n» over n boxes reads one box too many.`,R`Forgetting to set a total or a max before the loop starts.`,R`2D arrays: «m[i][j]» is row i, column j. «m[i, j]» is wrong.`],
+  strings:[R`Leave room for the STOP tile: "hello" needs «char s[6]», not 5.`,R`No «&» in «scanf("%s", name)», and «%s» stops at the first space.`,R`Compare strings with «strcmp», never with «==».`,R`Copy strings with «strcpy(dest, src)», never with «dest = src».`],
+  functions:[R`Parameters are copies: changing them does not change the caller’s variables.`,R`Every recursive function needs a base case, or the calls never stop.`,R`The return type must match what the function returns.`,R`Write (or declare) a function above «main» before main calls it.`],
+  pointers:[R`Using «*p» before «p» points at a real box.`,R`Mixing up «p» (an address) and «*p» (the value at that address).`,R`Forgetting «&» when a function must change your variable.`,R`«p++» moves to the next box (4 bytes for an int), not to the next number.`],
+  structs:[R`Forgetting the «;» after the struct design: «};».`,R`The dot for a struct variable («s.roll»), the arrow for a pointer to a struct («p->roll»).`,R`«q = p» copies a struct: changing q does not change p.`,R`In scanf, «s.name» has no «&» (it is an array) but «&s.roll» does.`]
+};
 
 /* ================= progress (this browser only) ================= */
 let progress={};try{progress=JSON.parse(localStorage.getItem('bb2-progress')||'{}')||{};}catch(e){progress={};}
@@ -1370,6 +1705,7 @@ function buildLesson(L,li){
    </div>
    ${li===0?`<div class="how"><span class="hi">${cat(44)} Hi, I’m <b>Mochi</b>! I’ll sit next to the code and explain every line for you.</span><span data-n="1"><b>Read</b>&nbsp;the idea</span><span data-n="2">Press&nbsp;<b>Next line</b>&nbsp;and watch the boxes</span><span data-n="3">Click any line to read about it</span><span data-n="4">Change the input and run again</span><span data-n="5">Solve the&nbsp;<b>scenario labs</b></span></div>`:''}
    <details class="words"><summary>Words to know (${L.words.length})</summary><dl class="wordlist">${L.words.map(w=>`<div><dt>${esc(w[0])}</dt><dd>${esc(w[1])}</dd></div>`).join('')}</dl></details>
+   ${MISTAKES[L.id]?`<div class="traps"><h3>${cat(40,{outfit:OUTFITS[L.id]})} Exam traps</h3><ul>${MISTAKES[L.id].map(m=>`<li>${md(m)}</li>`).join('')}</ul></div>`:''}
    <div><div class="sec"><h2>Programs to step through</h2><p>Each one is a small lab: read the task, check the sample input and output, then run it line by line.</p></div>
      <div class="ptabs" role="tablist">${L.progs.map((p,k)=>`<button role="tab" type="button" aria-selected="${k===0}" data-p="${k}">Program ${k+1}: ${esc(p.title)}<small>${esc(p.short)}</small></button>`).join('')}</div></div>
    <div class="pp">${L.progs.map((p,k)=>`<article class="lab" data-panel="${k}" ${k?'hidden':''}><div class="lab-top"><div class="task"><h3>${esc(p.title)}</h3><p>${md(p.task)}</p></div>${ioHtml(p.sampleIn,p.sampleOut)}</div><div class="bh-host"></div>${everyHtml(p)}</article>`).join('')}</div>
@@ -1415,7 +1751,8 @@ function buildLab(L,x,k){
 const sections=LESSONS.map((L,i)=>{const s=buildLesson(L,i);app.appendChild(s);return s;});
 const HELLO={basics:R`Hi, I’m Mochi! Press **Next line** and I’ll explain every line. Click me any time for a tip.`,
   arrays:R`Lockers in a row, numbered from «0». Let’s fill them and print them!`,strings:R`Letter tiles and a red STOP tile. Every letter is secretly a number!`,
-  functions:R`Little helpers with their own rooms. Each one hands back an answer.`,structs:R`ID cards with named parts. Open a part with the dot!`};
+  functions:R`Little helpers with their own rooms. Each one hands back an answer.`,structs:R`ID cards with named parts. Open a part with the dot, or the arrow «->» through a pointer!`,
+  pointers:R`Every box has an address, like a house number. Pointers hold addresses!`};
 function show(scroll){const id=curId(),L=LESSONS.find(l=>l.id===id);Mochi.dress(OUTFITS[id]);Mochi.hideSign();sections.forEach((s,i)=>{s.hidden=LESSONS[i].id!==id;if(!s.hidden)s._open();});renderTabs();if(scroll)window.scrollTo({top:0,behavior:'auto'});
   Mochi.roll(()=>Mochi.say(HELLO[id]+' *'+OUTFIT_LINE[OUTFITS[id]]+'*',{shout:id==='basics'?'Hello!':`${L.title}!`}));}
 window.addEventListener('hashchange',()=>show(true));
