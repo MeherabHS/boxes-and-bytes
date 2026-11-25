@@ -311,7 +311,29 @@ html,body{overflow-x:clip}
 @media (max-width:1000px){.bgrid{grid-template-columns:minmax(0,1fr)}}
 @media (max-width:860px){.hero,.lab-top{grid-template-columns:minmax(0,1fr)}}
 @media (max-width:520px){.io{grid-template-columns:minmax(0,1fr)}.lab,.ex{padding:14px}.code,.excode{font-size:13px}body{font-size:16px}}
+/* angry Mochi: stern face -> claw scratches -> red screen */
+.holder.shake{animation:shake .5s ease-in-out 3}
+@keyframes shake{0%,100%{transform:translateX(0) rotate(0)}20%{transform:translateX(-7px) rotate(-7deg)}40%{transform:translateX(7px) rotate(7deg)}60%{transform:translateX(-5px) rotate(-4deg)}80%{transform:translateX(5px) rotate(4deg)}}
+.scratch{position:fixed;inset:0;z-index:22;pointer-events:none;overflow:hidden;transition:opacity .6s}
+.scratch.fade{opacity:0}
+.scratch svg{position:absolute;inset:0;width:100%;height:100%}
+.scratch path{fill:none;stroke:var(--coral);stroke-width:13;stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:1;animation:claw .34s ease-out forwards;filter:drop-shadow(1px 2px 0 var(--ink))}
+.scratch path:nth-child(2){animation-delay:.06s}.scratch path:nth-child(3){animation-delay:.12s}.scratch path:nth-child(4){animation-delay:.18s}
+@keyframes claw{to{stroke-dashoffset:0}}
+.rage{position:fixed;inset:0;z-index:23;display:grid;place-items:center;pointer-events:none;background:radial-gradient(circle at 50% 55%,rgba(214,28,52,.62),rgba(120,0,18,.9));animation:rage-in .4s ease-out;transition:opacity .7s}
+.rage.out{opacity:0}
+.rage>div{display:grid;justify-items:center;gap:6px;text-align:center}
+.rage .cat{width:min(42vw,210px);height:auto;filter:drop-shadow(0 8px 14px rgba(0,0,0,.45))}
+.rage b{font:400 clamp(3rem,13vw,7.5rem)/1 "Bangers",var(--f-display);color:#fff;letter-spacing:.06em;text-shadow:4px 4px 0 #5a0010;transform:rotate(-4deg)}
+@keyframes rage-in{from{opacity:0}to{opacity:1}}
+.practice{display:grid;gap:18px}
+.practice .sec h2{display:flex;gap:10px;align-items:center}
+.ex.round{border:2px dashed var(--sun);background:linear-gradient(var(--sun-soft),var(--surface) 140px)}
+.rbadge{font:600 .72rem var(--f-body);text-transform:uppercase;letter-spacing:.08em;background:var(--sun);color:var(--sun-ink);padding:3px 9px;border-radius:6px}
+.tabs .due{margin-left:4px;color:var(--sun-ink);background:var(--sun);border-radius:999px;padding:0 6px;font-size:.72rem}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+/* with animation off, show the claw marks fully drawn instead of invisible */
+@media (prefers-reduced-motion:reduce){.scratch path{stroke-dashoffset:0}}
 </style>
 </head>
 <body>
@@ -338,10 +360,16 @@ function wear(o,L){
   if(o==='detective')return `<path d="M12 19 Q32 -6 52 19 Q32 14 12 19 Z" fill="#b08a63" ${st}/><path d="M13 18 Q4 22 3 14 Q9 12 15 15 Z" fill="#b08a63" ${st}/><path d="M51 18 Q60 22 61 14 Q55 12 49 15 Z" fill="#b08a63" ${st}/><path d="M19 11 Q32 5 45 11" fill="none" stroke="#7a5a3c" stroke-width="2"/><circle cx="32" cy="3" r="2.6" fill="#7a5a3c" ${st}/>`;
   return '';
 }
-function cat(size=48,{happy=false,cls='',outfit=OUTFIT}={}){
+function cat(size=48,{happy=false,cls='',outfit=OUTFIT,mood=''}={}){
   const L='var(--cat-line)',st=`stroke="${L}" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"`;
+  const open=`<ellipse cx="24" cy="34" rx="3.2" ry="4.2" fill="${L}"/><ellipse cx="40" cy="34" rx="3.2" ry="4.2" fill="${L}"/><circle cx="25.2" cy="32.4" r="1.1" fill="#fff"/><circle cx="41.2" cy="32.4" r="1.1" fill="#fff"/>`;
+  /* stern: level frown; angry: narrowed eyes, steep brows, fangs and a comic anger mark */
   const eyes=happy?`<path d="M19 35 q4.5 -5 9 0 M36 35 q4.5 -5 9 0" fill="none" ${st}/>`
-    :`<ellipse cx="24" cy="34" rx="3.2" ry="4.2" fill="${L}"/><ellipse cx="40" cy="34" rx="3.2" ry="4.2" fill="${L}"/><circle cx="25.2" cy="32.4" r="1.1" fill="#fff"/><circle cx="41.2" cy="32.4" r="1.1" fill="#fff"/>`;
+    :mood==='stern'?open+`<path d="M19 27.5 L28.5 29.5 M45 27.5 L35.5 29.5" fill="none" ${st}/>`
+    :mood==='angry'?`<path d="M19.5 33 L28.5 35.5 L19.5 36 Z M44.5 33 L35.5 35.5 L44.5 36 Z" fill="${L}" ${st}/><path d="M17 25 L29.5 31 M47 25 L34.5 31" fill="none" stroke="${L}" stroke-width="3.2" stroke-linecap="round"/>`
+      +`<path d="M29 44.6 L30.2 48 L31.4 44.9 M32.6 44.9 L33.8 48 L35 44.6" fill="#fff" stroke="${L}" stroke-width="1.2" stroke-linejoin="round"/>`
+      +`<path d="M51 1 l4 5 M58 0 l-3 6 M50 10 l5 -3 M60 9 l-5 -2" stroke="var(--coral)" stroke-width="2.6" stroke-linecap="round"/>`
+    :open;
   return `<svg class="cat ${cls}" width="${size}" height="${Math.round(size*84/72)}" viewBox="-4 -12 72 84" aria-hidden="true">
     <path d="M9 30 L13 6 L29 18 Z" fill="var(--cat-fur)" ${st}/><path d="M55 30 L51 6 L35 18 Z" fill="var(--cat-fur)" ${st}/>
     <path d="M15 22 L16 12 L23.5 17.5 Z" fill="var(--cat-ear)"/><path d="M49 22 L48 12 L40.5 17.5 Z" fill="var(--cat-ear)"/>
@@ -510,8 +538,23 @@ const Mochi=(()=>{
   const roller=document.createElement('div');roller.className='roller';roller.setAttribute('aria-hidden','true');roller.innerHTML=cat(80,{happy:true});
   document.body.append(roller,root);
   const pop=root.querySelector('.pop'),txt=pop.querySelector('p'),holder=root.querySelector('.holder'),me=root.querySelector('.buddy-cat'),board=root.querySelector('.sign'),boardTxt=board.querySelector('span');
-  let dancing=false;
-  function dress(o){OUTFIT=o;me.innerHTML=cat(80);roller.innerHTML=cat(80,{happy:true});}
+  let dancing=false,curMood='';
+  function dress(o){OUTFIT=o;me.innerHTML=cat(80,{mood:curMood});roller.innerHTML=cat(80,{happy:true});}
+  /* '' (normal), 'stern' or 'angry': changes Mochi's face until set back */
+  function mood(m=''){curMood=m;if(!dancing)me.innerHTML=cat(80,{mood:m});}
+  function shake(){if(reduce)return;holder.classList.remove('shake');void holder.offsetWidth;holder.classList.add('shake');setTimeout(()=>holder.classList.remove('shake'),1600);}
+  /* four claw marks raked across the screen, then faded away */
+  function scratch(){
+    const s=document.createElement('div');s.className='scratch';s.setAttribute('aria-hidden','true');
+    s.innerHTML=`<svg viewBox="0 0 1000 1000" preserveAspectRatio="none">${[0,1,2,3].map(k=>`<path pathLength="1" vector-effect="non-scaling-stroke" d="M${150+k*75} ${90+k*30} Q${420+k*60} 430 ${720+k*60} ${880-k*25}"/>`).join('')}</svg>`;
+    document.body.appendChild(s);setTimeout(()=>s.classList.add('fade'),1600);setTimeout(()=>s.remove(),2400);
+  }
+  /* the whole screen goes red for a moment (one slow fade, never flashing), then `then` runs */
+  function rage(then){
+    const r=document.createElement('div');r.className='rage';r.setAttribute('aria-hidden','true');
+    r.innerHTML=`<div>${cat(210,{mood:'angry'})}<b>MROWR!</b></div>`;document.body.appendChild(r);shake();
+    setTimeout(()=>r.classList.add('out'),2300);setTimeout(()=>{r.remove();if(then)then();},3050);
+  }
   function sign(n){boardTxt.textContent='Line '+n;board.hidden=false;}
   function hideSign(){board.hidden=true;}
   function confetti(){
@@ -524,7 +567,7 @@ const Mochi=(()=>{
   function dance(title){
     say(`You solved every ${title} lab. Time for my happy dance!`,{shout:'ALL LABS DONE!',ms:6500});
     if(reduce||dancing)return;dancing=true;me.innerHTML=cat(80,{happy:true});holder.classList.add('dance');confetti();
-    setTimeout(()=>{holder.classList.remove('dance');me.innerHTML=cat(80);dancing=false;},2800);
+    setTimeout(()=>{holder.classList.remove('dance');dancing=false;me.innerHTML=cat(80,{mood:curMood});},2800);
   }
   let hideT=null,rolling=false;
   function say(text,{shout='',ms=4800}={}){
@@ -544,7 +587,7 @@ const Mochi=(()=>{
     ['Tip!',R`A «?» box holds junk until you give it a value.`],['Purr…',R`A helper gets **copies** of numbers, but it uses the caller’s own array.`]];
   me.addEventListener('click',()=>{const t=TIPS[Math.floor(Math.random()*TIPS.length)];say(t[1],{shout:t[0]});});
   root.querySelector('.pop-x').addEventListener('click',()=>{pop.hidden=true;});
-  return {say,roll,dress,sign,hideSign,dance};
+  return {say,roll,dress,sign,hideSign,dance,mood,shake,scratch,rage};
 })();
 
 /* ================= the step-through bench ================= */
@@ -1681,6 +1724,105 @@ const MISTAKES={
   structs:[R`Forgetting the «;» after the struct design: «};».`,R`The dot for a struct variable («s.roll»), the arrow for a pointer to a struct («p->roll»).`,R`«q = p» copies a struct: changing q does not change p.`,R`In scanf, «s.name» has no «&» (it is an array) but «&s.roll» does.`]
 };
 
+/* ================= practice rounds: fixed and pre-written, max 3 rounds per lab =================
+   Round 1 is the lab itself. Rounds 2 and 3 come back in a later session when a
+   student ran out of tries, and drill the same weak spot:
+   - output labs: a new sample input; the right answer is computed by the lab's own trace
+   - fill the gap: the same program with a different exam trap blanked out
+   - pick the right line: the same right line with new wrong options
+   Nothing here is generated. Every round was checked against its program's trace:
+   the input is valid, the blank or right option restores the original program,
+   and the shown Sample Output is the trace's real output. */
+const MAX_ROUNDS=3;
+const ROUNDS={
+ 'basics:0':[
+  {sampleIn:'4',gap:R`scanf("%d", ⟦&n⟧);`,answers:['&n'],hint:R`scanf needs the **address** of the box it fills. What goes in front of «n»?`,explain:R`«&n» is the address of «n», so scanf can put the typed number straight into that box.`},
+  {sampleIn:'7',gap:R`printf("Total = ⟦%d⟧\n", total);`,answers:['%d'],hint:R`«total» is an «int». Which format code prints a whole number?`,explain:R`«%d» prints an int: «7 * 250 = 1750», so the screen shows «Total = 1750».`}],
+ 'basics:1':[
+  {sampleIn:'23 4',wrong:[{c:'Each = 5.75, Left = 0',why:R`Both numbers are «int», so «23 / 4» drops the fraction: it is «5», not 5.75.`},{c:'Each = 5, Left = 0',why:R`«%» gives what is left over after sharing: «23 % 4» is «3».`}],okAt:2,hint:R`«/» on two ints keeps only the whole part. «%» gives the remainder.`,explain:R`«23 / 4 = 5» (whole part only) and «23 % 4 = 3» (left over), so «Each = 5, Left = 3».`},
+  {sampleIn:'9 3',wrong:[{c:'Each = 3, Left = 3',why:R`«9 % 3» is what is left after sharing 9 into groups of 3: nothing, so «0».`},{c:'Each = 3.0, Left = 0',why:R`«%d» prints a whole number, with no decimal point.`}],okAt:0,hint:R`Does 9 share evenly into groups of 3?`,explain:R`«9 / 3 = 3» and «9 % 3 = 0»: it shares evenly, with nothing left over.`}],
+ 'arrays:0':[
+  {sampleIn:'3\n18 22 25',hint:R`The second loop starts at the **last** box, «i = n - 1», and walks back with «i--».`,explain:R`The boxes hold «18 22 25». Walking from «i = 2» down to «0» prints «25 22 18».`},
+  {sampleIn:'5\n1 2 3 4 5',hint:R`Which box does the second loop print first? It starts at «i = n - 1».`,explain:R`Starting at «t[4]» and walking down to «t[0]» prints «5 4 3 2 1».`}],
+ 'arrays:1':[
+  {sampleIn:'4\n40 39 90 41',gap:R`int passed = ⟦0⟧;`,answers:['0'],hint:R`A counter must start at some value before the loop. Without one it holds junk.`,explain:R`«passed» starts at «0». 40, 90 and 41 pass, so «Passed = 3».`},
+  {sampleIn:'3\n40 40 12',gap:R`scanf("%d", ⟦&m[i]⟧);`,answers:['&m[i]'],hint:R`scanf needs the address of box «i» in the array «m».`,explain:R`«&m[i]» is the address of box «i», so each mark goes into its own locker. Two marks are 40 or more: «Passed = 2».`}],
+ 'arrays:2':[
+  {sampleIn:'3 2\n1 1\n0 1\n1 0',wrong:[{c:'scanf("%d", &s[j][i]);',why:R`Row first, then column: «s[i][j]». «s[j][i]» fills a different box, so the next line adds junk.`},{c:'scanf("%d", &s[i]);',why:R`«s[i]» is a whole row. scanf needs one box: «&s[i][j]».`}],okAt:1,hint:R`Row «i», column «j», and scanf needs the address.`,explain:R`«&s[i][j]» is the address of the seat in row «i», column «j». Four seats are booked: «Booked = 4».`},
+  {sampleIn:'1 4\n1 1 1 1',wrong:[{c:'scanf("%f", &s[i][j]);',why:R`«%f» is for float boxes. The seats are «int», so use «%d».`},{c:'scanf("%d", &s);',why:R`«&s» is the address of the whole grid. scanf needs one seat: «&s[i][j]».`}],okAt:2,hint:R`One int seat in row «i», column «j».`,explain:R`«scanf("%d", &s[i][j]);» reads one int into one seat. All four are booked: «Booked = 4».`}],
+ 'strings:0':[
+  {sampleIn:'education',hint:R`Go tile by tile through «e d u c a t i o n» and count every a, e, i, o and u.`,explain:R`«e», «u», «a», «i» and «o»: five vowels, so «Vowels = 5».`},
+  {sampleIn:'rhythm',hint:R`Check each tile of «r h y t h m». Is «y» in the list?`,explain:R`The test only matches a, e, i, o and u. «rhythm» has none of them («y» is not in the list), so «Vowels = 0».`}],
+ 'strings:1':[
+  {sampleIn:'Rafi Ahmed',gap:R`printf("⟦%c⟧.%c.\n", first[0], last[0]);`,answers:['%c'],hint:R`«first[0]» is one single letter. Which format code prints one char?`,explain:R`«%c» prints one character: «R.A.»`},
+  {sampleIn:'Tania Islam',gap:R`scanf("%s %s", ⟦first⟧, last);`,answers:['first'],hint:R`With «%s», scanf gets the array name itself, with **no** «&».`,explain:R`An array name is already an address, so «scanf("%s %s", first, last);» needs no «&». Output: «T.I.»`}],
+ 'strings:2':[
+  {sampleIn:'noon',wrong:[{c:'w[i] != w[i + 1]',why:R`That compares a letter with its **neighbour**, not with its mirror at the other end.`},{c:'w[i] != w[n + 1 - i]',why:R`When «i = 0» that is «w[n + 1]», past the STOP tile. The mirror of «i» is «n - 1 - i».`}],okAt:0,hint:R`Letter «i» from the front must match letter «i» from the back. The last box is «n - 1».`,explain:R`«w[n - 1 - i]» is the mirror of «w[i]». «n o o n» reads the same both ways, so «Palindrome».`},
+  {sampleIn:'robot',wrong:[{c:'w[i] = w[n - 1 - i]',why:R`One «=» **copies** a letter. A test needs «!=» (or «==»).`},{c:'w[0] != w[n - 1]',why:R`That checks only the first and last letters, every time round the loop.`}],okAt:2,hint:R`Compare (don’t copy), and use the loop counter «i».`,explain:R`«r» and «t» are different, so «same» becomes 0: «Not palindrome».`}],
+ 'strings:3':[
+  {sampleIn:'cocoa o',gap:R`for (int i = 0; w[i] != ⟦'\0'⟧; i++) {`,answers:[R`'\0'`],hint:R`The loop walks the word until it reaches the STOP tile. How is the STOP tile written in C?`,explain:R`«'\0'» is the STOP tile at the end of every string. «o» appears twice in «cocoa»: «Count = 2».`},
+  {sampleIn:'mississippi s',gap:R`scanf("%s %c", w, ⟦&ch⟧);`,answers:['&ch'],hint:R`«ch» is a single char box, not an array. What does scanf need for it?`,explain:R`A char box needs its address: «&ch». The word has four «s» tiles: «Count = 4».`}],
+ 'functions:0':[
+  {sampleIn:'1000',hint:R`Read the test carefully: is «1000 > 1000»?`,explain:R`«1000 > 1000» is **false** (they are equal), so the first «return» is skipped: «Pay 1000».`},
+  {sampleIn:'1001',hint:R`Is 1001 bigger than 1000? Which «return» runs?`,explain:R`«1001 > 1000» is true, so «1001 - 100 = 901»: «Pay 901».`}],
+ 'functions:1':[
+  {sampleIn:'9',gap:R`printf("Area = %d\n", square(⟦side⟧));`,answers:['side'],hint:R`Which of «main»’s variables holds the side that was typed?`,explain:R`«square(side)» hands main’s «side» (9) to the helper: «Area = 81».`},
+  {sampleIn:'12',gap:R`⟦return⟧ n * n;`,answers:['return'],hint:R`The helper has worked out «n * n». Which word hands it back to the caller?`,explain:R`«return n * n;» hands «144» back to main.`}],
+ 'functions:2':[
+  {sampleIn:'0',wrong:[{c:'x = 10, y = 10',why:R`«addTen» changes its own **copy**, «n». main’s «x» is untouched.`},{c:'x = 0, y = 0',why:R`The helper returns «n + 10», and that goes into «y».`}],okAt:1,hint:R`The helper gets a copy of «x». What does it hand back?`,explain:R`«x» stays «0». The copy becomes «10» and is returned into «y».`},
+  {sampleIn:'-4',wrong:[{c:'x = 6, y = 6',why:R`Changing the parameter «n» never changes main’s «x».`},{c:'x = -4, y = -4',why:R`«y» gets the returned value: «-4 + 10 = 6».`}],okAt:0,hint:R`Negative numbers work the same way: copy, add 10, return.`,explain:R`«x» stays «-4», and «-4 + 10 = 6» goes into «y».`}],
+ 'functions:3':[
+  {sampleIn:'3 4',gap:R`if (e ⟦==⟧ 0) {`,answers:['=='],hint:R`The base case **compares** «e» with 0. A single «=» would change «e» instead.`,explain:R`«e == 0» stops the calls. «3 × 3 × 3 × 3 = 81».`},
+  {sampleIn:'5 3',gap:R`return ⟦1⟧;`,answers:['1'],hint:R`Any number to the power 0 is …? Returning 0 would wipe out every multiplication above it.`,explain:R`A number to the power 0 is «1», so the base case returns «1». «5 × 5 × 5 × 1 = 125».`}],
+ 'pointers:0':[
+  {sampleIn:'8 8',hint:R`Follow the arrow: first it points at «a», then at «b».`,explain:R`«*p = b» puts 8 into «a». Then «p» moves to «b» and «*p = 0» clears «b»: «a = 8, b = 0».`},
+  {sampleIn:'5 1',hint:R`«*p = b» writes into whatever «p» points at **at that moment**.`,explain:R`«a» gets «b»’s value, «1». Then «b» is set to «0»: «a = 1, b = 0».`}],
+ 'pointers:1':[
+  {sampleIn:'7 2',gap:R`int t = ⟦*x⟧;`,answers:['*x'],hint:R`Save the **value** that «x» points at before it gets overwritten.`,explain:R`«*x» is the value at the address in «x» (main’s «a»). After the swap: «2 7».`},
+  {sampleIn:'15 30',gap:R`*y = ⟦t⟧;`,answers:['t'],hint:R`The old value of «*x» was saved somewhere. Where?`,explain:R`«t» kept the old «*x», so «*y = t» finishes the swap: «30 15».`}],
+ 'pointers:2':[
+  {sampleIn:'99',wrong:[{c:'p = *x;',why:R`«x» is an int, not an address, so «*x» means nothing here.`},{c:'&p = x;',why:R`«&p» is where «p» itself lives. You can’t move it; you can only store an address **in** «p».`}],okAt:2,hint:R`«p» must hold the address of «x».`,explain:R`«p = &x;» makes «p» point at «x», so «*p + 1» is «100».`},
+  {sampleIn:'-1',wrong:[{c:'*p = &x;',why:R`«*p» is the box «p» points at, and «p» points nowhere yet.`},{c:'p == &x;',why:R`«==» only compares. It never stores the address in «p».`}],okAt:1,hint:R`Store an address with a single «=».`,explain:R`«p = &x;» stores the address of «x» in «p». «-1 + 1» prints «0».`}],
+ 'structs:0':[
+  {sampleIn:'Hamlet Shakespeare',gap:R`scanf("%s %s", ⟦b.title⟧, b.author);`,answers:['b.title'],hint:R`Card name, a dot, then the part. Which part is read first?`,explain:R`«b.title» is the title part of card «b». It is an array, so it needs no «&»: «Hamlet by Shakespeare».`},
+  {sampleIn:'Emma Austen',gap:R`}⟦;⟧`,answers:[';'],hint:R`Look at the end of the struct design. What does it need after the brace?`,explain:R`A struct design always ends with «};». Output: «Emma by Austen».`}],
+ 'structs:1':[
+  {sampleIn:'250 9',hint:R`«q = p» makes a separate copy. Which card does printf read?`,explain:R`Only the copy «q» gets the new price. «p.price» is still «250».`},
+  {sampleIn:'80 1',hint:R`Careful: the copy’s new price happens to be the same number. Which card is printed?`,explain:R`«p.price» is «80» because 80 was typed, not because of «q.price = 80»: «P = 80».`}],
+ 'structs:2':[
+  {sampleIn:'Nadia 12',wrong:[{c:'scanf("%d", &s->roll);',why:R`«->» is for a **pointer** to a struct. «s» is the card itself, so use the dot.`},{c:'scanf("%s", &s.roll);',why:R`«%s» reads a word into a string. «roll» is an int, so it needs «%d».`}],okAt:0,hint:R`An int part of card «s»: the dot, «%d» and an address.`,explain:R`«&s.roll» is the address of the roll part: «Nadia is roll 12».`},
+  {sampleIn:'Omar 31',wrong:[{c:'scanf("%d", &Student.roll);',why:R`«Student» is the design, not a card. The card is «s».`},{c:'scanf("%d", &s[roll]);',why:R`«s» is one card, not an array: open its part with a dot.`}],okAt:2,hint:R`Use the card’s name, not the design’s name.`,explain:R`«scanf("%d", &s.roll);» fills the roll part of card «s»: «Omar is roll 31».`}],
+ 'structs:3':[
+  {sampleIn:'202 300 300',gap:R`if (w ⟦<=⟧ acc.balance) {`,answers:['<='],hint:R`Taking out **exactly** the whole balance should be allowed.`,explain:R`«300 <= 300» is true, so the money comes out: «Account 202: 0».`},
+  {sampleIn:'303 200 250',gap:R`printf("Account %d: %d\n", acc.id, acc.⟦balance⟧);`,answers:['balance'],hint:R`Which part of the card holds the money?`,explain:R`«250 <= 200» is false, so nothing comes out and «acc.balance» stays «200».`}]
+};
+/* Round r (2 or 3) of lab k as a normal lab object, ready for buildLab. */
+function roundLab(L,k,r){
+  const x=L.labs[k];if(r<=1)return x;
+  const v=(ROUNDS[L.id+':'+k]||[])[r-2];if(!v)return null;
+  const st=x.trace(v.sampleIn),out=outNorm(st[st.length-1].out);
+  const y={...x,sampleIn:v.sampleIn,sampleOut:out,hint:v.hint,explain:v.explain,round:r};
+  if(v.gap){const plain=v.gap.replace(/⟦(.+?)⟧/g,'$1');y.code=x.code.replace(/⟦(.+?)⟧/g,'$1').replace(plain,v.gap);y.answers=v.answers;}
+  else if(v.wrong){const o=v.wrong.slice();o.splice(v.okAt,0,{c:x.solution||out,ok:true});y.options=o;}
+  else{y.answers=[out];if(x.answers&&x.answers.length>1)y.answers.push(out.split(/\s+/).pop());}
+  return y;
+}
+
+/* ================= Mochi's memory: weak spots and sessions (this browser only) =================
+   A "session" is one browser tab visit: sessionStorage resets when the tab is closed.
+   A weak spot saved in one session comes back as a practice round in a later one. */
+let mem={};try{mem=JSON.parse(localStorage.getItem('bb2-mochi')||'{}')||{};}catch(e){mem={};}
+if(!mem.weak||typeof mem.weak!=='object')mem.weak={};
+mem.session=Number.isInteger(mem.session)?mem.session:0;
+let newSession=true;
+try{newSession=!sessionStorage.getItem('bb2-session');sessionStorage.setItem('bb2-session','1');}catch(e){}
+if(newSession)mem.session++;
+const saveMem=()=>{try{localStorage.setItem('bb2-mochi',JSON.stringify(mem));}catch(e){}};
+saveMem();
+/* practice rounds waiting in one lesson: saved in an earlier session, at most MAX_ROUNDS */
+const dueRounds=lid=>Object.entries(mem.weak).filter(([key,w])=>key.split(':')[0]===lid&&w&&w.since<mem.session&&w.round>1&&w.round<=MAX_ROUNDS&&ROUNDS[key])
+  .map(([key,w])=>({k:+key.split(':')[1],round:w.round}));
+
 /* ================= progress (this browser only) ================= */
 let progress={};try{progress=JSON.parse(localStorage.getItem('bb2-progress')||'{}')||{};}catch(e){progress={};}
 const save=()=>{try{localStorage.setItem('bb2-progress',JSON.stringify(progress));}catch(e){}};
@@ -1691,8 +1833,8 @@ function markSolved(l,k){const was=solved(l,k);progress[l]=progress[l]||[];progr
 const tabs=document.getElementById('tabs'),app=document.getElementById('app');
 document.querySelector('.logo').innerHTML=cat(36);
 const curId=()=>{const h=location.hash.slice(1);return LESSONS.some(L=>L.id===h)?h:LESSONS[0].id;};
-function renderTabs(){const c=curId();tabs.innerHTML=LESSONS.map(L=>{const d=L.labs.filter((_,k)=>solved(L.id,k)).length;
-  return `<a href="#${L.id}" ${L.id===c?'aria-current="page"':''}>${L.title}<span class="cnt">${d}/${L.labs.length}</span></a>`;}).join('');}
+function renderTabs(){const c=curId();tabs.innerHTML=LESSONS.map(L=>{const d=L.labs.filter((_,k)=>solved(L.id,k)).length,p=dueRounds(L.id).length;
+  return `<a href="#${L.id}" ${L.id===c?'aria-current="page"':''}>${L.title}<span class="cnt">${d}/${L.labs.length}</span>${p?`<span class="due" title="${p} practice round${p>1?'s':''} waiting">★${p}</span>`:''}</a>`;}).join('');}
 function ioHtml(i,o,hide){return `<div class="io"><div class="io-box"><span>Sample Input</span><pre>${esc(i)}</pre></div><div class="io-box"><span>Sample Output</span>${hide?'<pre class="hidden">Work it out first</pre>':`<pre>${esc(o)}</pre>`}</div></div>`;}
 function everyHtml(p){return `<details class="every"><summary>Every line, explained</summary><div class="ew"><table>${p.code.split('\n').map((l,k)=>l.trim()?`<tr><td class="n">${k+1}</td><td class="s">${hl(l)}</td><td class="t">${md(p.notes[k+1]||autoNote(l))}</td></tr>`:'').join('')}</table></div></details>`;}
 const capHtml=s=>md(s).replace(/&lt;(\/?)(b|i)&gt;/g,'<$1$2>');
@@ -1711,6 +1853,7 @@ function buildLesson(L,li){
    <div><div class="sec"><h2>Programs to step through</h2><p>Each one is a small lab: read the task, check the sample input and output, then run it line by line.</p></div>
      <div class="ptabs" role="tablist">${L.progs.map((p,k)=>`<button role="tab" type="button" aria-selected="${k===0}" data-p="${k}">Program ${k+1}: ${esc(p.title)}<small>${esc(p.short)}</small></button>`).join('')}</div></div>
    <div class="pp">${L.progs.map((p,k)=>`<article class="lab" data-panel="${k}" ${k?'hidden':''}><div class="lab-top"><div class="task"><h3>${esc(p.title)}</h3><p>${md(p.task)}</p></div>${ioHtml(p.sampleIn,p.sampleOut)}</div><div class="bh-host"></div>${everyHtml(p)}</article>`).join('')}</div>
+   <div class="practice" hidden></div>
    <div class="sec"><h2>Scenario labs</h2><p>Real-life problems in lab format. Answer, then press “Watch it run” to see why.</p></div>
    <div class="labs"></div>
    <nav class="pager">${li>0?`<a class="btn" href="#${LESSONS[li-1].id}">← ${LESSONS[li-1].title}</a>`:'<span></span>'}${li<LESSONS.length-1?`<a class="btn primary" href="#${LESSONS[li+1].id}">Next: ${LESSONS[li+1].title} →</a>`:''}</nav>`;
@@ -1720,14 +1863,30 @@ function buildLesson(L,li){
     if(!built[k]){Bench(sec.querySelector(`.lab[data-panel="${k}"] .bh-host`),L.progs[k]);built[k]=true;}};
   sec.querySelector('.ptabs').addEventListener('click',e=>{const b=e.target.closest('[data-p]');if(b)openProg(+b.dataset.p);});
   sec._open=()=>{if(!built[0])openProg(0);};
-  const labs=sec.querySelector('.labs');L.labs.forEach((x,k)=>labs.appendChild(buildLab(L,x,k)));
+  const labs=sec.querySelector('.labs:not(.prac-labs)');L.labs.forEach((x,k)=>labs.appendChild(buildLab(L,x,k)));
+  renderPractice(sec,L);
   return sec;
 }
-function buildLab(L,x,k){
-  const id=`lab-${L.id}-${k}`,el=document.createElement('article');el.className='ex'+(solved(L.id,k)?' solved':'');
+/* rounds 2-3 of labs the student ran out of tries on in an earlier session */
+function renderPractice(sec,L){
+  const box=sec.querySelector('.practice'),due=dueRounds(L.id);box.hidden=!due.length;if(!due.length)return;
+  box.innerHTML=`<div class="sec"><h2>${cat(40,{outfit:OUTFITS[L.id]})} Mochi’s practice rounds</h2><p>These come from labs you found hard last time. Each one comes back at most ${MAX_ROUNDS} times in all, then I let it go.</p></div><div class="labs prac-labs"></div>`;
+  const host=box.querySelector('.prac-labs');due.forEach(({k,round})=>{const y=roundLab(L,k,round);if(y)host.appendChild(buildLab(L,y,k,round));});
+}
+/* Wrong answers make Mochi more and more cross: 1 encourages, 2 is firmer,
+   3 scratches the screen, 4 turns the screen red, saves the weak spot for a
+   practice round in a later session, then turns hopeful and shows the answer. */
+const NUDGE=[null,
+  {shout:'You can do it!',mood:'',text:R`Not quite, but you’re close. Read the hint and give it another go!`},
+  {shout:'Hmm. Focus.',mood:'stern',text:R`Two misses. Slow down: read that line one symbol at a time, then try the hint.`},
+  {shout:'HSSS!',mood:'angry',text:R`Three misses! *scratch scratch* Check **every** symbol before you press Check again.`}];
+const RAGE_AT=4;
+function buildLab(L,x,k,round=1){
+  const prac=round>1,key=L.id+':'+k,isDone=()=>!prac&&solved(L.id,k);
+  const id=`lab-${L.id}-${k}`+(prac?`-r${round}`:''),el=document.createElement('article');el.className='ex'+(prac?' round':'')+(isDone()?' solved':'');
   const fill=/⟦/.test(x.code),choice=!!x.options;
   const codeHtml=x.code.split(/⟦(.+?)⟧/).map((p,i)=>i%2?`<input id="${id}" aria-label="Your answer" autocomplete="off" spellcheck="false" size="${Math.max(3,p.length+1)}">`:hl(p)).join('');
-  el.innerHTML=`<div class="ex-h"><span class="kind">${x.kind}</span><h3>${esc(x.title)}</h3><span class="tick" ${solved(L.id,k)?'':'hidden'}>✓ Solved</span></div>
+  el.innerHTML=`<div class="ex-h"><span class="kind">${x.kind}</span>${prac?`<span class="rbadge">Practice round ${round} of ${MAX_ROUNDS}</span>`:''}<h3>${esc(x.title)}</h3><span class="tick" ${isDone()?'':'hidden'}>✓ Solved</span></div>
    <p class="story">${md(x.story)}</p>${ioHtml(x.sampleIn,x.sampleOut,x.hideOut)}
    <p class="q">${md(x.q)}</p><pre class="excode">${codeHtml}</pre>
    ${choice?`<div class="choices">${x.options.map((o,j)=>`<label for="${id}-${j}"><input type="radio" name="${id}" id="${id}-${j}" value="${j}">${esc(o.c)}</label>`).join('')}</div>`:''}
@@ -1744,8 +1903,21 @@ function buildLab(L,x,k){
     let ok,why='';
     if(choice){const p=el.querySelector(`input[name="${id}"]:checked`);if(!p){say('hint','Pick one of the options first.');return;}const o=x.options[+p.value];ok=!!o.ok;why=o.why||'';}
     else{const v=el.querySelector('#'+CSS.escape(id)).value;if(!v.trim()){say('hint','Type your answer first.');return;}ok=x.answers.map(ansNorm).includes(ansNorm(v));}
-    if(ok){Mochi.roll(()=>Mochi.say(x.explain,{shout:'PURR-FECT!',ms:6500}));say('ok',`<strong>${cat(30,{happy:true})} Purr-fect, that’s right!</strong>${md(x.explain)}`);el.classList.add('solved');el.querySelector('.tick').hidden=false;markSolved(L.id,k);showRun();}
-    else{wrong++;Mochi.say(wrong>=2?'Still not it. You can press **Show answer** now.':'Not quite. Read the hint and give it another go!',{shout:'Mrrp?'});say('bad',`<strong>Not quite.</strong>${md(why||('Hint: '+x.hint))}`);if(wrong>=2)el.querySelector('[data-x=reveal]').hidden=false;}
+    if(ok){Mochi.mood('');
+      if(prac){delete mem.weak[key];saveMem();}
+      Mochi.roll(()=>Mochi.say(x.explain,{shout:prac?'WEAK SPOT FIXED!':'PURR-FECT!',ms:6500}));
+      say('ok',`<strong>${cat(30,{happy:true})} ${prac?'You fixed a weak spot!':'Purr-fect, that’s right!'}</strong>${md(x.explain)}`);el.classList.add('solved');el.querySelector('.tick').hidden=false;markSolved(L.id,k);showRun();}
+    else{wrong++;say('bad',`<strong>Not quite.</strong>${md(why||('Hint: '+x.hint))}`);
+      if(wrong<RAGE_AT){const n=NUDGE[wrong];Mochi.mood(n.mood);Mochi.say(n.text,{shout:n.shout,ms:6000});if(wrong===3){Mochi.scratch();Mochi.shake();}}
+      else if(wrong===RAGE_AT){
+        /* save the weak spot (and where the student was) before anything else */
+        const next=round+1;if(next<=MAX_ROUNDS&&ROUNDS[key])mem.weak[key]={round:next,since:mem.session};else delete mem.weak[key];mem.last=L.id;saveMem();
+        const hope=next<=MAX_ROUNDS&&ROUNDS[key]
+          ?R`Okay. Deep breath. I saved this one as a weak spot. Next time you open Boxes & Bytes I’ll bring **round ${next} of ${MAX_ROUNDS}** of it. Let’s read the answer together so you learn it precisely.`
+          :R`Okay. Deep breath. That was the last round of this one. Read the answer slowly and press **Watch it run**: you’ll get it in the exam.`;
+        Mochi.mood('angry');Mochi.say('MROWR! Four misses!',{shout:'GRRR!',ms:3000});
+        Mochi.rage(()=>{Mochi.mood('');Mochi.say(hope,{shout:'You’ve got this',ms:12000});el.querySelector('[data-x=reveal]').hidden=false;el.querySelector('[data-x=reveal]').click();});}
+      else Mochi.say(R`The answer is right there. Read it, then press **Watch it run** to see why.`,{shout:'Purr…'});}
   });
   el.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.matches('input:not([type=radio])')){e.preventDefault();el.querySelector('[data-x=check]').click();}});
   return el;
@@ -1755,9 +1927,18 @@ const HELLO={basics:R`Hi, I’m Mochi! Press **Next line** and I’ll explain ev
   arrays:R`Lockers in a row, numbered from «0». Let’s fill them and print them!`,strings:R`Letter tiles and a red STOP tile. Every letter is secretly a number!`,
   functions:R`Little helpers with their own rooms. Each one hands back an answer.`,structs:R`ID cards with named parts. Open a part with the dot, or the arrow «->» through a pointer!`,
   pointers:R`Every box has an address, like a house number. Pointers hold addresses!`};
-function show(scroll){const id=curId(),L=LESSONS.find(l=>l.id===id);Mochi.dress(OUTFITS[id]);Mochi.hideSign();sections.forEach((s,i)=>{s.hidden=LESSONS[i].id!==id;if(!s.hidden)s._open();});renderTabs();if(scroll)window.scrollTo({top:0,behavior:'auto'});
+let greeted=false;
+function show(scroll){const id=curId(),L=LESSONS.find(l=>l.id===id);Mochi.mood('');Mochi.dress(OUTFITS[id]);Mochi.hideSign();sections.forEach((s,i)=>{s.hidden=LESSONS[i].id!==id;if(!s.hidden)s._open();});renderTabs();if(scroll)window.scrollTo({top:0,behavior:'auto'});
+  mem.last=id;saveMem();
+  /* first screen of a new session for a returning student: a hopeful welcome back */
+  if(!greeted&&newSession&&mem.session>1){greeted=true;const n=LESSONS.reduce((a,l)=>a+dueRounds(l.id).length,0);
+    Mochi.roll(()=>Mochi.say(n?R`Welcome back! I saved your place, and I brought **${n} practice round${n>1?'s':''}** for the labs that were hard last time. Look for the ★ on the tabs. Let’s learn them properly this time!`
+      :R`Welcome back! I saved your place in **${L.title}**. Let’s keep going, one line at a time.`,{shout:'Welcome back!',ms:9000}));return;}
+  greeted=true;
   Mochi.roll(()=>Mochi.say(HELLO[id]+' *'+OUTFIT_LINE[OUTFITS[id]]+'*',{shout:id==='basics'?'Hello!':`${L.title}!`}));}
 window.addEventListener('hashchange',()=>show(true));
+/* reopen at the lesson the student was on last time */
+if(!location.hash&&mem.last&&LESSONS.some(l=>l.id===mem.last))history.replaceState(null,'','#'+mem.last);
 show(false);
 </script>
 
